@@ -1,0 +1,11 @@
+PASS
+Scene roots: Main Island, Wisdom Tree, Player, Main Camera, Directional Light
+Original main-island rows: 33
+Player count: 1
+Wisdom tree count: 1
+Walking distance: 5.83 m
+Walking bone motion: verified
+Idle/walk transitions: verified
+Island edge containment: verified
+Missing scripts: 0
+Unity: 6000.6.0f1
