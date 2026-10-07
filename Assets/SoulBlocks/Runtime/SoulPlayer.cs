@@ -69,8 +69,8 @@ namespace SoulBlocks
                 animationState = next;
             }
         }
-        static bool Supported(Vector3 point) => Physics.Raycast(point + Vector3.up, Vector3.down, 3f, 1 << 8, QueryTriggerInteraction.Ignore);
-                void BuildWizardHat()
+        static bool Supported(Vector3 point) => Physics.Raycast(point + Vector3.up, Vector3.down, 3f, (1 << 8) | (1 << 9), QueryTriggerInteraction.Ignore);
+        void BuildWizardHat()
         {
             if(animator==null)return;
             var head=animator.GetBoneTransform(HumanBodyBones.Head);
@@ -127,3 +127,5 @@ namespace SoulBlocks
 
     }
 }
+
+

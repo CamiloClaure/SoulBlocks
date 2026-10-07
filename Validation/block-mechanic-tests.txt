@@ -1,0 +1,12 @@
+PASS
+30 blocks distributed without overlap
+18 dark tiles without walkable support
+Wrong color rejected
+Out-of-order placement rejected
+Nearest block selected automatically
+Held block remains selected while moving
+Release snaps block and enables solid support
+Player walks over filled tile and stops before dark tile
+Safe ground drop and cancellation
+No missing scripts
+Unity 6000.6.0f1
