@@ -78,7 +78,7 @@ Logica pura, sin `MonoBehaviour`, sin `Physics`, sin Input System. Puede usar `V
 - **`MapGen.Generate(MapGenInput)`**: implementacion actual es un *stand-in temporal*
   (marcado `ponytail:`) que la cuadrilla `og/mapa` reemplaza por completo: 3 ramas rectas, una
   por anchor recibido, especialidad por indice (`Souls, Prisons, Exploration`), 10 tiles cada
-  una espaciados `Balance.TileSize` empezando un tile afuera del anchor, una prision T1 al
+  una espaciados `Balance.TileSize`, el primero pegado al borde de la isla, una prision T1 al
   final (`branchEnd = true`), 4 puntos de almas (`baseCount = 5`), un refugio a mitad de la
   rama de Exploracion.
 - **`MapLayoutFixtures.Simple()`**: misma forma que el stand-in, anchors fijos en el origen
@@ -89,7 +89,7 @@ Logica pura, sin `MonoBehaviour`, sin `Physics`, sin Input System. Puede usar `V
 - **`GameEvents`**: un `event Action<...>` + `Raise...` estatico por cada señal cruzada
   (lista completa en `GameEvents.cs`: `MapBuilt, EnteredHub, LeftHub, ExpeditionStarted,
   ExpeditionEnded, ExpeditionPlanned, EnergyChanged, EnergyWarning, SoulsCollected,
-  CargoChanged, SoulsDeposited, WisdomChanged, PrisonDamaged, PrisonPhaseCompleted,
+  CargoChanged, SoulsDeposited, SoulsReleased, WisdomChanged, PrisonDamaged, PrisonPhaseCompleted,
   PrisonBroken, UnlockGranted, UpgradePurchased, StatsChanged, TreeStageChanged,
   ShelterEntered, ShelterExited, TileDiscovered, DashUsed, MagnetUsed, RayhitFired,
   ObjectiveCompleted, BlessingChosen, GameWon`). `ResetAll()` limpia todos los eventos; se
@@ -144,6 +144,26 @@ Logica pura, sin `MonoBehaviour`, sin `Physics`, sin Input System. Puede usar `V
 - **`IRayTarget`** + **`RayTargetRegistry.All`**: contrato para cualquier objetivo de Rayhit
   (`PrisonId, Position, Radius, Forecast(rayLevel), ApplyRayHit(rayLevel)` devuelve el dano
   aplicado). Lista global limpiada en `SubsystemRegistration`.
+
+## Reglas de cooperacion entre cuadrillas (agregadas por el orquestador)
+
+- `SoulsReleased(Vector3 position, int count)`: quien libera almas sueltas (prisiones, altares)
+  solo lanza el evento; `og/expedicion` las crea como `SoulPickup`, las persiste en
+  `Run.groundSouls` hasta que se recogen.
+- Expedicion: `og/expedicion` es dueña de `Run.inExpedition`, `expeditionIndex`, `energy`,
+  `cargoSouls`, `reserveSouls` y de lanzar `ExpeditionStarted/Ended`. El `EnteredHub` inicial
+  al bootear no es fin de expedicion.
+- Prisiones: `og/prisiones` es dueña de `Run.prisons`, `brokenByTier`, `totalPrisonsBroken`,
+  suma fragmentos a `Run.wisdom` (+ `WisdomChanged`). Portales NO son suyos (`og/mundo`, Fase 3).
+- Progresion: `og/progresion` es dueña de `Run.upgrades`, `Run.unlocks` de nodos Wisdom,
+  `treeStage`, y de los modificadores de `StatSheet` (fuente `"upgrade.<id>"`).
+- Mapa: `og/mapa` es dueña de `Run.discoveredTiles` y de los refugios (lanza
+  `ShelterEntered/Exited`); `og/expedicion` solo escucha.
+- Rangos de `Hud.Register(order, ...)`: expedicion 100-199, prisiones 200-299, habilidades
+  300-399, progresion 400-499, mapa 500-599, fase 3 600+.
+- Tests PlayMode: cargar "SoulBlocks", esperar `MapBuilt`, leer posiciones de
+  `GameRoot.Instance.Layout` y teletransportar. Nunca asumir la forma del stand-in (el mapa real
+  la cambia). Tests propios en `Tests/EditMode/<Feature>/` y `Tests/PlayMode/<Feature>/`.
 
 ## Quien es dueño de que (fases siguientes, ver `PLAN-OBRA-GRUESA.md`)
 

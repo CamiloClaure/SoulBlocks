@@ -18,6 +18,7 @@ namespace SoulBlocks
         public static event Action<int> SoulsCollected;
         public static event Action<int, int> CargoChanged;
         public static event Action<int> SoulsDeposited;
+        public static event Action<Vector3, int> SoulsReleased; // loose souls to spawn on the ground (prisons, altars)
         public static event Action<int> WisdomChanged;
         public static event Action<int, int, int> PrisonDamaged;
         public static event Action<int, int> PrisonPhaseCompleted;
@@ -47,6 +48,7 @@ namespace SoulBlocks
         public static void RaiseSoulsCollected(int amount) => SoulsCollected?.Invoke(amount);
         public static void RaiseCargoChanged(int cargo, int capacity) => CargoChanged?.Invoke(cargo, capacity);
         public static void RaiseSoulsDeposited(int amount) => SoulsDeposited?.Invoke(amount);
+        public static void RaiseSoulsReleased(Vector3 position, int count) => SoulsReleased?.Invoke(position, count);
         public static void RaiseWisdomChanged(int total) => WisdomChanged?.Invoke(total);
         public static void RaisePrisonDamaged(int prisonId, int damage, int remainingHp) => PrisonDamaged?.Invoke(prisonId, damage, remainingHp);
         public static void RaisePrisonPhaseCompleted(int prisonId, int phase) => PrisonPhaseCompleted?.Invoke(prisonId, phase);
@@ -81,6 +83,7 @@ namespace SoulBlocks
             SoulsCollected = null;
             CargoChanged = null;
             SoulsDeposited = null;
+            SoulsReleased = null;
             WisdomChanged = null;
             PrisonDamaged = null;
             PrisonPhaseCompleted = null;
