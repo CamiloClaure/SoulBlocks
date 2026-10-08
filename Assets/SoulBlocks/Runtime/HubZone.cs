@@ -7,8 +7,8 @@ namespace SoulBlocks
     {
         public bool InHub { get; private set; }
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        static void Boot() { if (GameRoot.ShouldBoot) GameRoot.Attach<HubZone>(); }
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        static void Register() => GameRoot.Register<HubZone>();
 
         void Update()
         {

@@ -35,13 +35,13 @@ namespace SoulBlocks
                 Vector3 last = anchor.position;
                 for (int t = 0; t < 10; t++)
                 {
-                    last = anchor.position + anchor.direction * (Balance.TileSize * (t + 1));
+                    last = anchor.position + anchor.direction * (Balance.TileSize * (t + .5f)); // flush with the island edge
                     layout.tiles.Add(new TileLayout
                     {
                         index = tileIndex++,
                         position = last,
                         branchId = b,
-                        pathDistance = Balance.TileSize * (t + 1)
+                        pathDistance = Balance.TileSize * (t + .5f)
                     });
                 }
 

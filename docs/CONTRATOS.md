@@ -6,19 +6,28 @@ contrato nuevo en tu rama.
 
 ## Patron de autoregistro
 
-Cada sistema se agrega solo, sin lista central:
+Cada sistema se registra por tipo, sin lista central:
 
 ```csharp
-[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-static void Boot() { if (GameRoot.ShouldBoot) GameRoot.Attach<MiSistema>(); }
+[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+static void Register() => GameRoot.Register<MiSistema>();
 ```
 
-`GameRoot.Attach<T>()` crea (una sola vez) el GameObject "Game Root" con el componente
-`GameRoot`, y devuelve el componente `T` existente o lo agrega. `ShouldBoot` es verdadero solo
-si la escena activa se llama "SoulBlocks". `Boot()` corre una sola vez por sesion (no por cada
-`SceneManager.LoadScene`): `GameRoot` sobrevive a `GameRoot.Restart(...)` via `DontDestroyOnLoad`
-y se suscribe a `SceneManager.sceneLoaded` para reconstruir el mundo (`Layout`, `Run`, `Stats`,
-tiles) en cada recarga posterior; la primera construccion ocurre en su propio `Start()`.
+Cada vez que carga la escena "SoulBlocks" (primer Play, `GameRoot.Restart(...)`, un PlayMode test
+que la carga) `GameRoot` crea un "Game Root" nuevo dentro de esa escena y le agrega todos los
+sistemas registrados. Sin `DontDestroyOnLoad`: al recargar, el root viejo muere con la escena.
+`GameRoot.Start()` construye el mundo y lanza `MapBuilt` cuando todos los sistemas ya pasaron
+por `OnEnable`.
+
+Reglas para cada sistema:
+- Suscribirse a `GameEvents` en `OnEnable` y desuscribirse en `OnDisable` (sobrevive a Restart).
+- `Hud.Register` en `OnEnable`, `Hud.Unregister` en `OnDisable`.
+- Inicializar el estado del mundo al recibir `MapBuilt`, no en `Start`.
+- Estado estatico propio: limpiarlo en `[RuntimeInitializeOnLoadMethod(SubsystemRegistration)]`.
+
+`GameRoot.Attach<T>()` sigue disponible para componentes creados a demanda (ej. `MapBuilder`).
+`GameRoot.BootWith(layout, run)` (tests con escena propia) crea el root, agrega los sistemas
+registrados y construye con ese layout, sin detectar anclajes.
 
 ## Patron partial (Balance, RunState, UnlockIds)
 

@@ -8,8 +8,8 @@ namespace SoulBlocks
     {
         float baseMoveSpeed;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        static void Boot() { if (GameRoot.ShouldBoot) GameRoot.Attach<PlayerStatsBinder>(); }
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        static void Register() => GameRoot.Register<PlayerStatsBinder>();
 
         void OnEnable()
         {

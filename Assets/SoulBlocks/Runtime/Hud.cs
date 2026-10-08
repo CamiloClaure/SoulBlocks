@@ -15,8 +15,11 @@ namespace SoulBlocks
         static readonly List<Entry> entries = new List<Entry>();
         static readonly List<ToastEntry> toasts = new List<ToastEntry>();
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        static void Boot() { if (GameRoot.ShouldBoot) GameRoot.Attach<Hud>(); }
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        static void RegisterSystem() => GameRoot.Register<Hud>();
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() { entries.Clear(); toasts.Clear(); }
 
         public static void Register(int order, Action draw) => entries.Add(new Entry { order = order, draw = draw });
 
