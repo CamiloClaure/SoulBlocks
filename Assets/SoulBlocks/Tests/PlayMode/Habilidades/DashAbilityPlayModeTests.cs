@@ -26,7 +26,7 @@ namespace SoulBlocks.Tests
             for (int i = 0; i < 3; i++) yield return null;
 
             Assert.IsTrue(dash.TryDash(branch.direction), "TryDash along the branch should succeed.");
-            for (int i = 0; i < 20; i++) yield return null;
+            yield return new WaitForSeconds(.6f); // time, not frames: batchmode frames are ~1 ms
 
             Vector3 planar = Vector3.ProjectOnPlane(player.transform.position - start, Vector3.up);
             Assert.Greater(planar.magnitude, .5f, "Player did not move forward.");
@@ -52,7 +52,7 @@ namespace SoulBlocks.Tests
             for (int i = 0; i < 3; i++) yield return null;
 
             dash.TryDash(branch.direction);
-            for (int i = 0; i < 20; i++) yield return null;
+            yield return new WaitForSeconds(.6f); // time, not frames: batchmode frames are ~1 ms
 
             Assert.IsTrue(SoulPlayer.IsSupportedAt(player.transform.position), "Player ended unsupported past the branch end.");
         }

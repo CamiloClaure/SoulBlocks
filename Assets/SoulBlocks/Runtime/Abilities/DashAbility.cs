@@ -65,7 +65,7 @@ namespace SoulBlocks
             if (direction.sqrMagnitude < .0001f) return false;
             direction.Normalize();
 
-            if (!TryPlanDestination(root.Player.transform.position, direction, root.Stats.Get(StatId.DashDistance), out var destination))
+            if (!TryPlanDestination(root.Player.transform.position, direction, root.Stats.Get(StatId.DashDistance), root.Player.transform, out var destination))
                 return false;
             if (!meter.TryConsume()) return false;
 
@@ -74,12 +74,12 @@ namespace SoulBlocks
             return true;
         }
 
-        bool TryPlanDestination(Vector3 origin, Vector3 direction, float maxDistance, out Vector3 destination)
+        static bool TryPlanDestination(Vector3 origin, Vector3 direction, float maxDistance, Transform ignore, out Vector3 destination)
         {
             foreach (float angle in AngleDeviationsDeg)
             {
                 Vector3 candidate = Quaternion.Euler(0f, angle, 0f) * direction;
-                if (TryPlanAlong(origin, candidate, maxDistance, out destination)) return true;
+                if (TryPlanAlong(origin, candidate, maxDistance, ignore, out destination)) return true;
             }
             destination = origin;
             return false;
@@ -87,7 +87,7 @@ namespace SoulBlocks
 
         // The farthest supported sample up to the first solid obstacle: samples in between with
         // no support (a gap) are simply skipped over, not a reason to stop.
-        static bool TryPlanAlong(Vector3 origin, Vector3 direction, float maxDistance, out Vector3 destination)
+        static bool TryPlanAlong(Vector3 origin, Vector3 direction, float maxDistance, Transform ignore, out Vector3 destination)
         {
             destination = origin;
             bool found = false;
@@ -96,12 +96,19 @@ namespace SoulBlocks
             {
                 float distance = Mathf.Min(maxDistance, i * Balance.HabilidadesSampleStep);
                 Vector3 point = origin + direction * distance;
-                if (Physics.CheckSphere(point + Vector3.up * .5f, Balance.DashObstacleRadius, ObstacleMask, QueryTriggerInteraction.Ignore))
-                    break;
+                if (Blocked(point + Vector3.up * .5f, ignore)) break;
                 if (SoulPlayer.IsSupportedAt(point)) { destination = point; found = true; }
                 if (distance >= maxDistance) break;
             }
             return found;
+        }
+
+        // The player's own CharacterController sits inside the first samples: never an obstacle.
+        static bool Blocked(Vector3 point, Transform ignore)
+        {
+            foreach (var hit in Physics.OverlapSphere(point, Balance.DashObstacleRadius, ObstacleMask, QueryTriggerInteraction.Ignore))
+                if (ignore == null || !hit.transform.IsChildOf(ignore)) return true;
+            return false;
         }
 
         IEnumerator RunDash(SoulPlayer player, Vector3 destination)
@@ -123,7 +130,7 @@ namespace SoulBlocks
 
         void UpdatePreview(GameRoot root, Vector3 direction)
         {
-            if (meter.Current <= 0 || !TryPlanDestination(root.Player.transform.position, direction, root.Stats.Get(StatId.DashDistance), out var destination))
+            if (meter.Current <= 0 || !TryPlanDestination(root.Player.transform.position, direction, root.Stats.Get(StatId.DashDistance), root.Player.transform, out var destination))
             {
                 HidePreview();
                 return;

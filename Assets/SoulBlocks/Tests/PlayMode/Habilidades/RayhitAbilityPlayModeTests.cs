@@ -50,7 +50,7 @@ namespace SoulBlocks.Tests
             try
             {
                 Assert.IsTrue(rayhit.Fire(start + branch.direction * 8f), "Fire should consume a charge and start travel.");
-                for (int i = 0; i < 30; i++) yield return null;
+                yield return new WaitForSeconds(.6f); // time, not frames: batchmode frames are ~1 ms
 
                 Assert.AreEqual(1, near.HitCount, "Near target was not hit.");
                 Assert.AreEqual(1, far.HitCount, "Far target was not hit.");
