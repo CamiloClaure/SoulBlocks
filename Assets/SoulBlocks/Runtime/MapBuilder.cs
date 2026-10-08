@@ -3,8 +3,9 @@ using UnityEngine;
 
 namespace SoulBlocks
 {
-    // Tiles only: one cube per TileLayout, layer 8 so SoulPlayer.Supported sees it. Shelters,
-    // gaps, altars, portals etc. belong to the crews that own those features.
+    // One cube per TileLayout (layer 8 so SoulPlayer.Supported sees it), gap-end posts, and
+    // shelter placeholders with their ShelterZone. Prisons, souls, altars and portals are built
+    // by the crews that own those features from this same MapLayout.
     public sealed class MapBuilder : MonoBehaviour
     {
         MapLayout layout;
@@ -34,6 +35,27 @@ namespace SoulBlocks
                 bool locked = !string.IsNullOrEmpty(tile.requiresUnlock) && !run.HasUnlock(tile.requiresUnlock);
                 go.SetActive(!locked);
                 tileObjects[tile.index] = go;
+            }
+
+            foreach (var gap in layout.gaps)
+            {
+                Placeholder.Make(PrimitiveType.Cylinder, new Color(1f, .6f, .1f), "Gap End",
+                    mapRoot, gap.from + Vector3.up * .4f, new Vector3(.2f, .3f, .2f));
+                Placeholder.Make(PrimitiveType.Cylinder, new Color(1f, .6f, .1f), "Gap End",
+                    mapRoot, gap.to + Vector3.up * .4f, new Vector3(.2f, .3f, .2f));
+            }
+
+            foreach (var shelter in layout.shelters)
+            {
+                // ponytail: Placeholder's shared material is Opaque (frozen file, not ours to
+                // change), so "translucent-looking" is approximated with a pale, slightly
+                // emissive cyan rather than real alpha blending.
+                float diameter = shelter.radius * 2f;
+                var go = Placeholder.Make(PrimitiveType.Cylinder, new Color(.55f, .95f, 1f, .5f), "Shelter " + shelter.id,
+                    mapRoot, shelter.position + Vector3.up * .15f, new Vector3(diameter, .15f, diameter), false, .3f);
+                var zone = go.AddComponent<ShelterZone>();
+                zone.ShelterId = shelter.id;
+                zone.Radius = shelter.radius;
             }
         }
 

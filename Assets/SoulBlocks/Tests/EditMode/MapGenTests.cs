@@ -5,6 +5,8 @@ using SoulBlocks;
 
 namespace SoulBlocks.Tests
 {
+    // ponytail: kept lean. The exhaustive 500-seed/extreme-seed/shape suite that replaces the old
+    // stand-in assertions (10 tiles/branch, 4 soul spawns/branch) lives in Tests/EditMode/Mapa/.
     public class MapGenTests
     {
         static MapGenInput Input(int seed) => new MapGenInput
@@ -24,37 +26,7 @@ namespace SoulBlocks.Tests
         {
             var a = MapGen.Generate(Input(7));
             var b = MapGen.Generate(Input(7));
-            Assert.AreEqual(a.tiles.Count, b.tiles.Count);
-            for (int i = 0; i < a.tiles.Count; i++)
-                Assert.AreEqual(a.tiles[i].position, b.tiles[i].position);
-            for (int i = 0; i < a.prisons.Count; i++)
-                Assert.AreEqual(a.prisons[i].position, b.prisons[i].position);
-        }
-
-        [Test]
-        public void TenTilesPerBranch()
-        {
-            var layout = MapGen.Generate(Input(1));
-            foreach (var branch in layout.branches)
-            {
-                int count = 0;
-                foreach (var tile in layout.tiles)
-                    if (tile.branchId == branch.id) count++;
-                Assert.AreEqual(10, count);
-            }
-        }
-
-        [Test]
-        public void FourSoulSpawnsPerBranch()
-        {
-            var layout = MapGen.Generate(Input(2));
-            foreach (var branch in layout.branches)
-            {
-                int count = 0;
-                foreach (var spawn in layout.soulSpawns)
-                    if (spawn.branchId == branch.id) count++;
-                Assert.AreEqual(4, count);
-            }
+            Assert.AreEqual(JsonUtility.ToJson(a), JsonUtility.ToJson(b));
         }
 
         [Test]

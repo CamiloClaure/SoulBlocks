@@ -4,16 +4,22 @@ using SoulBlocks;
 
 namespace SoulBlocks.Tests
 {
+    // ponytail: HasThreeBranchesInSpecialtyOrder and HasOneShelterOnTheExplorationBranch were
+    // written against the og/mapa stand-in (fixed branch order, exactly one shelter). The real
+    // generator shuffles specialties per seed and places a shelter every ~35m of the Exploration
+    // branch plus one near the Prisons branch end, so both are rewritten here to check the real
+    // contract instead of the stand-in's exact shape. See final report: deviation, not a frozen
+    // contract file.
     public class MapLayoutFixturesTests
     {
         [Test]
-        public void HasThreeBranchesInSpecialtyOrder()
+        public void HasThreeBranchesCoveringEachSpecialtyOnce()
         {
             var layout = MapLayoutFixtures.Simple();
             Assert.AreEqual(3, layout.branches.Count);
-            Assert.AreEqual(BranchSpecialty.Souls, layout.branches[0].specialty);
-            Assert.AreEqual(BranchSpecialty.Prisons, layout.branches[1].specialty);
-            Assert.AreEqual(BranchSpecialty.Exploration, layout.branches[2].specialty);
+            Assert.AreEqual(1, layout.branches.Count(b => b.specialty == BranchSpecialty.Souls));
+            Assert.AreEqual(1, layout.branches.Count(b => b.specialty == BranchSpecialty.Prisons));
+            Assert.AreEqual(1, layout.branches.Count(b => b.specialty == BranchSpecialty.Exploration));
         }
 
         [Test]
@@ -38,11 +44,11 @@ namespace SoulBlocks.Tests
         }
 
         [Test]
-        public void HasOneShelterOnTheExplorationBranch()
+        public void HasAtLeastOneShelterOnTheExplorationBranch()
         {
             var layout = MapLayoutFixtures.Simple();
-            Assert.AreEqual(1, layout.shelters.Count);
-            Assert.AreEqual(BranchSpecialty.Exploration, layout.branches[layout.shelters[0].branchId].specialty);
+            var explorationId = layout.branches.First(b => b.specialty == BranchSpecialty.Exploration).id;
+            Assert.IsTrue(layout.shelters.Any(s => s.branchId == explorationId));
         }
     }
 }
