@@ -12,6 +12,8 @@ namespace SoulBlocks
         public Camera viewCamera;
         public float moveSpeed = 6f;
         public bool readInput = true;
+        public float SpeedMultiplier = 1f;
+        public bool MovementLocked;
         public float MovementSpeed { get; private set; }
         CharacterController controller;
         float fallingSpeed;
@@ -37,24 +39,15 @@ namespace SoulBlocks
         public void StepMovement(Vector2 input, float deltaTime)
         {
             if (deltaTime <= 0) return;
-            input = Vector2.ClampMagnitude(input, 1);
-            Vector3 forward = viewCamera != null ? Vector3.ProjectOnPlane(viewCamera.transform.forward, Vector3.up).normalized : Vector3.forward;
-            if (forward.sqrMagnitude < .001f) forward = Vector3.forward;
-            Vector3 right = Vector3.Cross(Vector3.up, forward);
-            Vector3 motion = (forward * input.y + right * input.x) * moveSpeed * deltaTime;
-            // Sweep in short supported steps to keep walking on the only island.
             Vector3 before = transform.position;
-            int steps = Mathf.Max(1, Mathf.CeilToInt(motion.magnitude / .1f));
-            Vector3 step = motion / steps;
-            for (int i = 0; i < steps; i++)
+            if (!MovementLocked)
             {
-                if (Supported(transform.position + step)) controller.Move(step);
-                else
-                {
-                    Vector3 x = new Vector3(step.x, 0, 0), z = new Vector3(0, 0, step.z);
-                    if (Supported(transform.position + x)) controller.Move(x);
-                    if (Supported(transform.position + z)) controller.Move(z);
-                }
+                input = Vector2.ClampMagnitude(input, 1);
+                Vector3 forward = viewCamera != null ? Vector3.ProjectOnPlane(viewCamera.transform.forward, Vector3.up).normalized : Vector3.forward;
+                if (forward.sqrMagnitude < .001f) forward = Vector3.forward;
+                Vector3 right = Vector3.Cross(Vector3.up, forward);
+                Vector3 motion = (forward * input.y + right * input.x) * moveSpeed * SpeedMultiplier * deltaTime;
+                TryMoveSupported(motion);
             }
             fallingSpeed = controller.isGrounded ? -2f : Mathf.Max(-30f, fallingSpeed - 20f * deltaTime);
             controller.Move(Vector3.up * fallingSpeed * deltaTime);
@@ -69,6 +62,33 @@ namespace SoulBlocks
                 animationState = next;
             }
         }
+        // Sweeps delta in short supported steps to keep walking on the only island, sliding
+        // along an edge when the full step would walk off it. Returns false if any step
+        // needed that fallback (so the caller knows the full delta did not land).
+        public bool TryMoveSupported(Vector3 delta)
+        {
+            bool full = true;
+            int steps = Mathf.Max(1, Mathf.CeilToInt(delta.magnitude / .1f));
+            Vector3 step = delta / steps;
+            for (int i = 0; i < steps; i++)
+            {
+                if (Supported(transform.position + step)) { controller.Move(step); continue; }
+                full = false;
+                Vector3 x = new Vector3(step.x, 0, 0), z = new Vector3(0, 0, step.z);
+                if (Supported(transform.position + x)) controller.Move(x);
+                if (Supported(transform.position + z)) controller.Move(z);
+            }
+            return full;
+        }
+        public void MoveUnchecked(Vector3 delta) => controller.Move(delta);
+        public void Teleport(Vector3 position)
+        {
+            controller.enabled = false;
+            transform.position = position;
+            controller.enabled = true;
+            Physics.SyncTransforms();
+        }
+        public static bool IsSupportedAt(Vector3 point) => Supported(point);
         static bool Supported(Vector3 point) => Physics.Raycast(point + Vector3.up, Vector3.down, 3f, (1 << 8) | (1 << 9), QueryTriggerInteraction.Ignore);
         void BuildWizardHat()
         {
