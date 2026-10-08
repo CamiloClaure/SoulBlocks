@@ -44,14 +44,22 @@ namespace SoulBlocks.Tests
             player.readInput = false;
             var dash = root.GetComponent<DashAbility>();
 
-            var branch = root.Layout.branches[0];
-            // Last tile of the stand-in's straight branch: dashing further in the same
-            // direction runs off the end into the void, there is nothing beyond it.
-            Vector3 lastTile = branch.anchor + branch.direction * (branch.length - 1f);
+            // Last two tiles of branch 0's required path (always present, never a shortcut):
+            // dashing further along their direction runs off the end into the void.
+            TileLayout last = null, previous = null;
+            foreach (var tile in root.Layout.tiles)
+            {
+                if (tile.branchId != 0 || tile.shortcut || !string.IsNullOrEmpty(tile.requiresUnlock)) continue;
+                if (last == null || tile.pathDistance > last.pathDistance) { previous = last; last = tile; }
+                else if (previous == null || tile.pathDistance > previous.pathDistance) previous = tile;
+            }
+            Assert.IsNotNull(previous, "Branch 0 needs at least two required tiles.");
+            Vector3 lastTile = last.position;
+            Vector3 outward = last.position - previous.position;
             player.Teleport(lastTile);
             for (int i = 0; i < 3; i++) yield return null;
 
-            dash.TryDash(branch.direction);
+            dash.TryDash(outward);
             yield return new WaitForSeconds(.6f); // time, not frames: batchmode frames are ~1 ms
 
             Assert.IsTrue(SoulPlayer.IsSupportedAt(player.transform.position), "Player ended unsupported past the branch end.");

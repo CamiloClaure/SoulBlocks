@@ -165,6 +165,26 @@ Logica pura, sin `MonoBehaviour`, sin `Physics`, sin Input System. Puede usar `V
   `GameRoot.Instance.Layout` y teletransportar. Nunca asumir la forma del stand-in (el mapa real
   la cambia). Tests propios en `Tests/EditMode/<Feature>/` y `Tests/PlayMode/<Feature>/`.
 
+## APIs publicas que dejo la Fase 2 (usar, no reimplementar)
+
+- `ExpeditionController.Instance`: `EndExpedition(ExpeditionEndReason)` (portales), `DepositCargo()`
+  (entrega en refugios), `static Func<SoulSpawnLayout,int> SpawnCountFor` (densidad variable).
+  Almas recogibles: `SoulPickup : ISoul`; para crear almas sueltas usar
+  `GameEvents.RaiseSoulsReleased(pos, n)`.
+- `PrisonSystem`: `static Func<int,float> DamageMultiplierFor` (prision debilitada),
+  `static event Action<PrisonLayout,Vector3> Broken` (recompensas extra). Reglas puras en
+  `PrisonRules`, tabla en `Balance.Prisiones`.
+- Habilidades (componentes en el Game Root): `DashAbility.TryDash(dir)`, `MagnetAbility.TryMagnet()`,
+  `RayhitAbility.Fire(aimPoint)`. Rayhit en cadena se activa con `UnlockIds.Cadena` o con
+  `"rayhit_cadena"` en `Run.activeBlessings`.
+- `ProgressionSystem.TryBuy(id)`; datos en `UpgradeCatalog.All/Get/Tree`, reglas en `ProgressionRules`
+  (`CoreComplete`, `Cost`, `WhyCannotBuy`, `ApplyStats`).
+- Mapa: `MapBuilder.TileObject(index)`, refugios lanzan `ShelterEntered/Exited(id)`,
+  `TileDiscovery` llena `Run.discoveredTiles`.
+- Modificadores temporales de stats: `GameRoot.Instance.Stats.SetModifier("blessing.<id>" |
+  "anomaly.<id>" | "reward.<id>", stat, add, mul)` y `ClearSource(...)` al terminar la expedicion,
+  seguido de `GameEvents.RaiseStatsChanged()`.
+
 ## Quien es dueño de que (fases siguientes, ver `PLAN-OBRA-GRUESA.md`)
 
 | Cuadrilla | Archivos/sistemas que posee |
