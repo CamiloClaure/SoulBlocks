@@ -23,10 +23,44 @@ namespace SoulBlocks
         MaterialPropertyBlock runeProperties;Renderer rune;float yaw;
         // One entry per submesh we repaint: the renderer, its material slot, and the block we keep re-applying.
         (Renderer renderer,int index,MaterialPropertyBlock block)[] repaints;
+        // Tree stages (section 1.7): stage 0 is the look above, unchanged; each step brightens
+        // leaf/canopy emission and the ambient lights, stage 4 is fully lit. No tweening, set on
+        // TreeStageChanged and on MapBuilt (from Run.treeStage) so a loaded save lands instantly.
+        int stage;
+        float baseGlowIntensity=-1f,baseUplightIntensity=-1f;
+        Light trunkUplight;
+        static readonly float[] StageEmissionMul={1f,1.2f,1.5f,1.9f,2.5f};
         static readonly Color Lavender=new Color(.812f,.753f,1f);      // #CFC0FF
         static readonly Color LanternWarm=new Color(1f,.714f,.380f);   // #FFB661
         static readonly Color RuneInk=new Color(.55f,.42f,1.5f,1);     // HDR, so bloom catches the circle
         static readonly Color CordInk=new Color(.12f,.1f,.16f,1);
+        void OnEnable(){GameEvents.TreeStageChanged+=OnStageChanged;GameEvents.MapBuilt+=OnMapBuilt;}
+        void OnDisable(){GameEvents.TreeStageChanged-=OnStageChanged;GameEvents.MapBuilt-=OnMapBuilt;}
+        void OnStageChanged(int newStage)=>SetStage(newStage);
+        void OnMapBuilt(MapLayout layout)
+        {
+            var run=GameRoot.Instance!=null?GameRoot.Instance.Run:null;
+            if(run!=null)SetStage(run.treeStage);
+        }
+        // Instant, no coroutine lerp: redraws the emission property blocks at the new stage and
+        // rescales the ambient lights off their own first-seen intensity, so repeated calls
+        // (a fresh MapBuilt after Restart) never compound.
+        public void SetStage(int newStage)
+        {
+            stage=Mathf.Clamp(newStage,0,4);
+            Repaint();
+            float mul=StageEmissionMul[stage];
+            if(glowLight!=null)
+            {
+                if(baseGlowIntensity<0f)baseGlowIntensity=glowLight.intensity;
+                glowLight.intensity=baseGlowIntensity*mul;
+            }
+            if(trunkUplight!=null)
+            {
+                if(baseUplightIntensity<0f)baseUplightIntensity=trunkUplight.intensity;
+                trunkUplight.intensity=baseUplightIntensity*mul;
+            }
+        }
         void Start()
         {
             // ponytail: position-derived spin instead of a seeded Random - three trees only need
@@ -40,7 +74,9 @@ namespace SoulBlocks
                 var local=new Vector3(-1,.15f,-1);
                 var spot=NewLight("Trunk uplight",transform,local,Lavender,uplightIntensity,10);
                 spot.type=LightType.Spot;spot.spotAngle=55;spot.transform.localRotation=Quaternion.LookRotation(new Vector3(0,2.4f,0)-local);
+                trunkUplight=spot;
             }
+            else trunkUplight=transform.Find("Trunk uplight").GetComponent<Light>();
             BuildLanterns();   // before the circle: the fallback bounds must not swallow a 6 m disc
             BuildRuneCircle();
         }
@@ -57,6 +93,7 @@ namespace SoulBlocks
         // Wisdom_Leaves.mat stay as SpiritPathLook authored them, nothing leaks into the shared assets.
         void Repaint()
         {
+            float mul=StageEmissionMul[stage];
             var found=new List<(Renderer renderer,int index,MaterialPropertyBlock block)>();
             foreach(var r in GetComponentsInChildren<Renderer>(true))
             {
@@ -79,7 +116,9 @@ namespace SoulBlocks
                     bool leaf=m.name.Contains("Leaves")||luminous;
                     if(!leaf&&!m.name.Contains("Bark")&&!m.name.Contains("Filament"))continue;
                     var block=new MaterialPropertyBlock();
-                    block.SetColor("_EmissionColor",leaf?(luminous?canopyEmission:leafEmission):trunkEmission);
+                    Color emission=leaf?(luminous?canopyEmission:leafEmission):trunkEmission;
+                    if(leaf)emission=new Color(emission.r*mul,emission.g*mul,emission.b*mul,emission.a);
+                    block.SetColor("_EmissionColor",emission);
                     if(leaf&&m.HasProperty("_BaseColor"))block.SetColor("_BaseColor",luminous?canopyBase:leafBase);
                     r.SetPropertyBlock(block,i);found.Add((r,i,block));
                 }
