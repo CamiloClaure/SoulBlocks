@@ -3,12 +3,26 @@ using UnityEngine.InputSystem;
 
 namespace SoulBlocks
 {
-    // Escape-triggered pause: continue, save now, restart with a new seed, copy the seed, quit.
-    // Never opens while another modal (shop, blessing, the start menu) already holds
-    // Keys.Blocked, because Keys.PausePressed itself reads false whenever Blocked is true.
+    // Escape-triggered pause: continue, save, controls, quit; below that, restart with a seed
+    // and copy the seed. Freezes time (energy must not drain while it is open). Never opens
+    // while another modal (shop, blessing, the start menu) already holds Keys.Blocked, because
+    // Keys.PausePressed itself reads false whenever Blocked is true.
     public sealed class PauseMenu : MonoBehaviour
     {
-        bool open;
+        // Same table as README.md "Jugar".
+        static readonly string[] Controls =
+        {
+            "WASD / flechas: moverse",
+            "Botón derecho: orbitar cámara  ·  Rueda: zoom",
+            "Shift: dash",
+            "Q: imán de almas",
+            "Click izquierdo: mantener para apuntar Rayhit, soltar para lanzar",
+            "E: interactuar (tienda del árbol, altares, entrega en refugios)",
+            "Tab (mantener): mapa",
+            "Esc: pausa",
+        };
+
+        bool open, showControls;
         string seedText = "";
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -41,7 +55,9 @@ namespace SoulBlocks
         void Open()
         {
             open = true;
+            showControls = false;
             seedText = GameRoot.Instance.Run.seed.ToString();
+            Time.timeScale = 0f;
             Keys.Blocked = true;
             if (GameRoot.Instance.Player != null) GameRoot.Instance.Player.MovementLocked = true;
         }
@@ -49,6 +65,7 @@ namespace SoulBlocks
         void Close()
         {
             open = false;
+            Time.timeScale = 1f;
             Keys.Blocked = false;
             if (GameRoot.Instance != null && GameRoot.Instance.Player != null) GameRoot.Instance.Player.MovementLocked = false;
         }
@@ -56,7 +73,8 @@ namespace SoulBlocks
         void Draw()
         {
             if (!open) return;
-            var rect = new Rect(Screen.width * .5f - 180, Screen.height * .5f - 160, 360, 320);
+            float height = showControls ? 470f : 330f;
+            var rect = new Rect(Screen.width * .5f - 220, Screen.height * .5f - height * .5f, 440, height);
             GUI.Window(947102, rect, DrawWindow, "Pausa");
         }
 
@@ -65,19 +83,35 @@ namespace SoulBlocks
             var run = GameRoot.Instance.Run;
             if (GUILayout.Button("Continuar")) Close();
             if (GUILayout.Button("Guardar")) { SaveSystem.SaveNow(); Hud.Toast("Partida guardada"); }
+            if (GUILayout.Button(showControls ? "Ocultar controles" : "Controles")) showControls = !showControls;
+            if (showControls)
+                foreach (var line in Controls) GUILayout.Label(line);
+            if (GUILayout.Button("Salir")) Quit();
 
-            GUILayout.Space(10);
-            GUILayout.Label("Nueva partida (seed):");
-            seedText = SeedField.Filter(GUILayout.TextField(seedText));
+            GUILayout.Space(16);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Seed", GUILayout.Width(36));
+            seedText = SeedField.Filter(GUILayout.TextField(seedText, GUILayout.Width(120)));
             if (GUILayout.Button("Nueva partida"))
             {
                 int seed = SeedField.TryParse(seedText, out int parsed) ? parsed : run.seed;
+                Close();
                 GameRoot.Restart(seed, null);
             }
-
-            GUILayout.Space(10);
             if (GUILayout.Button("Copiar seed")) GUIUtility.systemCopyBuffer = run.effectiveSeed.ToString();
-            if (GUILayout.Button("Salir")) Application.Quit();
+            GUILayout.EndHorizontal();
+        }
+
+        // Saves first: quitting from the menu must never lose the run.
+        void Quit()
+        {
+            SaveSystem.SaveNow();
+            Close();
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
         }
     }
 }

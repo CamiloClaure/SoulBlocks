@@ -112,7 +112,6 @@ namespace SoulBlocks
             };
             layout.branches.Add(branch);
 
-            var mainTiles = new List<TileLayout>();
             for (int k = 0; k < steps.Count; k++)
             {
                 var tile = new TileLayout
@@ -124,7 +123,6 @@ namespace SoulBlocks
                     requiresUnlock = steps[k].deep ? UnlockIds.Raiz3 : ""
                 };
                 layout.tiles.Add(tile);
-                mainTiles.Add(tile);
             }
 
             // One props stream per branch, threaded through every prison placed on it: each
@@ -136,7 +134,7 @@ namespace SoulBlocks
             switch (specialty)
             {
                 case BranchSpecialty.Souls: endTier = PrisonTier.T1; AddSoulsInteriorPrisons(layout, branch, steps, ref prisonId, propsRng); break;
-                case BranchSpecialty.Prisons: endTier = PrisonTier.T2; AddPrisonGroups(layout, branch, steps, hubCenter, occupied, seed, propsRng, ref tileIndex, ref prisonId, ref groupId); break;
+                case BranchSpecialty.Prisons: endTier = PrisonTier.T2; AddPrisonGroups(layout, branch, steps, seed, propsRng, ref prisonId, ref groupId); break;
                 default: endTier = PrisonTier.T3; break;
             }
 
@@ -163,6 +161,8 @@ namespace SoulBlocks
                 AddDeepPrisons(layout, branch, steps, actualBase, isNucleoBranch, propsRng, ref prisonId);
 
             AddSoulSpawns(layout, branch, steps, specialty, ref soulId);
+            AddSidePlatforms(layout, branch, steps, actualBase, hubCenter, occupied,
+                SeededRng.Stream(seed, prefix + ".platforms"), ref tileIndex, ref gapId, ref soulId);
 
             if (specialty == BranchSpecialty.Exploration)
             {
@@ -174,8 +174,6 @@ namespace SoulBlocks
                 var nearEnd = steps[actualBase - 2];
                 layout.shelters.Add(new ShelterLayout { id = shelterId++, position = nearEnd.pos, radius = Balance.ShelterRadius, branchId = branch.id });
             }
-
-            AddShortcuts(mainTiles, branchId, SeededRng.Stream(seed, prefix + ".shortcuts"), layout.gaps, ref gapId);
         }
 
         // Does NOT mutate `occupied`: a discarded attempt (BuildBranch retries with a fresh
@@ -315,8 +313,8 @@ namespace SoulBlocks
 
         static readonly PrisonTier[] GroupTiers = { PrisonTier.T1, PrisonTier.T2, PrisonTier.T3 };
 
-        static void AddPrisonGroups(MapLayout layout, BranchLayout branch, List<Step> steps, Vector3 hubCenter,
-            HashSet<(int, int)> occupied, int seed, SeededRng propsRng, ref int tileIndex, ref int prisonId, ref int groupId)
+        static void AddPrisonGroups(MapLayout layout, BranchLayout branch, List<Step> steps, int seed,
+            SeededRng propsRng, ref int prisonId, ref int groupId)
         {
             int baseSteps = Mathf.RoundToInt(branch.length / Balance.TileSize);
             var patterns = new List<PrisonPattern> { PrisonPattern.Line, PrisonPattern.Arc, PrisonPattern.Compact, PrisonPattern.Connected };
@@ -330,7 +328,7 @@ namespace SoulBlocks
                 var center = steps[idx];
                 var pattern = patterns[g % patterns.Count];
                 string unlock = center.deep ? UnlockIds.Raiz3 : "";
-                var positions = PlacePlazaAndGetPrisonPositions(center, pattern, hubCenter, occupied, layout, branch.id, ref tileIndex, idx * Balance.TileSize, unlock);
+                var positions = PrisonPositions(center, pattern);
                 int thisGroup = groupId++;
                 foreach (var pos in positions)
                 {
@@ -350,24 +348,14 @@ namespace SoulBlocks
             }
         }
 
-        static List<Vector3> PlacePlazaAndGetPrisonPositions(Step center, PrisonPattern pattern, Vector3 hubCenter,
-            HashSet<(int, int)> occupied, MapLayout layout, int branchId, ref int tileIndex, float pathDistance, string requiresUnlock)
+        // The pattern fits inside the center tile: PrisonGroupSpacing keeps the group within
+        // Rayhit's 8 m, and the 10 m wide path leaves room to walk around it.
+        static List<Vector3> PrisonPositions(Step center, PrisonPattern pattern)
         {
             Vector3 forward = center.heading, right = TurnRight(forward);
-            for (int r = -1; r <= 1; r++)
-                for (int f = -1; f <= 1; f++)
-                {
-                    if (r == 0 && f == 0) continue;
-                    Vector3 cellPos = center.pos + right * (r * Balance.TileSize) + forward * (f * Balance.TileSize);
-                    var cell = CellOf(cellPos, hubCenter);
-                    if (occupied.Contains(cell)) continue;
-                    occupied.Add(cell);
-                    layout.tiles.Add(new TileLayout { index = tileIndex++, position = cellPos, branchId = branchId, pathDistance = pathDistance, requiresUnlock = requiresUnlock });
-                }
-
             var positions = new List<Vector3>();
             foreach (var offset in PatternOffsets(pattern))
-                positions.Add(offset.x == 0 && offset.y == 0 ? center.pos : center.pos + right * (offset.x * Balance.TileSize) + forward * (offset.y * Balance.TileSize));
+                positions.Add(center.pos + right * (offset.x * Balance.PrisonGroupSpacing) + forward * (offset.y * Balance.PrisonGroupSpacing));
             return positions;
         }
 
@@ -422,21 +410,23 @@ namespace SoulBlocks
 
         static void AddSoulSpawns(MapLayout layout, BranchLayout branch, List<Step> steps, BranchSpecialty specialty, ref int soulId)
         {
-            int spacing;
+            int perTile;
             switch (specialty)
             {
-                case BranchSpecialty.Souls: spacing = Balance.SoulSpacingSouls; break;
-                case BranchSpecialty.Prisons: spacing = Balance.SoulSpacingPrisons; break;
-                default: spacing = Balance.SoulSpacingExploration; break;
+                case BranchSpecialty.Souls: perTile = Balance.SoulsPerTileSouls; break;
+                case BranchSpecialty.Prisons: perTile = Balance.SoulsPerTilePrisons; break;
+                default: perTile = Balance.SoulsPerTileExploration; break;
             }
-            for (int k = 1; k < steps.Count; k += spacing)
+            // Tile 0 overlaps the island; every tile after it gets one spawn, and SoulSpawner
+            // scatters its souls over the whole tile square.
+            for (int k = 1; k < steps.Count; k++)
             {
                 layout.soulSpawns.Add(new SoulSpawnLayout
                 {
                     id = soulId++,
                     position = steps[k].pos,
                     branchId = branch.id,
-                    baseCount = steps[k].deep ? Balance.SoulBaseCountDeep : Balance.SoulBaseCountNormal,
+                    baseCount = steps[k].deep ? perTile * Balance.SoulsDeepMultiplier : perTile,
                     requiresUnlock = steps[k].deep ? UnlockIds.Raiz3 : ""
                 });
             }
@@ -465,20 +455,41 @@ namespace SoulBlocks
             }
         }
 
-        static void AddShortcuts(List<TileLayout> mainTiles, int branchId, SeededRng rng, List<GapLayout> gaps, ref int gapId)
+        // Optional platform beside the path, GapMaxLength off its edge: only a dash reaches it,
+        // so the required path never depends on it. Reserves the lateral cell so no other branch
+        // or connection runs into the gap.
+        static void AddSidePlatforms(MapLayout layout, BranchLayout branch, List<Step> steps, int actualBase,
+            Vector3 hubCenter, HashSet<(int, int)> occupied, SeededRng rng, ref int tileIndex, ref int gapId, ref int soulId)
         {
-            for (int i = 0; i < mainTiles.Count - 4; i++)
-                for (int j = i + 4; j < mainTiles.Count; j++)
+            int placed = 0;
+            for (int k = 3; k < actualBase - 1 && placed < Balance.PlatformsPerBranchMax; k++)
+            {
+                if (!rng.Chance(Balance.PlatformChance)) continue;
+                Vector3 side = rng.Chance(.5f) ? TurnLeft(steps[k].heading) : TurnRight(steps[k].heading);
+                var cell = CellOf(steps[k].pos + side * Balance.TileSize, hubCenter);
+                if (occupied.Contains(cell)) continue;
+                occupied.Add(cell);
+
+                float edge = Balance.TileSize * .5f;
+                Vector3 center = steps[k].pos + side * (edge + Balance.GapMaxLength + Balance.PlatformSize * .5f);
+                layout.tiles.Add(new TileLayout
                 {
-                    float d = XZDist(mainTiles[i].position, mainTiles[j].position);
-                    if (d > .5f && d <= Balance.GapMaxLength && rng.Chance(Balance.ShortcutChance))
-                    {
-                        mainTiles[i].shortcut = true;
-                        mainTiles[j].shortcut = true;
-                        gaps.Add(new GapLayout { id = gapId++, from = mainTiles[i].position, to = mainTiles[j].position, branchId = branchId });
-                        return; // ponytail: one shortcut per branch is enough texture, not an exhaustive search
-                    }
-                }
+                    index = tileIndex++,
+                    position = center,
+                    branchId = branch.id,
+                    pathDistance = k * Balance.TileSize,
+                    shortcut = true
+                });
+                layout.gaps.Add(new GapLayout
+                {
+                    id = gapId++,
+                    from = steps[k].pos + side * edge,
+                    to = steps[k].pos + side * (edge + Balance.GapMaxLength),
+                    branchId = branch.id
+                });
+                layout.soulSpawns.Add(new SoulSpawnLayout { id = soulId++, position = center, branchId = branch.id, baseCount = Balance.PlatformSouls });
+                placed++;
+            }
         }
 
         static Vector3 BranchEndPosition(MapLayout layout, int branchId)

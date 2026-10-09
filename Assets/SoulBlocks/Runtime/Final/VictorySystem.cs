@@ -65,7 +65,7 @@ namespace SoulBlocks
         {
             var run = GameRoot.Instance != null ? GameRoot.Instance.Run : null;
             if (run == null || !run.victory) return;
-            GUI.Label(new Rect(Screen.width - 90, 6, 80, 20), "Victoria");
+            Hud.SideLine("Victoria");
         }
 
         void Draw()

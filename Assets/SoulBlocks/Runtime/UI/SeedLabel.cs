@@ -3,8 +3,7 @@ using UnityEngine;
 namespace SoulBlocks
 {
     // Player-facing seed readout, bottom-right, always visible (no Keys check: it draws under
-    // menus too since it registers at the very top of the 800-899 range). Hud.cs keeps its own
-    // top-left debug line with the same number; this is the one players are meant to read.
+    // menus too since it registers at the very top of the 800-899 range).
     public sealed class SeedLabel : MonoBehaviour
     {
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -17,8 +16,7 @@ namespace SoulBlocks
         {
             var run = GameRoot.Instance != null ? GameRoot.Instance.Run : null;
             string text = "Seed " + (run != null ? run.effectiveSeed.ToString() : "-");
-            var size = GUI.skin.label.CalcSize(new GUIContent(text));
-            GUI.Label(new Rect(Screen.width - size.x - 8f, Screen.height - size.y - 6f, size.x, size.y), text);
+            Hud.SubtleLabel(new Rect(Screen.width - 208f, Screen.height - 22f, 200f, 16f), text, TextAnchor.LowerRight);
         }
     }
 }

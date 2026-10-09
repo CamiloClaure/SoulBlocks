@@ -158,6 +158,27 @@ namespace SoulBlocks.Tests.Mapa
             Assert.GreaterOrEqual(layout.connections.Count, 1);
         }
 
+        // Side platforms keep the dash useful on 10 m wide paths: every gap is within dash
+        // range and lands on a shortcut platform that holds souls.
+        [Test]
+        public void DashGapsLandOnASidePlatformHoldingSouls()
+        {
+            int total = 0;
+            foreach (var seed in FiveHundredSeeds().Take(100))
+            {
+                var layout = MapGen.Generate(Input(seed));
+                foreach (var gap in layout.gaps)
+                {
+                    total++;
+                    Assert.LessOrEqual(Vector3.Distance(gap.from, gap.to), Balance.GapMaxLength + .01f, "seed " + seed);
+                    var platform = layout.tiles.FirstOrDefault(t => t.shortcut && Vector3.Distance(t.position, gap.to) <= Balance.PlatformSize * .5f + .01f);
+                    Assert.IsNotNull(platform, "seed " + seed + " gap " + gap.id + " lands on no platform");
+                    Assert.IsTrue(layout.soulSpawns.Any(sp => (sp.position - platform.position).sqrMagnitude < .01f), "seed " + seed + " platform holds no souls");
+                }
+            }
+            Assert.Greater(total, 100, "side platforms almost never generate");
+        }
+
         // Real anchors come from island collider bounds and never land on a clean multiple of
         // Balance.TileSize relative to hubCenter, unlike Input()'s synthetic anchors above. This
         // is the exact shape that exposed the CellOf half-integer rounding bug (3.5/4.5 both

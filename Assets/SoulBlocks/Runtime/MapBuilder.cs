@@ -29,8 +29,9 @@ namespace SoulBlocks
             foreach (var tile in layout.tiles)
             {
                 Vector3 center = tile.position - new Vector3(0, Balance.TileThickness * .5f, 0);
+                float size = tile.shortcut ? Balance.PlatformSize : Balance.TileSize; // shortcut = dash-only side platform
                 var go = Placeholder.Make(PrimitiveType.Cube, new Color(.05f, .05f, .07f), "Tile " + tile.index,
-                    mapRoot, center, new Vector3(Balance.TileSize, Balance.TileThickness, Balance.TileSize), true);
+                    mapRoot, center, new Vector3(size, Balance.TileThickness, size), true);
                 go.layer = 8;
                 bool locked = !string.IsNullOrEmpty(tile.requiresUnlock) && !run.HasUnlock(tile.requiresUnlock);
                 go.SetActive(!locked);

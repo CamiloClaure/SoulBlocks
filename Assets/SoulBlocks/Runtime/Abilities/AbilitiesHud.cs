@@ -1,8 +1,9 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace SoulBlocks
 {
-    // Single combined panel for this crew's three abilities, order 300.
+    // One left-column line for the three abilities, order 300.
     public sealed class AbilitiesHud : MonoBehaviour
     {
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -15,28 +16,21 @@ namespace SoulBlocks
         {
             var root = GameRoot.Instance;
             if (root == null) return;
-            float y = 30f;
+            var parts = new List<string>(3);
 
             var dash = root.GetComponent<DashAbility>();
-            if (dash != null)
-            {
-                GUI.Label(new Rect(6, y, 260, 20), "Dash: " + dash.Charges + "/" + dash.MaxCharges + " cargas");
-                y += 18f;
-            }
+            if (dash != null) parts.Add("Dash " + dash.Charges + "/" + dash.MaxCharges);
 
             var magnet = root.GetComponent<MagnetAbility>();
             if (magnet != null)
-            {
-                string status = magnet.Active ? "activo"
-                    : magnet.CooldownRemaining > 0f ? "cooldown " + magnet.CooldownRemaining.ToString("F1") + "s"
-                    : "listo";
-                GUI.Label(new Rect(6, y, 260, 20), "Iman: " + status);
-                y += 18f;
-            }
+                parts.Add("Imán " + (magnet.Active ? "activo"
+                    : magnet.CooldownRemaining > 0f ? magnet.CooldownRemaining.ToString("F0") + "s"
+                    : "listo"));
 
             var ray = root.GetComponent<RayhitAbility>();
-            if (ray != null)
-                GUI.Label(new Rect(6, y, 260, 20), "Rayhit: " + ray.Charges + "/" + ray.MaxCharges + " cargas (almas " + ray.SoulsTowardCharge + "/" + ray.SoulsPerCharge + ")");
+            if (ray != null) parts.Add("Rayhit " + ray.Charges + "/" + ray.MaxCharges + " (" + ray.SoulsTowardCharge + "/" + ray.SoulsPerCharge + ")");
+
+            if (parts.Count > 0) Hud.Line(string.Join("  ·  ", parts));
         }
     }
 }

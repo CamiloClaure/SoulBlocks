@@ -13,6 +13,8 @@ namespace SoulBlocks
         Transform root;
         readonly List<SoulPickup> spawnPointSouls = new List<SoulPickup>();
         readonly HashSet<int> spawnedSpawnPointIds = new HashSet<int>();
+        readonly HashSet<Vector3> platformCenters = new HashSet<Vector3>();
+        SeededRng scatterRng;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Register() => GameRoot.Register<SoulSpawner>();
@@ -41,6 +43,10 @@ namespace SoulBlocks
             root.SetParent(transform, false);
             spawnPointSouls.Clear();
             spawnedSpawnPointIds.Clear();
+            scatterRng = NewScatterRng();
+            platformCenters.Clear();
+            foreach (var tile in layout.tiles)
+                if (tile.shortcut) platformCenters.Add(tile.position);
 
             foreach (var spawn in layout.soulSpawns)
                 if (string.IsNullOrEmpty(spawn.requiresUnlock) || run.HasUnlock(spawn.requiresUnlock))
@@ -80,6 +86,7 @@ namespace SoulBlocks
             spawnedSpawnPointIds.Clear();
 
             if (layout == null || run == null) return;
+            scatterRng = NewScatterRng();
             foreach (var spawn in layout.soulSpawns)
                 if (string.IsNullOrEmpty(spawn.requiresUnlock) || run.HasUnlock(spawn.requiresUnlock))
                     SpawnPoint(spawn);
@@ -89,9 +96,10 @@ namespace SoulBlocks
         {
             spawnedSpawnPointIds.Add(spawn.id);
             int count = ExpeditionController.SpawnCountFor(spawn);
+            float tileSize = platformCenters.Contains(spawn.position) ? Balance.PlatformSize : Balance.TileSize;
             for (int i = 0; i < count; i++)
             {
-                var pickup = SoulPickup.Spawn(root, ScatterPoint(spawn.position, i, count), (int)Balance.SoulValue);
+                var pickup = SoulPickup.Spawn(root, RandomPointOnTile(spawn.position, tileSize), (int)Balance.SoulValue);
                 spawnPointSouls.Add(pickup);
             }
         }
@@ -100,6 +108,17 @@ namespace SoulBlocks
         {
             var pickup = SoulPickup.Spawn(root, ground.position, ground.value);
             pickup.OnCollected += () => run.groundSouls.Remove(ground);
+        }
+
+        // New positions every expedition, same ones for the same seed and expedition.
+        SeededRng NewScatterRng() => SeededRng.Stream(run.effectiveSeed, "souls.scatter." + run.expeditionIndex);
+
+        // Uniform over the spawn's own tile square (tiles are full squares, so every point has
+        // ground). No physics query: tiles unlocked this same frame may not be active yet.
+        Vector3 RandomPointOnTile(Vector3 center, float tileSize)
+        {
+            float half = tileSize * .45f;
+            return center + new Vector3(scatterRng.Range(-half, half), 0f, scatterRng.Range(-half, half));
         }
 
         static Vector3 ScatterPoint(Vector3 center, int index, int count)

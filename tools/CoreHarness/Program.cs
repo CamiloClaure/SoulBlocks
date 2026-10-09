@@ -22,11 +22,15 @@ static class Program
         for (int s = 1; s <= count; s++) seeds.Add(s);
         var reasons = new Dictionary<string, int>();
         int failed = 0, retried = 0;
+        long tiles = 0, gaps = 0, souls = 0;
         var watch = Stopwatch.StartNew();
         foreach (int seed in seeds)
         {
             input.seed = seed;
             var layout = MapGen.Generate(input);
+            tiles += layout.tiles.Count;
+            gaps += layout.gaps.Count;
+            foreach (var spawn in layout.soulSpawns) souls += spawn.baseCount;
             if (layout.effectiveSeed != seed) retried++;
             var problems = MapValidator.Validate(layout);
             if (problems.Count == 0) continue;
@@ -39,6 +43,7 @@ static class Program
             if (failed <= 3) Console.WriteLine($"seed {seed} (effective {layout.effectiveSeed}): {string.Join("; ", problems)}");
         }
         Console.WriteLine($"{seeds.Count} seeds, {failed} invalid, {retried} needed retries, {watch.ElapsedMilliseconds} ms");
+        Console.WriteLine($"per map: {tiles / seeds.Count} tiles, {gaps / (float)seeds.Count:0.0} dash gaps, {souls / seeds.Count} spawn souls");
         foreach (var kv in reasons) Console.WriteLine($"  {kv.Value}x {kv.Key}");
         return failed == 0 ? 0 : 1;
     }

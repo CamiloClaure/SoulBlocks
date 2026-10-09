@@ -86,13 +86,16 @@ namespace SoulBlocks.Tests.Humo
             for (int i = 0; i < 10; i++) yield return null;
             Assert.IsTrue(run.inExpedition, "Leaving the hub onto a branch tile did not start an expedition.");
 
-            // Walk/teleport over a soul spawn position -> Run.cargoSouls grows.
+            // Teleport onto a soul from a Souls-branch spawn -> Run.cargoSouls grows. Souls scatter
+            // over the whole 10 m tile, so stand on one of them, not on the spawn center.
             var spawn = root.Layout.soulSpawns.FirstOrDefault(s => s.branchId == soulsBranch.id && string.IsNullOrEmpty(s.requiresUnlock));
             Assert.IsNotNull(spawn, "Souls branch has no always-available soul spawn.");
+            var soul = SoulRegistry.All.Where(s => s.Available).OrderBy(s => (s.Position - spawn.position).sqrMagnitude).FirstOrDefault();
+            Assert.IsNotNull(soul, "No soul was spawned on the map.");
 
-            player.Teleport(spawn.position);
+            player.Teleport(soul.Position);
             for (int i = 0; i < 10; i++) yield return null;
-            Assert.Greater(run.cargoSouls, 0, "Standing on a soul spawn did not grow cargoSouls.");
+            Assert.Greater(run.cargoSouls, 0, "Standing on a soul did not grow cargoSouls.");
 
             // Return to the island -> reserveSouls grows, cargo 0. Anchor - direction*1 is the
             // same "just inside the island" offset GameRootPlayModeTests uses for branch 0; it

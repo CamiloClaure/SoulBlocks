@@ -21,7 +21,7 @@ namespace SoulBlocks.Tests
             Assert.IsNotNull(dash, "DashAbility was not attached.");
 
             var branch = root.Layout.branches[0];
-            Vector3 start = branch.anchor + branch.direction * 1f; // first tile's center
+            Vector3 start = branch.anchor + branch.direction * 1f; // just past the island edge, on tile 0
             player.Teleport(start);
             for (int i = 0; i < 3; i++) yield return null;
 

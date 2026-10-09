@@ -48,7 +48,7 @@ namespace SoulBlocks
         {
             var root = GameRoot.Instance;
             if (root == null || !CanDeliver(root.Run)) return;
-            GUI.Label(new Rect(6, Screen.height - 30, 300, 20), "E: Entregar carga");
+            if (root.Player != null) Hud.WorldLabel(root.Player.transform.position + Vector3.up * 2.2f, "E: Entregar carga");
         }
     }
 }

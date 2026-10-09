@@ -188,14 +188,8 @@ namespace SoulBlocks
         void DrawBlessingList()
         {
             if (run == null || !run.inExpedition || run.activeBlessings.Count == 0) return;
-            float y = 130f; // ponytail: fixed offset below ExpeditionController's own rows (6..110)
-            GUI.Label(new Rect(6, y, 300, 20), "Bendiciones:");
-            y += 20f;
             foreach (var id in run.activeBlessings)
-            {
-                GUI.Label(new Rect(6, y, 300, 20), "- " + BlessingName(id));
-                y += 18f;
-            }
+                Hud.SideLine("Bendición: " + BlessingName(id));
         }
 
         void DrawBlessingModal()

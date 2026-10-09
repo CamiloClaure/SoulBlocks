@@ -92,7 +92,7 @@ namespace SoulBlocks
             if (!awakened || root.Run.victory || !root.Run.inExpedition) return;
 
             float distance = Vector3.Distance(root.Player.transform.position, nucleo.position);
-            GUI.Label(new Rect(6, 150, 320, 20), "Rompé el Núcleo: " + distance.ToString("0") + " m");
+            Hud.SideLine("Rompé el Núcleo: " + distance.ToString("0") + " m");
         }
     }
 }

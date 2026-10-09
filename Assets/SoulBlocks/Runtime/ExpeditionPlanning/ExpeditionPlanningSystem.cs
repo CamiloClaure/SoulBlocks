@@ -235,27 +235,17 @@ namespace SoulBlocks
 
         void DrawHubPanel(GameRoot root, RunState run)
         {
-            const float x = 320f, w = 380f;
-            float y = 10f;
-            GUI.Label(new Rect(x, y, w, 20), "Próxima expedición");
-            y += 22f;
-
+            Hud.SideLine("Próxima expedición");
             for (int i = 0; i < run.plan.offered.Count; i++)
             {
                 var objective = run.plan.offered[i];
-                string text = Describe(root.Layout, objective) + "  (+" + objective.rewardWisdom + " Wisdom, +" + objective.rewardSouls + " almas)";
-                GUI.Label(new Rect(x, y, w - 90f, 20f), text);
-                if (run.plan.chosenObjective == i) GUI.Label(new Rect(x + w - 88f, y, 86f, 20f), "Elegido");
-                else if (GUI.Button(new Rect(x + w - 88f, y, 86f, 20f), "Elegir")) run.plan.chosenObjective = i;
-                y += 22f;
+                string text = Describe(root.Layout, objective) + " (+" + objective.rewardWisdom + " Wisdom, +" + objective.rewardSouls + " almas)";
+                bool chosen = run.plan.chosenObjective == i;
+                if (Hud.SideLine(chosen ? "> " + text : text, chosen ? null : "Elegir")) run.plan.chosenObjective = i;
             }
-
-            y += 4f;
-            GUI.Label(new Rect(x, y, w, 20f), "Anomalía: " + (run.plan.anomaly != null ? AnomalyText(run.plan.anomaly) : "ninguna"));
-            y += 22f;
-
+            Hud.SideLine("Anomalía: " + (run.plan.anomaly != null ? AnomalyText(run.plan.anomaly) : "ninguna"));
             if (run.plan.hintBranch >= 0 && run.plan.hintBranch < root.Layout.branches.Count)
-                GUI.Label(new Rect(x, y, w, 20f), "Rama más activa: " + SpecialtyName(root.Layout.branches[run.plan.hintBranch].specialty));
+                Hud.SideLine("Rama más activa: " + SpecialtyName(root.Layout.branches[run.plan.hintBranch].specialty));
         }
 
         void DrawExpeditionLine(RunState run)
@@ -263,7 +253,7 @@ namespace SoulBlocks
             var objective = ChosenObjective(run, out _);
             if (objective == null) return;
             string state = objective.done ? "completado" : objective.progress + "/" + objective.goal;
-            GUI.Label(new Rect(320f, 10f, 420f, 20f), "Objetivo: " + DescribeShort(objective) + " (" + state + ")");
+            Hud.SideLine("Objetivo: " + DescribeShort(objective) + " (" + state + ")");
         }
 
         static string SpecialtyName(BranchSpecialty specialty)

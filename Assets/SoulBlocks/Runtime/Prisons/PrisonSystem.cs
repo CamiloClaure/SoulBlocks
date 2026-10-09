@@ -96,7 +96,7 @@ namespace SoulBlocks
         void DrawHud()
         {
             if (run == null) return;
-            GUI.Label(new Rect(6, 26, 300, 20), "Prisiones rotas: " + run.totalPrisonsBroken);
+            Hud.Line("Prisiones rotas " + run.totalPrisonsBroken);
         }
     }
 }

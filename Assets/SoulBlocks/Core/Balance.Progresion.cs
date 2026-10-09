@@ -8,7 +8,7 @@ namespace SoulBlocks
 
         // Arbol de Almas
         public static float CargaCost = 40f, CargaGrowth = 1.5f, CargaMaxLevel = 8f, CargaEffect = 50f;
-        public static float EnergiaCost = 40f, EnergiaGrowth = 1.5f, EnergiaMaxLevel = 8f, EnergiaEffect = 8f;
+        public static float EnergiaCost = 40f, EnergiaGrowth = 1.5f, EnergiaMaxLevel = 8f, EnergiaEffect = 32f;
         public static float VelocidadCost = 50f, VelocidadGrowth = 1.5f, VelocidadMaxLevel = 6f, VelocidadEffect = .48f;
         public static float RadioCost = 35f, RadioGrowth = 1.5f, RadioMaxLevel = 4f, RadioEffect = .5f;
         public static float DashCost = 60f, DashGrowth = 1.5f, DashMaxLevel = 4f, DashEffect = 1.5f, DashMilestoneCharges = 1f;

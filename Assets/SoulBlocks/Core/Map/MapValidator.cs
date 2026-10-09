@@ -177,18 +177,18 @@ namespace SoulBlocks
                 float dist = Mathf.Sqrt(dx * dx + dz * dz);
                 if (dist > Balance.GapMaxLength + .01f) failures.Add("gap " + gap.id + " exceeds the max dash-shortcut length");
 
-                bool fromShortcut = false, toShortcut = false;
+                bool landsOnPlatform = false;
                 foreach (var tile in layout.tiles)
                 {
-                    if (!fromShortcut && (tile.position - gap.from).sqrMagnitude < .01f && tile.shortcut) fromShortcut = true;
-                    if (!toShortcut && (tile.position - gap.to).sqrMagnitude < .01f && tile.shortcut) toShortcut = true;
+                    if (!tile.shortcut) continue;
+                    float px = tile.position.x - gap.to.x, pz = tile.position.z - gap.to.z;
+                    if (Mathf.Sqrt(px * px + pz * pz) <= Balance.PlatformSize * .5f + .01f) { landsOnPlatform = true; break; }
                 }
-                if (!fromShortcut || !toShortcut) failures.Add("gap " + gap.id + " is not anchored on shortcut-flagged tiles");
+                if (!landsOnPlatform) failures.Add("gap " + gap.id + " does not land on a shortcut platform");
             }
 
-            // The required path is every tile not flagged shortcut=true; gaps never remove a tile,
-            // so as long as every branch stayed continuous (checked above) the required path never
-            // depends on a gap.
+            // The required path is every tile not flagged shortcut=true; platforms only ever add
+            // a tile beside the path, so the required path never depends on a gap.
         }
 
         static void CheckShelterSpacing(MapLayout layout, List<string> failures)

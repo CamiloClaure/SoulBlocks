@@ -79,7 +79,8 @@ namespace SoulBlocks
             foreach (var tile in layout.tiles)
             {
                 if (!run.discoveredTiles.Contains(tile.index)) continue;
-                DrawMark(ToScreen(tile.position), 4f, BranchColor(tile.branchId));
+                float tileSize = tile.shortcut ? Balance.PlatformSize : Balance.TileSize;
+                DrawMark(ToScreen(tile.position), Mathf.Max(4f, tileSize * scale), BranchColor(tile.branchId));
             }
 
             foreach (var shelter in layout.shelters)
@@ -104,7 +105,7 @@ namespace SoulBlocks
         {
             foreach (var spawn in layout.soulSpawns)
             {
-                float t = Mathf.Clamp01(spawn.baseCount / (float)Balance.SoulBaseCountDeep);
+                float t = Mathf.Clamp01(spawn.baseCount / (float)(Balance.SoulsPerTileSouls * Balance.SoulsDeepMultiplier));
                 DrawMark(ToScreen(spawn.position), 4f + t * 6f, new Color(1f, 1f, .3f, .35f + t * .35f));
             }
             if (run.plan != null && run.plan.anomaly != null && !run.plan.anomaly.consumed)

@@ -179,14 +179,12 @@ namespace SoulBlocks
             float fraction = max > 0f ? run.energy / max : 0f;
             int capacity = root.Stats != null ? root.Stats.GetInt(StatId.CargoCapacity) : (int)Balance.CargoCapacity;
 
-            GUI.Label(new Rect(6, 30, 280, 20), "Expedición #" + run.expeditionIndex);
             var previous = GUI.color;
             GUI.color = fraction <= Balance.EnergyWarningLow ? Color.red : fraction <= Balance.EnergyWarningHigh ? Color.yellow : Color.white;
-            GUI.Label(new Rect(6, 50, 280, 20), string.Format("Energía: {0:0}/{1:0}", run.energy, max));
+            Hud.Line(string.Format("Energía {0:0}/{1:0}", run.energy, max));
             GUI.color = previous;
-            GUI.Label(new Rect(6, 70, 280, 20), "Carga: " + run.cargoSouls + "/" + capacity);
-            GUI.Label(new Rect(6, 90, 280, 20), "Reserva: " + run.reserveSouls);
-            GUI.Label(new Rect(6, 110, 280, 20), "Wisdom: " + run.wisdom);
+            Hud.Line("Carga " + run.cargoSouls + "/" + capacity + "  ·  Reserva " + run.reserveSouls);
+            Hud.Line("Wisdom " + run.wisdom + "  ·  Expedición #" + run.expeditionIndex);
         }
     }
 }
