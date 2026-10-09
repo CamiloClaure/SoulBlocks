@@ -108,7 +108,7 @@ namespace SoulBlocks
                     index = tileIndex++,
                     position = steps[k].pos,
                     branchId = branchId,
-                    pathDistance = (k + .5f) * Balance.TileSize,
+                    pathDistance = k * Balance.TileSize,
                     requiresUnlock = steps[k].deep ? UnlockIds.Raiz3 : ""
                 };
                 layout.tiles.Add(tile);
@@ -170,7 +170,7 @@ namespace SoulBlocks
         {
             var steps = new List<Step>();
             Vector3 heading = Cardinal(anchor.direction);
-            Vector3 pos = anchor.position + heading * (Balance.TileSize * .5f); // flush with the island edge
+            Vector3 pos = SnapFirstTile(anchor.position, hubCenter, heading);
             occupied.Add(CellOf(pos, hubCenter));
             steps.Add(new Step { pos = pos, heading = heading, deep = false });
 
@@ -196,6 +196,28 @@ namespace SoulBlocks
                 steps.Add(new Step { pos = pos, heading = heading, deep = false });
             }
             return steps;
+        }
+
+        // Every tile across every branch must sit on ONE global lattice (centers at
+        // hubCenter + TileSize*(i,j)): real anchors come from island collider bounds and never
+        // line up with hubCenter on a clean multiple of TileSize, and CellOf's Mathf.RoundToInt
+        // only recovers the right integer cell when the value it rounds is already near an
+        // integer, not near a half-integer (half-integers round to even, so two different tiles
+        // 1 TileSize apart can round to the SAME cell). Snap laterally to the nearest lattice
+        // line, and along the heading to the lattice point at or just before edge + TileSize/2,
+        // so the tile overlaps the island by at most one tile instead of ever leaving a gap.
+        static Vector3 SnapFirstTile(Vector3 anchorPos, Vector3 hubCenter, Vector3 heading)
+        {
+            Vector3 lateral = TurnRight(heading);
+            float alongHub = Vector3.Dot(anchorPos - hubCenter, heading);
+            float lateralHub = Vector3.Dot(anchorPos - hubCenter, lateral);
+
+            int k = Mathf.FloorToInt(alongHub / Balance.TileSize + .5f);
+            int m = Mathf.RoundToInt(lateralHub / Balance.TileSize);
+
+            Vector3 snapped = hubCenter + heading * (k * Balance.TileSize) + lateral * (m * Balance.TileSize);
+            snapped.y = anchorPos.y;
+            return snapped;
         }
 
         static Vector3 StepCandidate(Vector3 pos, Vector3 heading, SeededRng rng, HashSet<(int, int)> occupied, Vector3 hubCenter, out Vector3 newHeading)
@@ -283,7 +305,7 @@ namespace SoulBlocks
                 var center = steps[idx];
                 var pattern = patterns[g % patterns.Count];
                 string unlock = center.deep ? UnlockIds.Raiz3 : "";
-                var positions = PlacePlazaAndGetPrisonPositions(center, pattern, hubCenter, occupied, layout, branch.id, ref tileIndex, (idx + .5f) * Balance.TileSize, unlock);
+                var positions = PlacePlazaAndGetPrisonPositions(center, pattern, hubCenter, occupied, layout, branch.id, ref tileIndex, idx * Balance.TileSize, unlock);
                 int thisGroup = groupId++;
                 foreach (var pos in positions)
                 {
@@ -400,7 +422,7 @@ namespace SoulBlocks
             float nextThreshold = Balance.ShelterSpacing;
             for (int k = 0; k < actualBase; k++)
             {
-                float dist = (k + .5f) * Balance.TileSize;
+                float dist = k * Balance.TileSize;
                 if (dist < nextThreshold) continue;
                 layout.shelters.Add(new ShelterLayout { id = shelterId++, position = steps[k].pos, radius = Balance.ShelterRadius, branchId = branch.id });
                 nextThreshold += Balance.ShelterSpacing;

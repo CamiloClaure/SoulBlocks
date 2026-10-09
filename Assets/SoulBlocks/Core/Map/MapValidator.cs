@@ -124,8 +124,8 @@ namespace SoulBlocks
                     if (tile.branchId == branch.id && !distances.Contains(tile.pathDistance)) distances.Add(tile.pathDistance);
                 distances.Sort();
                 if (distances.Count == 0) { failures.Add("branch " + branch.id + " has no tiles"); continue; }
-                if (Mathf.Abs(distances[0] - Balance.TileSize * .5f) > .01f)
-                    failures.Add("branch " + branch.id + " does not start flush with the island edge");
+                if (Mathf.Abs(distances[0]) > .01f)
+                    failures.Add("branch " + branch.id + " required path does not start at distance 0");
                 for (int i = 1; i < distances.Count; i++)
                     if (Mathf.Abs(distances[i] - distances[i - 1] - Balance.TileSize) > .01f)
                         failures.Add("branch " + branch.id + " required path breaks continuity at distance " + distances[i - 1]);

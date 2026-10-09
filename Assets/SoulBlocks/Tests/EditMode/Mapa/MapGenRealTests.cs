@@ -104,8 +104,14 @@ namespace SoulBlocks.Tests.Mapa
                     var tiles = layout.tiles.Where(t => t.branchId == branch.id).OrderBy(t => t.pathDistance).Take(3).ToList();
                     Assert.AreEqual(3, tiles.Count, "seed " + seed + " branch " + branch.id + " too short");
 
-                    Vector3 expectedFirst = branch.anchor + branch.direction * (Balance.TileSize * .5f);
-                    Assert.Less((tiles[0].position - expectedFirst).magnitude, .01f, "seed " + seed + " branch " + branch.id + " not flush");
+                    // No gap at the island edge: the first tile's near face (toward the hub) must
+                    // sit at or behind the anchor edge along the heading, and overlap it by at
+                    // most one tile (MapGen.SnapFirstTile puts every tile on one global lattice,
+                    // so the exact flush offset varies with the anchor's position on that lattice).
+                    Vector3 nearFace = tiles[0].position - branch.direction * (Balance.TileSize * .5f);
+                    float behindEdge = Vector3.Dot(branch.anchor - nearFace, branch.direction);
+                    Assert.GreaterOrEqual(behindEdge, -.01f, "seed " + seed + " branch " + branch.id + " leaves a gap at the island edge");
+                    Assert.LessOrEqual(behindEdge, Balance.TileSize + .01f, "seed " + seed + " branch " + branch.id + " overlaps the island by more than one tile");
 
                     for (int i = 1; i < 3; i++)
                     {
@@ -150,6 +156,34 @@ namespace SoulBlocks.Tests.Mapa
         {
             var layout = MapGen.Generate(Input(42));
             Assert.GreaterOrEqual(layout.connections.Count, 1);
+        }
+
+        // Real anchors come from island collider bounds and never land on a clean multiple of
+        // Balance.TileSize relative to hubCenter, unlike Input()'s synthetic anchors above. This
+        // is the exact shape that exposed the CellOf half-integer rounding bug (3.5/4.5 both
+        // round to 4), so it gets its own always-realistic coverage.
+        static MapGenInput RealisticInput(int seed) => new MapGenInput
+        {
+            seed = seed,
+            hubCenter = new Vector3(-12.3f, 0, -11.8f),
+            anchors = new List<MapAnchor>
+            {
+                new MapAnchor { position = new Vector3(-5.0f, 0, 9.37f), direction = Vector3.forward },
+                new MapAnchor { position = new Vector3(6.21f, 0, -12.0f), direction = Vector3.right },
+                new MapAnchor { position = new Vector3(-30.7f, 0, -30.0f), direction = Vector3.left }
+            }
+        };
+
+        [Test]
+        public void TwoHundredSeedsWithRealisticAnchorsValidateClean()
+        {
+            for (int i = 0; i < 200; i++)
+            {
+                int seed = i * 131 + 3;
+                var layout = MapGen.Generate(RealisticInput(seed));
+                var failures = MapValidator.Validate(layout);
+                Assert.IsEmpty(failures, "seed " + seed + " (effective " + layout.effectiveSeed + "): " + string.Join("; ", failures));
+            }
         }
     }
 }
