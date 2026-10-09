@@ -80,8 +80,20 @@ namespace SoulBlocks
             int deepStepCount = Mathf.Max(1, Mathf.RoundToInt(Balance.DeepExtensionLength / Balance.TileSize));
             int totalSteps = baseStepCount + deepStepCount;
 
-            var walkRng = SeededRng.Stream(seed, prefix + ".walk");
-            var steps = WalkBranch(anchor, totalSteps, hubCenter, occupied, walkRng);
+            // The walk can rarely box itself in (tight run of turns) and stop short of
+            // baseStepCount. WalkBranch never commits to the shared `occupied` set itself, so a
+            // discarded attempt leaves no trace; retry with a fresh sub-stream a few times before
+            // settling for the longest attempt and letting the seed-level retry catch it if even
+            // that is not enough.
+            List<Step> steps = null;
+            for (int walkAttempt = 0; walkAttempt < 5; walkAttempt++)
+            {
+                string walkName = walkAttempt == 0 ? prefix + ".walk" : prefix + ".walk." + walkAttempt;
+                var candidate = WalkBranch(anchor, totalSteps, hubCenter, occupied, SeededRng.Stream(seed, walkName));
+                if (steps == null || candidate.Count > steps.Count) steps = candidate;
+                if (steps.Count >= baseStepCount) break;
+            }
+            foreach (var s in steps) occupied.Add(CellOf(s.pos, hubCenter));
             int actualBase = Mathf.Min(baseStepCount, steps.Count);
             for (int i = actualBase; i < steps.Count; i++)
             {
@@ -166,12 +178,17 @@ namespace SoulBlocks
             AddShortcuts(mainTiles, branchId, SeededRng.Stream(seed, prefix + ".shortcuts"), layout.gaps, ref gapId);
         }
 
+        // Does NOT mutate `occupied`: a discarded attempt (BuildBranch retries with a fresh
+        // sub-stream when one gets stuck short) must leave no trace there. Self-collision within
+        // this one attempt is tracked in `local`; `occupied` is only ever read, for cross-branch
+        // and earlier-branch collisions.
         static List<Step> WalkBranch(MapAnchor anchor, int totalSteps, Vector3 hubCenter, HashSet<(int, int)> occupied, SeededRng rng)
         {
             var steps = new List<Step>();
+            var local = new HashSet<(int, int)>();
             Vector3 heading = Cardinal(anchor.direction);
             Vector3 pos = SnapFirstTile(anchor.position, hubCenter, heading);
-            occupied.Add(CellOf(pos, hubCenter));
+            local.Add(CellOf(pos, hubCenter));
             steps.Add(new Step { pos = pos, heading = heading, deep = false });
 
             for (int t = 1; t < totalSteps; t++)
@@ -183,16 +200,16 @@ namespace SoulBlocks
                 {
                     next = pos + heading * Balance.TileSize;
                     nextHeading = heading;
-                    if (!IsValidStep(pos, next, hubCenter, occupied)) break;
+                    if (!IsValidStep(pos, next, hubCenter, occupied, local)) break;
                 }
                 else
                 {
-                    next = StepCandidate(pos, heading, rng, occupied, hubCenter, out nextHeading);
+                    next = StepCandidate(pos, heading, rng, occupied, local, hubCenter, out nextHeading);
                     if ((next - pos).sqrMagnitude < .0001f) break; // stuck: end the branch here
                 }
                 pos = next;
                 heading = nextHeading;
-                occupied.Add(CellOf(pos, hubCenter));
+                local.Add(CellOf(pos, hubCenter));
                 steps.Add(new Step { pos = pos, heading = heading, deep = false });
             }
             return steps;
@@ -220,7 +237,7 @@ namespace SoulBlocks
             return snapped;
         }
 
-        static Vector3 StepCandidate(Vector3 pos, Vector3 heading, SeededRng rng, HashSet<(int, int)> occupied, Vector3 hubCenter, out Vector3 newHeading)
+        static Vector3 StepCandidate(Vector3 pos, Vector3 heading, SeededRng rng, HashSet<(int, int)> occupied, HashSet<(int, int)> local, Vector3 hubCenter, out Vector3 newHeading)
         {
             Vector3 left = TurnLeft(heading), right = TurnRight(heading);
             Vector3[] order;
@@ -232,15 +249,16 @@ namespace SoulBlocks
             foreach (var candidate in order)
             {
                 Vector3 next = pos + candidate * Balance.TileSize;
-                if (IsValidStep(pos, next, hubCenter, occupied)) { newHeading = candidate; return next; }
+                if (IsValidStep(pos, next, hubCenter, occupied, local)) { newHeading = candidate; return next; }
             }
             newHeading = heading;
             return pos;
         }
 
-        static bool IsValidStep(Vector3 pos, Vector3 next, Vector3 hubCenter, HashSet<(int, int)> occupied)
+        static bool IsValidStep(Vector3 pos, Vector3 next, Vector3 hubCenter, HashSet<(int, int)> occupied, HashSet<(int, int)> local)
         {
-            if (occupied.Contains(CellOf(next, hubCenter))) return false;
+            var cell = CellOf(next, hubCenter);
+            if (occupied.Contains(cell) || local.Contains(cell)) return false;
             return XZDist(next, hubCenter) >= XZDist(pos, hubCenter) - .001f;
         }
 
@@ -267,6 +285,13 @@ namespace SoulBlocks
             foreach (var tile in layout.tiles)
                 if (tile.branchId == branchId && (tile.position - position).sqrMagnitude < .01f) return tile.pathDistance;
             return 0f;
+        }
+
+        static int TileIndexAt(MapLayout layout, Vector3 position)
+        {
+            foreach (var tile in layout.tiles)
+                if ((tile.position - position).sqrMagnitude < .01f) return tile.index;
+            return -1;
         }
 
         static void AddSoulsInteriorPrisons(MapLayout layout, BranchLayout branch, List<Step> steps, ref int prisonId, SeededRng propsRng)
@@ -465,6 +490,8 @@ namespace SoulBlocks
             return Vector3.zero;
         }
 
+        static int Manhattan((int, int) a, (int, int) b) => Mathf.Abs(a.Item1 - b.Item1) + Mathf.Abs(a.Item2 - b.Item2);
+
         static void TryConnect(MapLayout layout, HashSet<(int, int)> occupied, Vector3 hubCenter, int branchA, int branchB, ref int tileIndex, ref int connectionId)
         {
             Vector3 endA = BranchEndPosition(layout, branchA);
@@ -473,26 +500,42 @@ namespace SoulBlocks
             var goal = CellOf(endB, hubCenter);
             if (start.Equals(goal)) return;
 
-            var prev = new Dictionary<(int, int), (int, int)>();
-            var visited = new HashSet<(int, int)> { start };
-            var queue = new Queue<(int, int)>();
-            queue.Enqueue(start);
+            // A*, not plain BFS: branch ends can be 100+ cells apart with open space between
+            // them, and unguided BFS has to visit the whole diamond around start (~2*dist^2
+            // cells) before it reaches a far-away goal. The Manhattan heuristic keeps the open
+            // set small and proportional to the path length instead.
             var dirs = new (int, int)[] { (1, 0), (-1, 0), (0, 1), (0, -1) };
+            var gScore = new Dictionary<(int, int), int> { [start] = 0 };
+            var prev = new Dictionary<(int, int), (int, int)>();
+            var open = new List<(int, int)> { start };
+            var closed = new HashSet<(int, int)>();
             bool found = false;
-            int budget = 8000;
-            while (queue.Count > 0 && budget-- > 0)
+            int budget = 20000;
+
+            while (open.Count > 0 && budget-- > 0)
             {
-                var cur = queue.Dequeue();
+                int bestIndex = 0, bestF = gScore[open[0]] + Manhattan(open[0], goal);
+                for (int i = 1; i < open.Count; i++)
+                {
+                    int f = gScore[open[i]] + Manhattan(open[i], goal);
+                    if (f < bestF) { bestF = f; bestIndex = i; }
+                }
+                var cur = open[bestIndex];
+                open.RemoveAt(bestIndex);
                 if (cur.Equals(goal)) { found = true; break; }
+                closed.Add(cur);
+
                 foreach (var d in dirs)
                 {
                     var next = (cur.Item1 + d.Item1, cur.Item2 + d.Item2);
-                    if (visited.Contains(next)) continue;
+                    if (closed.Contains(next)) continue;
                     bool isGoal = next.Equals(goal);
                     if (!isGoal && occupied.Contains(next)) continue;
-                    visited.Add(next);
+                    int tentativeG = gScore[cur] + 1;
+                    if (gScore.TryGetValue(next, out int existingG) && tentativeG >= existingG) continue;
+                    gScore[next] = tentativeG;
                     prev[next] = cur;
-                    queue.Enqueue(next);
+                    if (!open.Contains(next)) open.Add(next);
                 }
             }
             if (!found) return; // ponytail: give up on this pair, the other two usually succeed
@@ -502,15 +545,24 @@ namespace SoulBlocks
             while (!c.Equals(start)) { cellPath.Add(c); c = prev[c]; }
             cellPath.Reverse();
 
+            // The goal cell is the OTHER branch's end tile, already placed; every other cell in
+            // cellPath was required by the A* loop above to be unoccupied. Reference the existing
+            // tile instead of stacking a duplicate on top of it.
             float baseDistance = PathDistanceAt(layout, branchA, endA);
             var tileIds = new List<int>();
             int step = 0;
             foreach (var cell in cellPath)
             {
+                step++;
+                if (cell.Equals(goal))
+                {
+                    int existing = TileIndexAt(layout, endB);
+                    if (existing >= 0) tileIds.Add(existing);
+                    continue;
+                }
                 Vector3 pos = hubCenter + new Vector3(cell.Item1 * Balance.TileSize, 0, cell.Item2 * Balance.TileSize);
                 pos.y = endA.y;
                 occupied.Add(cell);
-                step++;
                 var tile = new TileLayout
                 {
                     index = tileIndex++,
