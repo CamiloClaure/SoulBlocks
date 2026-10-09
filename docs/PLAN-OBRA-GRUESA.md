@@ -230,3 +230,21 @@ Falla: errores cortos se arreglan en `obra-gruesa`; errores de lógica vuelven a
 
 ## Estimación total
 Unas 10-12 h de reloj: Fase 0 45 min, Fase 1 ~2 h, Fase 2 ~4.5 h, Fase 3 ~4 h, Fase 4 ~2 h. La integración en serie es el cuello de botella (~10 min de Unity batchmode por merge).
+
+---
+
+## Resultado (2026-10-09)
+
+Obra gruesa terminada en `obra-gruesa`, mergeada a `develop`. Tests: 149 EditMode y 22 PlayMode en verde, incluido un smoke test que juega una partida completa (recolectar, depositar, comprar, romper prisión, bendición, Raíz I, portal, guardar/cargar, Despertar, Núcleo, victoria).
+
+Simulación (`Validation/balance.txt`, bot codicioso, 200 seeds): 0 seeds bloqueadas; mediana primera compra 0.9 min, Raíz I 1.2, Despertar 7.4, Núcleo 16.8 min. Un humano tarda más que el bot; el ritmo real se ajusta en playtest.
+
+Desvíos respecto al plan:
+- La escena se limpió con un script editor de un solo uso (el backup también referenciaba la mecánica de bloques).
+- `GameRoot` se crea en cada carga de la escena y los sistemas se registran por tipo en `BeforeSceneLoad` (el `AfterSceneLoad` original no arrancaba en tests ni al reiniciar).
+- Mapa sobre una sola grilla global anclada a `hubCenter`; conexiones con A*; reintento por rama.
+- Portales se re-arman al salir del radio, no por tiempo (el smoke test detectó un rebote infinito).
+- Contrato agregado: `GameEvents.SoulsReleased`.
+- `tools/CoreHarness`: compila `Core/` fuera de Unity contra `UnityEngine.CoreModule.dll` (2 s por 200 seeds vs ~10 min en Unity).
+
+Pendiente fuera de la obra gruesa: playtest del usuario (sección 5), acabados (modelos, animación, VFX, audio, UI final).

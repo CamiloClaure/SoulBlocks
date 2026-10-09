@@ -1,17 +1,56 @@
 # SoulBlocks
 
-A minimal Unity starting project extracted from Lighting Blocks.
+Incremental de exploración en Unity 6000.6.0f1 (URP, Input System). Salís del árbol central por caminos generados por seed, recogés almas, rompés prisiones cristalinas con Rayhit, volvés, mejorás y el mundo se transforma hasta despertar al Núcleo.
 
-The single scene contains the original main island, one wisdom tree, and the original player with its idle and locomotion animations. Camera and lighting provide the playable view. No other islands, HUD, enemies, collectibles, bridge building, progression, audio systems, or save systems are included.
+Estado: **obra gruesa**. Todas las mecánicas funcionan de punta a punta con placeholders (primitivas, colores, IMGUI). Sin animaciones ni modelos nuevos. Diseño completo y plan de construcción en [`docs/PLAN-OBRA-GRUESA.md`](docs/PLAN-OBRA-GRUESA.md); contratos entre sistemas en [`docs/CONTRATOS.md`](docs/CONTRATOS.md).
 
-## Open and play
+## Jugar
 
-1. Add this folder in Unity Hub and open it with **Unity 6000.6.0f1**.
-2. Open `Assets/Scenes/SoulBlocks.unity` and press Play.
-3. Move with **WASD** or **arrow keys**. Hold the **right mouse button** to orbit the camera; use the **mouse wheel** to zoom.
+1. Abrí la carpeta en Unity Hub con **Unity 6000.6.0f1**.
+2. Abrí `Assets/Scenes/SoulBlocks.unity` y dale Play.
+3. Menú inicial: continuar, nueva partida (seed aleatoria o ingresada) o jugar con el mundo actual.
 
-The player retains the source project's locomotion clip (originally named Run), now used as the Walk state. Movement stops at the island edge.
+| Acción | Control |
+|---|---|
+| Moverse | WASD / flechas |
+| Cámara | Botón derecho (orbitar), rueda (zoom) |
+| Dash | Shift |
+| Imán de almas | Q |
+| Rayhit | Mantener click izquierdo para apuntar, soltar para lanzar |
+| Interactuar (tienda del árbol, altares, entrega en refugios) | E |
+| Mapa | Tab (mantener) |
+| Pausa (guardar, copiar seed, nueva partida) | Esc |
 
-Runtime scripts are in `Assets/SoulBlocks/Runtime`. Retained art remains under its original asset paths to preserve Unity GUIDs. The editor validation checks scene contents, movement, animation transitions, foot motion, and island boundaries. Its latest results and preview are in `Validation/`.
+La partida se guarda sola al terminar cada expedición, al comprar y al salir.
 
-Source: CamiloClaure/Lighting-Blocks. This repository has its own Git history and project identity. Source assets retain their original ownership and usage terms.
+## Estructura
+
+- `Assets/SoulBlocks/Core/`: lógica pura sin MonoBehaviour (mapa por seed, energía, carga, prisiones, árboles de mejoras, azar, guardado, simulación). Tunables en `Balance.*.cs`.
+- `Assets/SoulBlocks/Runtime/`: sistemas en escena. Cada uno se registra solo en `GameRoot` (no hay que tocar la escena).
+- `Assets/SoulBlocks/Tests/`: EditMode y PlayMode (incluye un smoke test que juega una partida completa).
+- `tools/CoreHarness/`: compila `Core/` fuera de Unity y valida mapas en segundos.
+- `Validation/balance.txt`: ritmo de una partida simulada sobre 200 seeds (lo escribe un test EditMode).
+
+## Tests
+
+Con el Editor cerrado (batchmode necesita el lock del proyecto):
+
+```bash
+UNITY="C:\Program Files\Unity\Hub\Editor\6000.6.0f1\Editor\Unity.exe"
+"$UNITY" -batchmode -nographics -projectPath . -runTests -testPlatform EditMode -testResults Logs/editmode.xml
+"$UNITY" -batchmode -projectPath . -runTests -testPlatform PlayMode -testResults Logs/playmode.xml
+```
+
+Loop rápido para lógica de `Core` (requiere .NET SDK; ~2 s para 200 seeds):
+
+```bash
+cd tools/CoreHarness
+dotnet run -c Release -- 500            # anclajes sintéticos
+dotnet run -c Release -- 500 realistic  # anclajes fuera de grilla
+```
+
+`JsonUtility` y otras llamadas internas del motor compilan en el harness pero fallan al ejecutarse fuera de Unity.
+
+## Origen
+
+Proyecto mínimo extraído de CamiloClaure/Lighting-Blocks (isla, Wisdom Tree, jugador y animaciones). La mecánica anterior de bloques quedó archivada en el tag `archive/block-mechanic`. Los assets de origen conservan su autoría y términos de uso.
