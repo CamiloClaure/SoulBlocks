@@ -7,7 +7,9 @@ namespace SoulBlocks
     // the enter/exit events, ExpeditionController.DepositCargo() owns the actual move to Run.reserveSouls.
     public sealed class ShelterDelivery : MonoBehaviour
     {
+        const float LabelRange = 30f;
         int currentShelterId = -1;
+        MapLayout layout;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Register() => GameRoot.Register<ShelterDelivery>();
@@ -28,7 +30,7 @@ namespace SoulBlocks
             Hud.Unregister(DrawPrompt);
         }
 
-        void OnMapBuilt(MapLayout layout) => currentShelterId = -1;
+        void OnMapBuilt(MapLayout mapLayout) { layout = mapLayout; currentShelterId = -1; }
         void OnShelterEntered(int id) => currentShelterId = id;
         void OnShelterExited(int id) { if (currentShelterId == id) currentShelterId = -1; }
 
@@ -44,11 +46,17 @@ namespace SoulBlocks
             Hud.Toast("Entregaste " + amount + " almas");
         }
 
+        // "Refugio" over nearby shelters (what the pale disc is), plus the delivery prompt.
         void DrawPrompt()
         {
             var root = GameRoot.Instance;
-            if (root == null || !CanDeliver(root.Run)) return;
-            if (root.Player != null) Hud.WorldLabel(root.Player.transform.position + Vector3.up * 2.2f, "E: Entregar carga");
+            if (root == null || root.Player == null) return;
+            Vector3 player = root.Player.transform.position;
+            if (layout != null)
+                foreach (var shelter in layout.shelters)
+                    if ((shelter.position - player).sqrMagnitude <= LabelRange * LabelRange)
+                        Hud.WorldLabel(shelter.position + Vector3.up * 1.2f, "Refugio");
+            if (CanDeliver(root.Run)) Hud.WorldLabel(player + Vector3.up * 2.2f, "E: Entregar carga");
         }
     }
 }

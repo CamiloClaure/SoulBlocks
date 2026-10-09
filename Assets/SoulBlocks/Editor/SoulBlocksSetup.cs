@@ -91,8 +91,6 @@ namespace SoulBlocks.Editor
                 light.color = new Color(.82f, .80f, 1f);
                 light.shadows = LightShadows.Soft;
                 rig = Object.FindAnyObjectByType<SoulCamera>();
-                rig.distance = 36f;
-                rig.focusOffset = new Vector3(-6, 1, -3);
                 rig.SnapToPlayer();
                 var camera = rig.GetComponent<Camera>();
                 camera.farClipPlane = 150;

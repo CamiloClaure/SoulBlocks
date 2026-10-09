@@ -48,7 +48,11 @@ namespace SoulBlocks
         public int branchId = -1; // -1 for connections
         public float pathDistance; // walking distance from hub
         public string requiresUnlock = ""; // "" = always present
-        public bool shortcut;
+        public bool shortcut; // dash-only side platform (a disc), not part of the required path
+        // This tile's stretch of the curved ribbon (PathShape), left/right top-surface edges.
+        // Empty for shortcut platforms.
+        public List<Vector3> edgeLeft = new List<Vector3>();
+        public List<Vector3> edgeRight = new List<Vector3>();
     }
 
     [Serializable]
@@ -56,6 +60,7 @@ namespace SoulBlocks
     {
         public int id;
         public Vector3 position;
+        public int tileIndex = -1; // the tile whose ribbon the souls scatter over
         public int branchId;
         public int baseCount;
         public string requiresUnlock = "";

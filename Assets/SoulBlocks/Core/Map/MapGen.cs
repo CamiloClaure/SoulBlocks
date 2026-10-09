@@ -59,6 +59,8 @@ namespace SoulBlocks
                 for (int c = a + 1; c < layout.branches.Count; c++)
                     TryConnect(layout, occupied, input.hubCenter, a, c, ref tileIndex, ref connectionId);
 
+            Naturalize(layout, seed);
+
             return layout;
         }
 
@@ -112,6 +114,7 @@ namespace SoulBlocks
             };
             layout.branches.Add(branch);
 
+            var stepTiles = new List<TileLayout>();
             for (int k = 0; k < steps.Count; k++)
             {
                 var tile = new TileLayout
@@ -123,18 +126,20 @@ namespace SoulBlocks
                     requiresUnlock = steps[k].deep ? UnlockIds.Raiz3 : ""
                 };
                 layout.tiles.Add(tile);
+                stepTiles.Add(tile);
             }
 
             // One props stream per branch, threaded through every prison placed on it: each
             // Chance() call must consume the next draw, not a fresh one, or separate prisons end
             // up re-rolling the same first value instead of independent ones.
             var propsRng = SeededRng.Stream(seed, prefix + ".props");
+            var spotsRng = SeededRng.Stream(seed, prefix + ".prisonSpots"); // which tiles get prisons
 
             PrisonTier endTier;
             switch (specialty)
             {
-                case BranchSpecialty.Souls: endTier = PrisonTier.T1; AddSoulsInteriorPrisons(layout, branch, steps, ref prisonId, propsRng); break;
-                case BranchSpecialty.Prisons: endTier = PrisonTier.T2; AddPrisonGroups(layout, branch, steps, seed, propsRng, ref prisonId, ref groupId); break;
+                case BranchSpecialty.Souls: endTier = PrisonTier.T1; AddSoulsInteriorPrisons(layout, branch, steps, ref prisonId, propsRng, spotsRng); break;
+                case BranchSpecialty.Prisons: endTier = PrisonTier.T2; AddPrisonGroups(layout, branch, steps, seed, propsRng, spotsRng, ref prisonId, ref groupId); break;
                 default: endTier = PrisonTier.T3; break;
             }
 
@@ -158,9 +163,9 @@ namespace SoulBlocks
             }
 
             if (steps.Count > actualBase)
-                AddDeepPrisons(layout, branch, steps, actualBase, isNucleoBranch, propsRng, ref prisonId);
+                AddDeepPrisons(layout, branch, steps, actualBase, isNucleoBranch, propsRng, spotsRng, ref prisonId);
 
-            AddSoulSpawns(layout, branch, steps, specialty, ref soulId);
+            AddSoulSpawns(layout, branch, steps, stepTiles, specialty, ref soulId);
             AddSidePlatforms(layout, branch, steps, actualBase, hubCenter, occupied,
                 SeededRng.Stream(seed, prefix + ".platforms"), ref tileIndex, ref gapId, ref soulId);
 
@@ -278,11 +283,19 @@ namespace SoulBlocks
             return Mathf.Sqrt(dx * dx + dz * dz);
         }
 
+        // Walking distance of the branch tile nearest to `position` (XZ): prisons and souls sit
+        // anywhere across the ribbon, not on tile centers.
         internal static float PathDistanceAt(MapLayout layout, int branchId, Vector3 position)
         {
+            float best = float.MaxValue, distance = 0f;
             foreach (var tile in layout.tiles)
-                if (tile.branchId == branchId && (tile.position - position).sqrMagnitude < .01f) return tile.pathDistance;
-            return 0f;
+            {
+                if (tile.branchId != branchId) continue;
+                float dx = tile.position.x - position.x, dz = tile.position.z - position.z;
+                float d = dx * dx + dz * dz;
+                if (d < best) { best = d; distance = tile.pathDistance; }
+            }
+            return distance;
         }
 
         static int TileIndexAt(MapLayout layout, Vector3 position)
@@ -292,9 +305,11 @@ namespace SoulBlocks
             return -1;
         }
 
-        static void AddSoulsInteriorPrisons(MapLayout layout, BranchLayout branch, List<Step> steps, ref int prisonId, SeededRng propsRng)
+        static void AddSoulsInteriorPrisons(MapLayout layout, BranchLayout branch, List<Step> steps, ref int prisonId, SeededRng propsRng, SeededRng spotsRng)
         {
-            for (int k = 3; k < steps.Count - 1 && k < branch.length / Balance.TileSize - 1; k += Balance.SoulsBranchPrisonInterval)
+            // Random gaps of SoulsBranchPrisonInterval +-1 tiles: spots vary per seed.
+            int interval = Balance.SoulsBranchPrisonInterval;
+            for (int k = spotsRng.Next(2, 4); k < steps.Count - 1 && k < branch.length / Balance.TileSize - 1; k += spotsRng.Next(interval - 1, interval + 2))
             {
                 var prison = new PrisonLayout
                 {
@@ -314,7 +329,7 @@ namespace SoulBlocks
         static readonly PrisonTier[] GroupTiers = { PrisonTier.T1, PrisonTier.T2, PrisonTier.T3 };
 
         static void AddPrisonGroups(MapLayout layout, BranchLayout branch, List<Step> steps, int seed,
-            SeededRng propsRng, ref int prisonId, ref int groupId)
+            SeededRng propsRng, SeededRng spotsRng, ref int prisonId, ref int groupId)
         {
             int baseSteps = Mathf.RoundToInt(branch.length / Balance.TileSize);
             var patterns = new List<PrisonPattern> { PrisonPattern.Line, PrisonPattern.Arc, PrisonPattern.Compact, PrisonPattern.Connected };
@@ -323,7 +338,7 @@ namespace SoulBlocks
             for (int g = 0; g < GroupTiers.Length; g++)
             {
                 float frac = (g + 1) / (GroupTiers.Length + 1.5f);
-                int idx = Mathf.Clamp(Mathf.RoundToInt(frac * (baseSteps - 1)), 3, Mathf.Max(3, baseSteps - 2));
+                int idx = Mathf.Clamp(Mathf.RoundToInt(frac * (baseSteps - 1)) + spotsRng.Next(-2, 3), 3, Mathf.Max(3, baseSteps - 2));
                 if (idx >= steps.Count) continue;
                 var center = steps[idx];
                 var pattern = patterns[g % patterns.Count];
@@ -377,10 +392,11 @@ namespace SoulBlocks
             if (prison.tier != PrisonTier.T1 && rng.Chance(Balance.ExposedCoreChance)) prison.props |= PrisonProp.ExposedCore;
         }
 
-        static void AddDeepPrisons(MapLayout layout, BranchLayout branch, List<Step> steps, int actualBase, bool isNucleoBranch, SeededRng propsRng, ref int prisonId)
+        static void AddDeepPrisons(MapLayout layout, BranchLayout branch, List<Step> steps, int actualBase, bool isNucleoBranch, SeededRng propsRng, SeededRng spotsRng, ref int prisonId)
         {
             int deepCount = steps.Count - actualBase;
-            int midIndex = actualBase + Mathf.Clamp(deepCount / 2, 0, deepCount - 1);
+            int lo = actualBase + deepCount / 4, hi = Mathf.Max(lo + 1, steps.Count - 1);
+            int midIndex = Mathf.Clamp(spotsRng.Next(lo, hi), actualBase, steps.Count - 1);
             var t4 = new PrisonLayout
             {
                 id = prisonId++,
@@ -408,7 +424,7 @@ namespace SoulBlocks
             });
         }
 
-        static void AddSoulSpawns(MapLayout layout, BranchLayout branch, List<Step> steps, BranchSpecialty specialty, ref int soulId)
+        static void AddSoulSpawns(MapLayout layout, BranchLayout branch, List<Step> steps, List<TileLayout> stepTiles, BranchSpecialty specialty, ref int soulId)
         {
             int perTile;
             switch (specialty)
@@ -425,6 +441,7 @@ namespace SoulBlocks
                 {
                     id = soulId++,
                     position = steps[k].pos,
+                    tileIndex = stepTiles[k].index,
                     branchId = branch.id,
                     baseCount = steps[k].deep ? perTile * Balance.SoulsDeepMultiplier : perTile,
                     requiresUnlock = steps[k].deep ? UnlockIds.Raiz3 : ""
@@ -465,21 +482,32 @@ namespace SoulBlocks
             for (int k = 3; k < actualBase - 1 && placed < Balance.PlatformsPerBranchMax; k++)
             {
                 if (!rng.Chance(Balance.PlatformChance)) continue;
+                // Straight grid stretch only, so after Naturalize the ribbon still runs roughly
+                // perpendicular to the platform's side and the gap stays within dash range.
+                if (steps[k - 1].heading != steps[k].heading || steps[k + 1].heading != steps[k].heading) continue;
                 Vector3 side = rng.Chance(.5f) ? TurnLeft(steps[k].heading) : TurnRight(steps[k].heading);
-                var cell = CellOf(steps[k].pos + side * Balance.TileSize, hubCenter);
-                if (occupied.Contains(cell)) continue;
-                occupied.Add(cell);
+                // The platform plus room around it: 2 cells out to the side, 1 cell either way
+                // along the path, so no other ribbon (wide and jittered) comes near the disc.
+                var block = new List<(int, int)>();
+                for (int a = -1; a <= 1; a++)
+                    for (int l = 1; l <= 2; l++)
+                        block.Add(CellOf(steps[k].pos + side * (l * Balance.TileSize) + steps[k].heading * (a * Balance.TileSize), hubCenter));
+                bool free = true;
+                foreach (var c in block) if (occupied.Contains(c)) free = false;
+                if (!free) continue;
+                foreach (var c in block) occupied.Add(c);
 
                 float edge = Balance.TileSize * .5f;
                 Vector3 center = steps[k].pos + side * (edge + Balance.GapMaxLength + Balance.PlatformSize * .5f);
-                layout.tiles.Add(new TileLayout
+                var platform = new TileLayout
                 {
                     index = tileIndex++,
                     position = center,
                     branchId = branch.id,
                     pathDistance = k * Balance.TileSize,
                     shortcut = true
-                });
+                };
+                layout.tiles.Add(platform);
                 layout.gaps.Add(new GapLayout
                 {
                     id = gapId++,
@@ -487,7 +515,7 @@ namespace SoulBlocks
                     to = steps[k].pos + side * (edge + Balance.GapMaxLength),
                     branchId = branch.id
                 });
-                layout.soulSpawns.Add(new SoulSpawnLayout { id = soulId++, position = center, branchId = branch.id, baseCount = Balance.PlatformSouls });
+                layout.soulSpawns.Add(new SoulSpawnLayout { id = soulId++, position = center, tileIndex = platform.index, branchId = branch.id, baseCount = Balance.PlatformSouls });
                 placed++;
             }
         }

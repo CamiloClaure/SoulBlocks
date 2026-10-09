@@ -50,12 +50,8 @@ namespace SoulBlocks
             if (Keys.DashPressed) TryDash(direction);
         }
 
-        static Vector3 FacingDirection(SoulPlayer player)
-        {
-            Vector3 forward = player.visual != null ? player.visual.forward : player.transform.forward;
-            forward.y = 0f;
-            return forward.sqrMagnitude > .0001f ? forward.normalized : Vector3.forward;
-        }
+        // The input's direction (SoulPlayer.Yaw), not the model's: the model may still be turning.
+        static Vector3 FacingDirection(SoulPlayer player) => Quaternion.Euler(0f, player.Yaw, 0f) * Vector3.forward;
 
         public bool TryDash(Vector3 direction)
         {

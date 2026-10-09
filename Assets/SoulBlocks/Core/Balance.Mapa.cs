@@ -12,6 +12,12 @@ namespace SoulBlocks
         public static float DeepExtensionLength = 240f;
 
         public static float TurnChance = .25f;
+        // Natural look: tile centers jitter off the 10 m grid and a Catmull-Rom ribbon of
+        // varying width runs through them (PathShape). The grid stays the topology.
+        public static float PathJitter = 2.5f;
+        public static float PathHalfWidth = 5f;
+        public static float PathWidthNoise = .2f; // half width 4..6 m, so 8..12 m wide
+        public static int PathSamplesPerSegment = 8;
         public static float GapMaxLength = 4f; // base dash is 6 m, keep gaps comfortably shorter
         public static float ShelterSpacing = 140f;
         public static float ShelterRadius = 4.5f; // covers the 10 m path width

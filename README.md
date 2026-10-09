@@ -12,8 +12,8 @@ Estado: **obra gruesa**. Todas las mecánicas funcionan de punta a punta con pla
 
 | Acción | Control |
 |---|---|
-| Moverse | WASD / flechas |
-| Cámara | Botón derecho (orbitar), rueda (zoom) |
+| Moverse | WASD / flechas (la cámara se acomoda detrás) |
+| Zoom de cámara | Rueda |
 | Dash | Shift |
 | Imán de almas | Q |
 | Rayhit | Mantener click izquierdo para apuntar, soltar para lanzar |

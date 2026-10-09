@@ -19,6 +19,7 @@ namespace SoulBlocks
             CheckGaps(layout, failures);
             CheckShelterSpacing(layout, failures);
             CheckBranchLengths(layout, failures);
+            CheckRibbons(layout, failures);
             if (layout.branches.Count > 1 && layout.connections.Count == 0)
                 failures.Add("no connection links the branches into a circuit");
             return failures;
@@ -40,6 +41,30 @@ namespace SoulBlocks
                 if (branch.length < min - Balance.TileSize - .01f || branch.length > max + .01f)
                     failures.Add("branch " + branch.id + " length " + branch.length + " is outside its specialty's table");
             }
+        }
+
+        // Every walkable tile needs its stretch of curved ribbon, or MapBuilder draws nothing there.
+        static void CheckRibbons(MapLayout layout, List<string> failures)
+        {
+            foreach (var tile in layout.tiles)
+            {
+                if (tile.shortcut) continue;
+                if (tile.edgeLeft.Count < 2 || tile.edgeLeft.Count != tile.edgeRight.Count) { failures.Add("tile " + tile.index + " has no ribbon"); continue; }
+                if (Folds(tile)) failures.Add("tile " + tile.index + " ribbon folds over itself");
+            }
+        }
+
+        // An edge running backwards against the centerline means the ribbon folded: its mesh
+        // would show a hole there (backface) and the player could fall through it.
+        public static bool Folds(TileLayout tile)
+        {
+            for (int k = 0; k + 1 < tile.edgeLeft.Count; k++)
+            {
+                Vector3 forward = (tile.edgeLeft[k + 1] + tile.edgeRight[k + 1] - tile.edgeLeft[k] - tile.edgeRight[k]) * .5f;
+                if (Vector3.Dot(tile.edgeLeft[k + 1] - tile.edgeLeft[k], forward) <= 0f) return true;
+                if (Vector3.Dot(tile.edgeRight[k + 1] - tile.edgeRight[k], forward) <= 0f) return true;
+            }
+            return false;
         }
 
         static void CheckNoDuplicateCells(MapLayout layout, List<string> failures)

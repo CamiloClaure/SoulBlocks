@@ -12,8 +12,8 @@ namespace SoulBlocks
         // Same table as README.md "Jugar".
         static readonly string[] Controls =
         {
-            "WASD / flechas: moverse",
-            "Botón derecho: orbitar cámara  ·  Rueda: zoom",
+            "WASD: moverse (la cámara se acomoda detrás)",
+            "Rueda: zoom de la cámara",
             "Shift: dash",
             "Q: imán de almas",
             "Click izquierdo: mantener para apuntar Rayhit, soltar para lanzar",

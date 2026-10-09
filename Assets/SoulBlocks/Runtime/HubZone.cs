@@ -2,10 +2,12 @@ using UnityEngine;
 
 namespace SoulBlocks
 {
-    // "In hub" = the ground under the player belongs to the island, not a generated tile.
+    // "In hub" = there is island ground under the player. Path ribbons start a little inside
+    // the island (just under its surface), so look through every hit, not only the first.
     public sealed class HubZone : MonoBehaviour
     {
         public bool InHub { get; private set; }
+        readonly RaycastHit[] hits = new RaycastHit[8];
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Register() => GameRoot.Register<HubZone>();
@@ -16,8 +18,9 @@ namespace SoulBlocks
             if (root == null || root.Player == null || root.Island == null) return;
 
             bool inHub = false;
-            if (Physics.Raycast(root.Player.transform.position + Vector3.up, Vector3.down, out var hit, 3f, (1 << 8) | (1 << 9), QueryTriggerInteraction.Ignore))
-                inHub = hit.collider.transform.IsChildOf(root.Island);
+            int count = Physics.RaycastNonAlloc(root.Player.transform.position + Vector3.up, Vector3.down, hits, 3f, (1 << 8) | (1 << 9), QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < count && !inHub; i++)
+                inHub = hits[i].collider.transform.IsChildOf(root.Island);
 
             if (inHub == InHub) return;
             InHub = inHub;

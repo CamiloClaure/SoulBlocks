@@ -179,6 +179,31 @@ namespace SoulBlocks.Tests.Mapa
             Assert.Greater(total, 100, "side platforms almost never generate");
         }
 
+        // Paths are curved ribbons now: every walkable tile has one, none folds, and every prison
+        // (scattered at random across the width) still stands on it.
+        [Test]
+        public void RibbonsCoverEveryTileAndHoldEveryPrison()
+        {
+            foreach (var seed in FiveHundredSeeds().Take(60))
+            {
+                var layout = MapGen.Generate(RealisticInput(seed));
+                var walkable = layout.tiles.Where(t => !t.shortcut).ToList();
+                foreach (var tile in walkable)
+                {
+                    Assert.GreaterOrEqual(tile.edgeLeft.Count, 2, "seed " + seed + " tile " + tile.index + " has no ribbon");
+                    Assert.IsFalse(MapValidator.Folds(tile), "seed " + seed + " tile " + tile.index + " folds");
+                }
+                foreach (var prison in layout.prisons)
+                {
+                    float best = float.MaxValue;
+                    foreach (var tile in walkable)
+                        for (int k = 0; k < tile.edgeLeft.Count; k++)
+                            best = Mathf.Min(best, PathShapeTests.DistanceToSegment(prison.position, tile.edgeLeft[k], tile.edgeRight[k]));
+                    Assert.Less(best, 1f, "seed " + seed + " prison " + prison.id + " stands off the path");
+                }
+            }
+        }
+
         // Real anchors come from island collider bounds and never land on a clean multiple of
         // Balance.TileSize relative to hubCenter, unlike Input()'s synthetic anchors above. This
         // is the exact shape that exposed the CellOf half-integer rounding bug (3.5/4.5 both

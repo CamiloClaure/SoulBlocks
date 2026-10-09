@@ -12,6 +12,9 @@ namespace SoulBlocks
         public Camera viewCamera;
         public float moveSpeed = 6f;
         public bool readInput = true;
+        public float Yaw { get; private set; } // facing; SoulCamera swings behind it while moving
+        Vector2 heldInput;
+        float basisYaw;
         public float SpeedMultiplier = 1f;
         public bool MovementLocked;
         public float MovementSpeed { get; private set; }
@@ -25,6 +28,7 @@ namespace SoulBlocks
         void Start()
         {
             if (visual != null) visual.localPosition = Vector3.down * (controller.skinWidth + .19f);
+            Yaw = visual != null ? visual.eulerAngles.y : transform.eulerAngles.y;
             BuildWizardHat();
         }
         void Update()
@@ -42,19 +46,28 @@ namespace SoulBlocks
             Vector3 before = transform.position;
             if (!MovementLocked)
             {
+                // WASD relative to the camera, but the camera yaw is sampled only when a key
+                // combination starts or changes: holding D runs straight right in the world while
+                // the camera swings in behind, instead of the player circling with it.
                 input = Vector2.ClampMagnitude(input, 1);
-                Vector3 forward = viewCamera != null ? Vector3.ProjectOnPlane(viewCamera.transform.forward, Vector3.up).normalized : Vector3.forward;
-                if (forward.sqrMagnitude < .001f) forward = Vector3.forward;
-                Vector3 right = Vector3.Cross(Vector3.up, forward);
-                Vector3 motion = (forward * input.y + right * input.x) * moveSpeed * SpeedMultiplier * deltaTime;
-                TryMoveSupported(motion);
+                if (input.sqrMagnitude < .0001f) heldInput = Vector2.zero;
+                else
+                {
+                    if (heldInput == Vector2.zero || (input - heldInput).sqrMagnitude > .0001f)
+                    {
+                        basisYaw = viewCamera != null ? viewCamera.transform.eulerAngles.y : Yaw;
+                        heldInput = input;
+                    }
+                    Vector3 direction = Quaternion.Euler(0f, basisYaw, 0f) * new Vector3(input.x, 0f, input.y);
+                    Yaw = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
+                    TryMoveSupported(direction * moveSpeed * SpeedMultiplier * deltaTime);
+                }
             }
             fallingSpeed = controller.isGrounded ? -2f : Mathf.Max(-30f, fallingSpeed - 20f * deltaTime);
             controller.Move(Vector3.up * fallingSpeed * deltaTime);
             Vector3 planar = Vector3.ProjectOnPlane(transform.position - before, Vector3.up);
             MovementSpeed = planar.magnitude / deltaTime;
-            if (visual != null && planar.sqrMagnitude > .00001f)
-                visual.rotation = Quaternion.RotateTowards(visual.rotation, Quaternion.LookRotation(planar), 720f * deltaTime);
+            if (visual != null) visual.rotation = Quaternion.RotateTowards(visual.rotation, Quaternion.Euler(0f, Yaw, 0f), 1080f * deltaTime);
             int next = MovementSpeed > .08f ? Walk : Idle;
             if (animator != null && animationState != next)
             {
