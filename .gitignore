@@ -119,3 +119,7 @@ docs/art-direction/*/*.png
 !docs/art-direction/*/gameplay.png
 !docs/art-direction/*/vista-sw.png
 !docs/art-direction/*/hud.png
+
+# Core harness build output (tools/CoreHarness)
+/tools/**/bin/
+/tools/**/obj/
