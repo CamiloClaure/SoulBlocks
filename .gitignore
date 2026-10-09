@@ -123,3 +123,4 @@ docs/art-direction/*/*.png
 # Core harness build output (tools/CoreHarness)
 /tools/**/bin/
 /tools/**/obj/
+!/tools/**/*.csproj
