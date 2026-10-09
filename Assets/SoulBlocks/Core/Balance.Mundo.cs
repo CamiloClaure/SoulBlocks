@@ -7,7 +7,6 @@ namespace SoulBlocks
         public static float PortalThickness = .2f;
         public static float PortalPadRadius = 3.5f;
         public static float PortalTriggerRadius = 1.1f;
-        public static float PortalReentryCooldown = 1.5f;
 
         public static float BroteIntervalSeconds = 8f;
         public static int BroteSoulsPerTick = 3;

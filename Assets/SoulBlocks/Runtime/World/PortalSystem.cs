@@ -25,7 +25,7 @@ namespace SoulBlocks
 
         readonly List<Entry> entries = new List<Entry>();
         RunState run;
-        float cooldownUntil;
+        bool armed = true; // false after a teleport until the player stands outside every trigger
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Register() => GameRoot.Register<PortalSystem>();
@@ -129,9 +129,15 @@ namespace SoulBlocks
         {
             var root = GameRoot.Instance;
             if (root == null || root.Player == null || run == null) return;
-            if (Time.time < cooldownUntil) return;
-
             Vector3 pos = root.Player.transform.position;
+            if (!armed)
+            {
+                // A time cooldown bounced a player who stood still on the arrival pad back out:
+                // re-arm only once they have stepped off every portal and pad.
+                foreach (var e in entries)
+                    if (e.active && (WithinRadius(pos, e.portal.position) || WithinRadius(pos, e.padPosition))) return;
+                armed = true;
+            }
             foreach (var e in entries)
             {
                 if (!e.active) continue;
@@ -139,13 +145,13 @@ namespace SoulBlocks
                 {
                     root.Player.Teleport(e.padPosition);
                     if (run.inExpedition) ExpeditionController.Instance?.EndExpedition(ExpeditionEndReason.Portal);
-                    cooldownUntil = Time.time + Balance.PortalReentryCooldown;
+                    armed = false;
                     return;
                 }
                 if (WithinRadius(pos, e.padPosition))
                 {
                     root.Player.Teleport(e.portal.position);
-                    cooldownUntil = Time.time + Balance.PortalReentryCooldown;
+                    armed = false;
                     return;
                 }
             }

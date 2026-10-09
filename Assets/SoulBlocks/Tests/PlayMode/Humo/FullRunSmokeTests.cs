@@ -217,6 +217,11 @@ namespace SoulBlocks.Tests.Humo
             yield return null;
             Assert.IsFalse(Keys.Blocked, "Keys.Blocked stayed true after choosing a blessing.");
 
+            // Rayhit travel left the player on the branch end, which is where the portal sits:
+            // step back first so the portal does not fire the instant raiz1 activates it.
+            player.Teleport(nearEnd.position);
+            yield return new WaitForSeconds(.2f);
+
             // 4. Grant enough wisdom and buy raiz1 -> portal at the broken branch end activates.
             run.wisdom = 1000; // shortcut: grant wisdom instead of farming more prisons for it
             var progression = root.GetComponent<ProgressionSystem>();
@@ -233,12 +238,19 @@ namespace SoulBlocks.Tests.Humo
             GameEvents.ExpeditionEnded += onEnded;
 
             player.Teleport(portal.position);
-            for (int i = 0; i < 15; i++) yield return null;
+            Vector3 arrivedAt = player.transform.position;
+            yield return new WaitForSeconds(.5f); // time, not frames: batchmode frames are ~1 ms
             GameEvents.ExpeditionEnded -= onEnded;
 
             var hubZone = root.GetComponent<HubZone>();
             Assert.IsNotNull(hubZone, "HubZone was not attached.");
-            Assert.IsTrue(hubZone.InHub, "Stepping into the active portal did not return the player to the island.");
+            Assert.IsTrue(hubZone.InHub, "Stepping into the active portal did not return the player to the island."
+                + " portal=" + portal.position + " arrivedAt=" + arrivedAt + " now=" + player.transform.position
+                + " tree=" + (root.Tree != null ? root.Tree.position.ToString() : "null") + " ended=" + ended
+                + " inExpedition=" + run.inExpedition + " supportedNow=" + SoulPlayer.IsSupportedAt(player.transform.position)
+                + " ringActive=" + (GameObject.Find("Portal rama " + portal.branchId) != null)
+                + " raiz1=" + run.HasUnlock(UnlockIds.Raiz1) + " branchEndPrisonId=" + soulsBranch.endPrisonId
+                + " testedPrison=" + endPrison.id + " endBroken=" + run.Prison(soulsBranch.endPrisonId).broken);
             Assert.IsFalse(run.inExpedition, "The expedition was not ended by the portal.");
             Assert.IsTrue(ended, "ExpeditionEnded was not raised by the portal.");
             Assert.AreEqual(ExpeditionEndReason.Portal, lastEndReason, "ExpeditionEnded fired with the wrong reason.");
