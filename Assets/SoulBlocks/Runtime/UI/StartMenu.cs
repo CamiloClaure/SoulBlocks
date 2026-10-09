@@ -17,6 +17,9 @@ namespace SoulBlocks
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics() => shownThisProcess = false;
 
+        // Tests run many scene loads in one play session: lets a test see the "first boot" menu again.
+        public static void ResetForTests() => shownThisProcess = false;
+
         void OnEnable() { GameEvents.MapBuilt += OnMapBuilt; Hud.Register(800, Draw); }
 
         void OnDisable()

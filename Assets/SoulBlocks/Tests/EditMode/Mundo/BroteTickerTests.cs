@@ -24,8 +24,8 @@ namespace SoulBlocks.Tests
             var ticker = new BroteTicker();
             Assert.AreEqual(0, ticker.Tick(5f, 8f));
             Assert.AreEqual(1, ticker.Tick(5f, 8f)); // 10s total: one tick, 2s carried over
-            Assert.AreEqual(0, ticker.Tick(1.9f, 8f));
-            Assert.AreEqual(1, ticker.Tick(.2f, 8f));
+            Assert.AreEqual(0, ticker.Tick(5.9f, 8f)); // 2 carried + 5.9 = 7.9: still short
+            Assert.AreEqual(1, ticker.Tick(.2f, 8f));  // 8.1: second tick
         }
 
         [Test]

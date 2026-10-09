@@ -13,6 +13,7 @@ namespace SoulBlocks.Tests
             bool mapBuilt = false;
             GameEvents.MapBuilt += _ => mapBuilt = true;
 
+            StartMenu.ResetForTests(); // another test may have booted the scene first in this play session
             SceneManager.LoadScene("SoulBlocks");
             for (int i = 0; i < 10; i++) yield return null;
             Assert.IsTrue(mapBuilt, "MapBuilt was not raised.");
