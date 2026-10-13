@@ -39,6 +39,13 @@ namespace SoulBlocks
             },
             new UpgradeDef
             {
+                id = "abundancia", tree = UpgradeTree.Souls, currency = Currency.Souls,
+                name = "Abundancia", description = "Aparecen más almas en las cuevas.",
+                maxLevel = (int)Balance.AbundanciaMaxLevel, baseCost = (int)Balance.AbundanciaCost, growth = Balance.AbundanciaGrowth,
+                perLevelEffects = { new UpgradeEffect(StatId.SoulDensity, Balance.AbundanciaEffect) }
+            },
+            new UpgradeDef
+            {
                 id = "dash", tree = UpgradeTree.Souls, currency = Currency.Souls,
                 name = "Dash", description = "Más distancia de dash.",
                 maxLevel = (int)Balance.DashMaxLevel, baseCost = (int)Balance.DashCost, growth = Balance.DashGrowth,

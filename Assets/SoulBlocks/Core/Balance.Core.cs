@@ -24,5 +24,6 @@ namespace SoulBlocks
         public static float RaySoulsPerCharge = 25f;
         public static float RayRechargeSeconds = 20f;
         public static float BlessingOptions = 3f;
+        public static float SoulDensity = .5f; // fraction of each spawn's souls that appear; Abundancia raises it
     }
 }

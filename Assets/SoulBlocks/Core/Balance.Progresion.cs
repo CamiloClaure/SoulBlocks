@@ -11,6 +11,7 @@ namespace SoulBlocks
         public static float EnergiaCost = 40f, EnergiaGrowth = 1.5f, EnergiaMaxLevel = 8f, EnergiaEffect = 32f;
         public static float VelocidadCost = 50f, VelocidadGrowth = 1.5f, VelocidadMaxLevel = 6f, VelocidadEffect = .48f;
         public static float RadioCost = 35f, RadioGrowth = 1.5f, RadioMaxLevel = 4f, RadioEffect = .5f;
+        public static float AbundanciaCost = 50f, AbundanciaGrowth = 1.5f, AbundanciaMaxLevel = 4f, AbundanciaEffect = .125f;
         public static float DashCost = 60f, DashGrowth = 1.5f, DashMaxLevel = 4f, DashEffect = 1.5f, DashMilestoneCharges = 1f;
         public static float ImanRadioCost = 45f, ImanRadioGrowth = 1.5f, ImanRadioMaxLevel = 4f, ImanRadioEffect = 2f;
         public static float ImanDuracionCost = 45f, ImanDuracionGrowth = 1.5f, ImanDuracionMaxLevel = 3f, ImanDuracionEffect = 1f;

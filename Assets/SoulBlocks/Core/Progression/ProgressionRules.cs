@@ -117,6 +117,8 @@ namespace SoulBlocks
                     }
                 case "carga":
                     return "+" + Fmt(def.perLevelEffects[0].add) + " almas por salida";
+                case "abundancia":
+                    return "+" + Fmt(def.perLevelEffects[0].add * 100f) + "% de almas en las cuevas";
                 case "rayhit_nivel":
                     {
                         // nv X damages up to tier index X (0 = T1 .. 3 = T4), nv 4 reaches the Nucleo.

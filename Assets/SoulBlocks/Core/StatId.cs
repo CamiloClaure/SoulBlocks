@@ -18,6 +18,7 @@ namespace SoulBlocks
         RayCharges,
         RaySoulsPerCharge,
         RayRechargeSeconds,
-        BlessingOptions
+        BlessingOptions,
+        SoulDensity
     }
 }

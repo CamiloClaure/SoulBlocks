@@ -3,8 +3,8 @@ using UnityEngine;
 
 namespace SoulBlocks
 {
-    // Spawns souls for the layout's spawn points and for loose souls released elsewhere
-    // (prisons, altars). Spawn-point souls are refreshed whenever an expedition ends; ground
+    // Spawns souls for the layout's spawn points (scaled by StatId.SoulDensity) and for loose
+    // souls released elsewhere (prisons, altars). Spawn-point souls are refreshed whenever an expedition ends; ground
     // souls persist across expeditions and saves via Run.groundSouls.
     public sealed class SoulSpawner : MonoBehaviour
     {
@@ -94,7 +94,7 @@ namespace SoulBlocks
         void SpawnPoint(SoulSpawnLayout spawn)
         {
             spawnedSpawnPointIds.Add(spawn.id);
-            int count = ExpeditionController.SpawnCountFor(spawn);
+            int count = Mathf.RoundToInt(ExpeditionController.SpawnCountFor(spawn) * GameRoot.Instance.Stats.Get(StatId.SoulDensity));
             tilesByIndex.TryGetValue(spawn.tileIndex, out var tile);
             for (int i = 0; i < count; i++)
             {

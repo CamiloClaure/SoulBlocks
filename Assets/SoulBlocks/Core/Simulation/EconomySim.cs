@@ -230,6 +230,7 @@ namespace SoulBlocks
             float moveSpeed = Mathf.Max(.01f, stats.Get(StatId.MoveSpeed));
             float energyBudget = Mathf.Max(0f, stats.Get(StatId.EnergyMax));
             int cargoCap = Mathf.Max(1, stats.GetInt(StatId.CargoCapacity));
+            float soulDensity = stats.Get(StatId.SoulDensity);
             int rayLevel = stats.GetInt(StatId.RayLevel);
             int rayChargesMax = Mathf.Max(0, stats.GetInt(StatId.RayCharges));
             float rayRecharge = Mathf.Max(.0001f, stats.Get(StatId.RayRechargeSeconds));
@@ -261,9 +262,10 @@ namespace SoulBlocks
 
                 if (poi.isSoul)
                 {
-                    int accepted = Cargo.Add(ref cargoSouls, poi.soul.baseCount, cargoCap);
+                    int spawned = Mathf.RoundToInt(poi.soul.baseCount * soulDensity);
+                    int accepted = Cargo.Add(ref cargoSouls, spawned, cargoCap);
                     outcome.soulsCollected += accepted;
-                    if (accepted < poi.soul.baseCount) outcome.cargoWasFull = true;
+                    if (accepted < spawned) outcome.cargoWasFull = true;
                     charges.AddProgress(accepted);
                     continue;
                 }

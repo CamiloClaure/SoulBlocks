@@ -45,6 +45,7 @@ namespace SoulBlocks
                 case StatId.RaySoulsPerCharge: return Balance.RaySoulsPerCharge;
                 case StatId.RayRechargeSeconds: return Balance.RayRechargeSeconds;
                 case StatId.BlessingOptions: return Balance.BlessingOptions;
+                case StatId.SoulDensity: return Balance.SoulDensity;
                 default: return 0f;
             }
         }
