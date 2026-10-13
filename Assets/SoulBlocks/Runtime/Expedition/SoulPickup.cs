@@ -4,7 +4,7 @@ using UnityEngine;
 namespace SoulBlocks
 {
     // Placeholder pickup: a small dark violet sphere with emission, floating FloatHeight above
-    // the ground with a gentle bob. Position/MoveTo work on the steady (un-bobbed) point so the
+    // the ground with a gentle bob, bursting into violet specks when collected. Position/MoveTo work on the steady (un-bobbed) point so the
     // magnet and the collector never fight the bob. Registers itself in SoulRegistry.All so
     // SoulCollector and the magnet (habilidades) can find it generically.
     public sealed class SoulPickup : MonoBehaviour, ISoul
@@ -13,6 +13,7 @@ namespace SoulBlocks
         public const float FloatHeight = 1f;
         const float BobAmplitude = .12f, BobSpeed = 2f;
         static readonly Color DarkViolet = new Color(.35f, .05f, .55f);
+        static readonly Color BurstViolet = new Color(.7f, .3f, 1f);
 
         public int Value { get; private set; } = 1;
         public bool Available { get; private set; } = true;
@@ -36,6 +37,7 @@ namespace SoulBlocks
             if (!Available) return;
             Available = false;
             OnCollected?.Invoke();
+            Burst.Spawn(transform.position, BurstViolet);
             Destroy(gameObject);
         }
 
