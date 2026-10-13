@@ -14,7 +14,6 @@ namespace SoulBlocks
 
         ChargeMeter meter;
         int maxCharges;
-        GameObject preview;
         Coroutine running;
 
         public int Charges => meter != null ? meter.Current : 0;
@@ -42,12 +41,7 @@ namespace SoulBlocks
             meter.Configure(maxCharges, root.Stats.Get(StatId.DashRechargeSeconds));
             meter.Tick(Time.deltaTime);
 
-            if (running != null) { HidePreview(); return; }
-
-            Vector3 direction = FacingDirection(root.Player);
-            UpdatePreview(root, direction);
-
-            if (Keys.DashPressed) TryDash(direction);
+            if (running == null && Keys.DashPressed) TryDash(FacingDirection(root.Player));
         }
 
         // The input's direction (SoulPlayer.Yaw), not the model's: the model may still be turning.
@@ -123,20 +117,5 @@ namespace SoulBlocks
             player.MovementLocked = false;
             running = null;
         }
-
-        void UpdatePreview(GameRoot root, Vector3 direction)
-        {
-            if (meter.Current <= 0 || !TryPlanDestination(root.Player.transform.position, direction, root.Stats.Get(StatId.DashDistance), root.Player.transform, out var destination))
-            {
-                HidePreview();
-                return;
-            }
-            if (preview == null)
-                preview = Placeholder.Make(PrimitiveType.Cylinder, new Color(.3f, .9f, 1f), "Dash Preview", null, destination, new Vector3(.8f, .02f, .8f));
-            preview.SetActive(true);
-            preview.transform.position = destination + Vector3.up * .05f;
-        }
-
-        void HidePreview() { if (preview != null) preview.SetActive(false); }
     }
 }
