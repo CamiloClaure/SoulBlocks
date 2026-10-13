@@ -10,7 +10,7 @@ namespace SoulBlocks.Tests
         static readonly PrisonTier[] AllTiers = (PrisonTier[])Enum.GetValues(typeof(PrisonTier));
 
         [Test]
-        public void AtRequiredLevelEveryPhaseTakesAtMostThreeHitsAndFragmentsMatchTheTable()
+        public void AtRequiredLevelEveryPhaseTakesAtMostTwelveBlowsAndFragmentsMatchTheTable()
         {
             foreach (var tier in AllTiers)
             {
@@ -28,7 +28,8 @@ namespace SoulBlocks.Tests
                     int newlyCompleted = record.phasesDone - before;
                     if (newlyCompleted > 0)
                     {
-                        Assert.LessOrEqual(hitsThisPhase, 3, tier + " phase took more than 3 hits at its required level");
+                        // Was 3 Rayhit impacts; pick blows chip 4x the HP, so 12 (a few seconds of picking).
+                        Assert.LessOrEqual(hitsThisPhase, 12, tier + " phase took more than 12 blows at its required level");
                         hitsThisPhase = 0;
                         phasesSeen += newlyCompleted;
                     }

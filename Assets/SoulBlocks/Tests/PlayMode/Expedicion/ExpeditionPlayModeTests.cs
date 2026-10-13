@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -30,10 +31,10 @@ namespace SoulBlocks.Tests
             Assert.IsNotNull(player, "Player missing from the booted scene.");
             player.readInput = false;
 
-            // The tile closest to the hub is always reachable with base energy.
-            var closestTile = root.Layout.tiles[0];
-            foreach (var tile in root.Layout.tiles)
-                if (tile.pathDistance < closestTile.pathDistance) closestTile = tile;
+            // The closest tile past each branch's first one (which, 30 m wide, can sit on the
+            // island itself) is off the island and always reachable with base energy.
+            var closestTile = root.Layout.tiles.Where(t => !t.shortcut && t.pathDistance >= Balance.TileSize && string.IsNullOrEmpty(t.requiresUnlock))
+                .OrderBy(t => t.pathDistance).First();
             player.Teleport(closestTile.position);
             for (int i = 0; i < 10; i++) yield return null;
 

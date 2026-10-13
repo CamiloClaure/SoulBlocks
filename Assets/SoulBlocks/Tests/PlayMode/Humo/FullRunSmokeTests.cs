@@ -110,11 +110,12 @@ namespace SoulBlocks.Tests.Humo
             Assert.AreEqual(0, run.cargoSouls, "Cargo was not deposited into the reserve on return.");
             Assert.Greater(run.reserveSouls, 0, "Reserve did not grow from the deposited cargo.");
 
-            // 2. Buy the cheapest affordable Souls upgrade with TryBuy.
+            // 2. Buy the cheapest Souls upgrade already open on the board (its parent requirement met) with TryBuy.
             var progression = root.GetComponent<ProgressionSystem>();
             Assert.IsNotNull(progression, "ProgressionSystem was not attached.");
 
             var cheapest = UpgradeCatalog.Tree(UpgradeTree.Souls)
+                .Where(d => ProgressionRules.RequirementMet(run, d))
                 .OrderBy(d => ProgressionRules.Cost(d, run.UpgradeLevel(d.id) + 1))
                 .First();
             int cost = ProgressionRules.Cost(cheapest, run.UpgradeLevel(cheapest.id) + 1);
