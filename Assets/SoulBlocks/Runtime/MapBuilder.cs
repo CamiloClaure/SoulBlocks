@@ -15,6 +15,7 @@ namespace SoulBlocks
         RunState run;
         Transform mapRoot;
         readonly Dictionary<int, GameObject> tileObjects = new Dictionary<int, GameObject>();
+        readonly List<GameObject> caves = new List<GameObject>();
 
         void OnEnable() { GameEvents.UnlockGranted += OnUnlockGranted; }
         void OnDisable() { GameEvents.UnlockGranted -= OnUnlockGranted; }
@@ -30,10 +31,6 @@ namespace SoulBlocks
             mapRoot.SetParent(transform, false);
             mapRoot.position = Vector3.zero; // ribbon meshes are built in world space
 
-            var island = GameRoot.Instance != null ? GameRoot.Instance.Island : null;
-            bool OnIsland(Vector3 p) => island != null &&
-                Physics.Raycast(p + Vector3.up * 5f, Vector3.down, out var hit, 10f, 1 << 8, QueryTriggerInteraction.Ignore) && hit.transform.IsChildOf(island);
-
             foreach (var tile in layout.tiles)
             {
                 GameObject go;
@@ -45,17 +42,14 @@ namespace SoulBlocks
                         new Vector3(Balance.PlatformSize, Balance.TileThickness * .5f, Balance.PlatformSize));
                     go.AddComponent<MeshCollider>();
                 }
-                else
-                {
-                    go = Placeholder.MakeMesh(RibbonMesh(tile), PathColor, "Tile " + tile.index, mapRoot);
-                    var cave = Placeholder.MakeMesh(CaveMesh(tile, p => OnIsland(p) || PathShape.OnAnyFloor(layout, p, tile), OnIsland), RockColor, "Cave", go.transform, false);
-                    cave.GetComponent<MeshRenderer>().shadowCastingMode = ShadowCastingMode.Off;
-                }
+                else go = Placeholder.MakeMesh(RibbonMesh(tile), PathColor, "Tile " + tile.index, mapRoot);
                 go.layer = 8;
                 bool locked = !string.IsNullOrEmpty(tile.requiresUnlock) && !run.HasUnlock(tile.requiresUnlock);
                 go.SetActive(!locked);
                 tileObjects[tile.index] = go;
             }
+
+            BuildCaves();
 
             foreach (var gap in layout.gaps)
             {
@@ -234,9 +228,37 @@ namespace SoulBlocks
         void OnUnlockGranted(string id)
         {
             if (layout == null) return;
+            bool opened = false;
             foreach (var tile in layout.tiles)
                 if (tile.requiresUnlock == id && tileObjects.TryGetValue(tile.index, out var go))
+                {
                     go.SetActive(true);
+                    opened = true;
+                }
+            if (opened) BuildCaves();
+        }
+
+        // A cave shell under every ribbon tile (child of the tile, so it hides with a locked one).
+        // Walls open only toward floor that exists right now, so they never gape at a still-locked
+        // bridge or deep stretch: unlocking tiles rebuilds every shell.
+        void BuildCaves()
+        {
+            foreach (var cave in caves)
+                if (cave != null) { Destroy(cave.GetComponent<MeshFilter>().sharedMesh); Destroy(cave); }
+            caves.Clear();
+            var island = GameRoot.Instance != null ? GameRoot.Instance.Island : null;
+            bool OnIsland(Vector3 p) => island != null &&
+                Physics.Raycast(p + Vector3.up * 5f, Vector3.down, out var hit, 10f, 1 << 8, QueryTriggerInteraction.Ignore) && hit.transform.IsChildOf(island);
+            bool Locked(TileLayout t) => !string.IsNullOrEmpty(t.requiresUnlock) && !run.HasUnlock(t.requiresUnlock);
+
+            foreach (var tile in layout.tiles)
+            {
+                if (tile.shortcut || !tileObjects.TryGetValue(tile.index, out var go)) continue;
+                var mesh = CaveMesh(tile, p => OnIsland(p) || PathShape.OnAnyFloor(layout, p, tile, Locked), OnIsland);
+                var cave = Placeholder.MakeMesh(mesh, RockColor, "Cave", go.transform, false);
+                cave.GetComponent<MeshRenderer>().shadowCastingMode = ShadowCastingMode.Off;
+                caves.Add(cave);
+            }
         }
     }
 }

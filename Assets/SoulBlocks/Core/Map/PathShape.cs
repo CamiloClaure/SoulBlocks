@@ -133,12 +133,12 @@ namespace SoulBlocks
         }
 
         // Whether `point` (horizontally) lies on any tile's ribbon or platform disc other than
-        // `except`, locked tiles included: the cave walls open wherever another floor continues.
-        public static bool OnAnyFloor(MapLayout layout, Vector3 point, TileLayout except = null)
+        // `except` (and those `skip` rules out): the cave walls open wherever another floor continues.
+        public static bool OnAnyFloor(MapLayout layout, Vector3 point, TileLayout except = null, System.Func<TileLayout, bool> skip = null)
         {
             foreach (var tile in layout.tiles)
             {
-                if (tile == except) continue;
+                if (tile == except || (skip != null && skip(tile))) continue;
                 float dx = point.x - tile.position.x, dz = point.z - tile.position.z;
                 if (tile.shortcut)
                 {
