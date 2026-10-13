@@ -12,7 +12,9 @@ namespace SoulBlocks
         PrisonSystem system;
         RunState run;
         PrisonLayout layout;
-        TextMesh label;
+
+        // Drawn by PrisonSystem as a Hud.WorldLabel (opaque box) while the player is close.
+        public string Label { get; private set; }
 
         public int PrisonId => layout.id;
         public Vector3 Position => transform.position;
@@ -41,7 +43,6 @@ namespace SoulBlocks
             if ((layout.props & PrisonProp.ExposedCore) != 0)
                 Placeholder.Make(PrimitiveType.Sphere, Color.magenta, "ExposedCoreMarker", transform, transform.position, new Vector3(.3f, .3f, .3f), false, .6f);
 
-            label = Placeholder.Label(transform, "", new Vector3(0, 1.2f, 0), Color.white);
             UpdateLabel(run.Prison(layout.id));
         }
 
@@ -122,7 +123,7 @@ namespace SoulBlocks
         void UpdateLabel(PrisonRecord record)
         {
             int remaining = PrisonRules.TotalHp(layout.tier) - record.damage;
-            label.text = TierSymbol(layout.tier) + "\nHP " + remaining + " fase " + record.phasesDone + "/" + PrisonRules.Phases(layout.tier);
+            Label = TierSymbol(layout.tier) + "\nHP " + remaining + " fase " + record.phasesDone + "/" + PrisonRules.Phases(layout.tier);
         }
 
         static string TierSymbol(PrisonTier tier)

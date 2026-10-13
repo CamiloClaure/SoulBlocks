@@ -7,9 +7,10 @@ namespace SoulBlocks
 {
     // Shared IMGUI surface: every panel registers a draw callback instead of adding its own
     // OnGUI, so draw order stays controllable and there is exactly one GUI.skin to agree on.
-    // Persistent text is small and translucent, stacked in two side columns: player stats on the
-    // left (Line), plan/objective/blessings/toasts on the right (SideLine). Modals (shop, pause,
-    // blessing pick, start menu, victory) still use plain GUI.Window, on a solid background.
+    // The skin is flat and fully opaque (no default bevels, no translucency): every piece of text
+    // sits on its own solid box. Persistent text is stacked in two side columns: player stats on
+    // the left (Line), plan/objective/blessings/toasts on the right (SideLine). Modals (shop,
+    // pause, blessing pick, start menu, victory) use plain GUI.Window on the same skin.
     public sealed class Hud : MonoBehaviour
     {
         struct Entry { public int order; public Action draw; }
@@ -17,10 +18,11 @@ namespace SoulBlocks
 
         static readonly List<Entry> entries = new List<Entry>();
         static readonly List<ToastEntry> toasts = new List<ToastEntry>();
-        const float LineHeight = 16f, ColumnWidth = 360f, Margin = 8f, ButtonWidth = 56f;
+        const float LineHeight = 20f, ColumnWidth = 360f, Margin = 8f, ButtonWidth = 56f;
         static float leftY, rightY;
-        static GUIStyle subtle, shadow, smallButton;
+        static GUIStyle boxed, smallButton;
         static GUISkin skin;
+        public static readonly Color PanelColor = new Color32(28, 26, 38, 255);
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void RegisterSystem() => GameRoot.Register<Hud>();
@@ -39,7 +41,7 @@ namespace SoulBlocks
         // (100 expedition, 200 prisons, 300 abilities...).
         public static void Line(string text)
         {
-            SubtleLabel(new Rect(Margin, leftY, ColumnWidth, LineHeight), text);
+            TextBox(new Rect(Margin, leftY, ColumnWidth, LineHeight), text);
             leftY += LineHeight;
         }
 
@@ -55,18 +57,28 @@ namespace SoulBlocks
                 clicked = GUI.Button(new Rect(right - ButtonWidth, rightY, ButtonWidth, LineHeight), button, smallButton);
                 textRight -= ButtonWidth + 6f;
             }
-            SubtleLabel(new Rect(textRight - ColumnWidth, rightY, ColumnWidth, LineHeight), text, TextAnchor.UpperRight);
+            TextBox(new Rect(textRight - ColumnWidth, rightY, ColumnWidth, LineHeight), text, TextAnchor.UpperRight);
             rightY += button != null ? LineHeight + 2f : LineHeight;
             return clicked;
         }
 
-        // Small translucent text with a 1 px shadow so it still reads over the bright tree.
-        // GUI.color still tints it (the energy warning uses that).
-        public static void SubtleLabel(Rect rect, string text, TextAnchor anchor = TextAnchor.UpperLeft)
+        // Text on an opaque box hugging it, placed at `anchor` inside rect (rect only positions,
+        // the box is as wide as the text). GUI.color tints the text only (the energy warning uses
+        // that), so the box stays the same solid panel.
+        public static void TextBox(Rect rect, string text, TextAnchor anchor = TextAnchor.UpperLeft)
         {
-            subtle.alignment = shadow.alignment = anchor;
-            GUI.Label(new Rect(rect.x + 1f, rect.y + 1f, rect.width, rect.height), text, shadow);
-            GUI.Label(rect, text, subtle);
+            Vector2 size = boxed.CalcSize(new GUIContent(text));
+            size.y = Mathf.Max(size.y, LineHeight);
+            float x = anchor == TextAnchor.UpperRight || anchor == TextAnchor.LowerRight ? rect.xMax - size.x
+                : anchor == TextAnchor.MiddleCenter ? rect.center.x - size.x * .5f : rect.x;
+            float y = anchor == TextAnchor.LowerRight ? rect.yMax - size.y
+                : anchor == TextAnchor.MiddleCenter ? rect.center.y - size.y * .5f : rect.y;
+            Color tint = GUI.color;
+            GUI.color = Color.white;
+            GUI.contentColor = tint;
+            GUI.Label(new Rect(x, y, size.x, size.y), text, boxed);
+            GUI.contentColor = Color.white;
+            GUI.color = tint;
         }
 
         // Call from inside a registered draw callback, after GUI layout for the frame started.
@@ -76,9 +88,7 @@ namespace SoulBlocks
             if (camera == null) return;
             Vector3 screen = camera.WorldToScreenPoint(world);
             if (screen.z <= 0f) return;
-            float y = Screen.height - screen.y;
-            Vector2 size = subtle.CalcSize(new GUIContent(text));
-            SubtleLabel(new Rect(screen.x - size.x * .5f, y - size.y * .5f, size.x, size.y), text, TextAnchor.MiddleCenter);
+            TextBox(new Rect(screen.x, Screen.height - screen.y, 0f, 0f), text, TextAnchor.MiddleCenter);
         }
 
         static void EnsureStyles()
@@ -86,16 +96,40 @@ namespace SoulBlocks
             if (skin != null) return;
             // A copy, so the builtin skin (which outlives play mode in the editor) stays untouched.
             skin = Instantiate(GUI.skin);
-            var solid = new Texture2D(1, 1);
-            solid.SetPixel(0, 0, new Color32(28, 26, 38, 255));
-            solid.Apply();
-            skin.window.normal.background = skin.window.onNormal.background = solid;
+            Texture2D panel = Solid(PanelColor), field = Solid(new Color32(14, 13, 20, 255));
+            Texture2D button = Solid(new Color32(56, 50, 76, 255)), hover = Solid(new Color32(76, 68, 102, 255)), pressed = Solid(new Color32(40, 36, 56, 255));
+            Flat(skin.window, panel, panel, panel);
+            Flat(skin.box, panel, panel, panel);
+            Flat(skin.button, button, hover, pressed);
+            Flat(skin.textField, field, field, field);
+            Flat(skin.verticalScrollbar, field, field, field);
+            Flat(skin.verticalScrollbarThumb, button, hover, pressed);
+            Flat(skin.horizontalScrollbar, field, field, field);
+            Flat(skin.horizontalScrollbarThumb, button, hover, pressed);
+            foreach (var style in new[] { skin.label, skin.window, skin.box, skin.button, skin.textField })
+                style.normal.textColor = style.hover.textColor = style.active.textColor = style.focused.textColor =
+                    style.onNormal.textColor = style.onHover.textColor = style.onActive.textColor = style.onFocused.textColor = Color.white;
             GUI.skin = skin;
-            subtle = new GUIStyle(GUI.skin.label) { fontSize = 12, wordWrap = false, clipping = TextClipping.Overflow };
-            subtle.normal.textColor = new Color(1f, 1f, 1f, .75f);
-            shadow = new GUIStyle(subtle);
-            shadow.normal.textColor = new Color(0f, 0f, 0f, .6f);
-            smallButton = new GUIStyle(GUI.skin.button) { fontSize = 11, padding = new RectOffset(2, 2, 1, 1) };
+            boxed = new GUIStyle(skin.label) { fontSize = 12, wordWrap = false, clipping = TextClipping.Overflow, alignment = TextAnchor.MiddleLeft, padding = new RectOffset(6, 6, 2, 2) };
+            boxed.normal.background = panel;
+            smallButton = new GUIStyle(skin.button) { fontSize = 11, padding = new RectOffset(2, 2, 1, 1) };
+        }
+
+        // One opaque texture for every state, no 9-slice border: kills the default skin's bevel.
+        static void Flat(GUIStyle style, Texture2D normal, Texture2D hover, Texture2D active)
+        {
+            style.normal.background = style.onNormal.background = style.focused.background = style.onFocused.background = normal;
+            style.hover.background = style.onHover.background = hover;
+            style.active.background = style.onActive.background = active;
+            style.border = new RectOffset(0, 0, 0, 0);
+        }
+
+        static Texture2D Solid(Color color)
+        {
+            var texture = new Texture2D(1, 1);
+            texture.SetPixel(0, 0, color);
+            texture.Apply();
+            return texture;
         }
 
         void OnGUI()

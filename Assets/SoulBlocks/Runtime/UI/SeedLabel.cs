@@ -16,7 +16,7 @@ namespace SoulBlocks
         {
             var run = GameRoot.Instance != null ? GameRoot.Instance.Run : null;
             string text = "Seed " + (run != null ? run.effectiveSeed.ToString() : "-");
-            Hud.SubtleLabel(new Rect(Screen.width - 208f, Screen.height - 22f, 200f, 16f), text, TextAnchor.LowerRight);
+            Hud.TextBox(new Rect(Screen.width - 208f, Screen.height - 28f, 200f, 20f), text, TextAnchor.LowerRight);
         }
     }
 }

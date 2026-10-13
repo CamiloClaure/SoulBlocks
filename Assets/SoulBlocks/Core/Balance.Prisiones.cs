@@ -17,5 +17,8 @@ namespace SoulBlocks
 
         // Targeting radius for IRayTarget trajectory checks (habilidades' Rayhit).
         public static float PrisonRadius = .8f;
+
+        // Crystals closer than this to the player show their HP/phase label.
+        public static float PrisonLabelRange = 25f;
     }
 }

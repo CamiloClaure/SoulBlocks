@@ -97,6 +97,11 @@ namespace SoulBlocks
         {
             if (run == null) return;
             Hud.Line("Prisiones rotas " + run.totalPrisonsBroken);
+            var player = GameRoot.Instance != null ? GameRoot.Instance.Player : null;
+            if (player == null) return;
+            foreach (var view in views.Values)
+                if (view != null && view.gameObject.activeInHierarchy && Vector3.Distance(view.Position, player.transform.position) <= Balance.PrisonLabelRange)
+                    Hud.WorldLabel(view.Position + Vector3.up * 1.6f, view.Label);
         }
     }
 }
