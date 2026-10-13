@@ -41,12 +41,12 @@ namespace SoulBlocks.Tests
                 yield break;
             }
 
-            var target = RayTargetRegistry.All.FirstOrDefault(t => t.PrisonId == branchEnd.id);
+            var target = MineableRegistry.All.FirstOrDefault(t => t.PrisonId == branchEnd.id);
             Assert.IsNotNull(target, "No PrisonView registered for the branch-end prison.");
 
             int level = PrisonRules.RequiredLevel(branchEnd.tier);
-            for (int guard = 0; guard < 20 && !root.Run.Prison(branchEnd.id).broken; guard++)
-                target.ApplyRayHit(level);
+            for (int guard = 0; guard < 64 && !root.Run.Prison(branchEnd.id).broken; guard++)
+                target.ApplyPickHit(level);
             Assert.IsTrue(root.Run.Prison(branchEnd.id).broken, "branch-end prison never broke.");
             yield return null;
 

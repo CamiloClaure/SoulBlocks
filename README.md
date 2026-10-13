@@ -1,6 +1,6 @@
 # SoulBlocks
 
-Incremental de exploración en Unity 6000.6.0f1 (URP, Input System). Salís del árbol central por caminos generados por seed, recogés almas, rompés prisiones cristalinas con Rayhit, volvés, mejorás y el mundo se transforma hasta despertar al Núcleo.
+Incremental de exploración en Unity 6000.6.0f1 (URP, Input System). Salís del árbol central por caminos generados por seed, recogés almas, picás prisiones cristalinas, volvés, mejorás y el mundo se transforma hasta despertar al Núcleo.
 
 Estado: **obra gruesa**. Todas las mecánicas funcionan de punta a punta con placeholders (primitivas, colores, IMGUI). Sin animaciones ni modelos nuevos. Diseño completo y plan de construcción en [`docs/PLAN-OBRA-GRUESA.md`](docs/PLAN-OBRA-GRUESA.md); contratos entre sistemas en [`docs/CONTRATOS.md`](docs/CONTRATOS.md).
 
@@ -17,7 +17,7 @@ Estado: **obra gruesa**. Todas las mecánicas funcionan de punta a punta con pla
 | Zoom de cámara | Rueda |
 | Dash | Shift |
 | Imán de almas | Q |
-| Rayhit | Mantener click izquierdo para apuntar, soltar para lanzar |
+| Picar cristal | Click izquierdo al lado del cristal |
 | Interactuar (tienda del árbol, altares, entrega en refugios) | E |
 | Mapa | Tab (mantener) |
 | Pausa (guardar, copiar seed, nueva partida) | Esc |

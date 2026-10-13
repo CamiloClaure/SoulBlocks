@@ -31,12 +31,12 @@ namespace SoulBlocks.Tests
                 yield break;
             }
 
-            var target = RayTargetRegistry.All.FirstOrDefault(t => t.PrisonId == layoutPrison.id);
+            var target = MineableRegistry.All.FirstOrDefault(t => t.PrisonId == layoutPrison.id);
             Assert.IsNotNull(target, "No PrisonView registered for the T1 prison.");
 
             int wisdomBefore = run.wisdom;
-            for (int guard = 0; guard < 20 && !run.Prison(layoutPrison.id).broken; guard++)
-                target.ApplyRayHit(0);
+            for (int guard = 0; guard < 64 && !run.Prison(layoutPrison.id).broken; guard++)
+                target.ApplyPickHit(0);
 
             Assert.IsTrue(run.Prison(layoutPrison.id).broken, "T1 never broke.");
             Assert.AreEqual(layoutPrison.id, brokenId, "PrisonBroken fired for the wrong id.");

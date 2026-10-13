@@ -18,11 +18,8 @@ namespace SoulBlocks
         public static float MagnetRadius = 8f;
         public static float MagnetDuration = 3f;
         public static float MagnetCooldown = 12f;
-        public static float RayLevel = 0f;
-        public static float RayLength = 8f;
-        public static float RayCharges = 1f;
-        public static float RaySoulsPerCharge = 25f;
-        public static float RayRechargeSeconds = 20f;
+        public static float PickLevel = 0f;
+        public static float PickInterval = .6f; // seconds between pick blows
         public static float BlessingOptions = 3f;
         public static float SoulDensity = .5f; // fraction of each spawn's souls that appear; Abundancia raises it
     }

@@ -8,7 +8,7 @@ namespace SoulBlocks.Tests
     {
         static UpgradeDef Carga => UpgradeCatalog.Get("carga");
         static UpgradeDef Dash => UpgradeCatalog.Get("dash");
-        static UpgradeDef RayhitNivel => UpgradeCatalog.Get("rayhit_nivel");
+        static UpgradeDef PicoNivel => UpgradeCatalog.Get("pico_nivel");
         static UpgradeDef Raiz1 => UpgradeCatalog.Get("raiz1");
         static UpgradeDef Raiz2 => UpgradeCatalog.Get("raiz2");
         static UpgradeDef Raiz3 => UpgradeCatalog.Get("raiz3");
@@ -26,10 +26,10 @@ namespace SoulBlocks.Tests
         [Test]
         public void CostUsesPerUpgradeGrowth()
         {
-            // rayhit_nivel: growth 2.0, base 80.
-            Assert.AreEqual(80, ProgressionRules.Cost(RayhitNivel, 1));
-            Assert.AreEqual(160, ProgressionRules.Cost(RayhitNivel, 2));
-            Assert.AreEqual(320, ProgressionRules.Cost(RayhitNivel, 3));
+            // pico_nivel: growth 2.0, base 80.
+            Assert.AreEqual(80, ProgressionRules.Cost(PicoNivel, 1));
+            Assert.AreEqual(160, ProgressionRules.Cost(PicoNivel, 2));
+            Assert.AreEqual(320, ProgressionRules.Cost(PicoNivel, 3));
         }
 
         [Test]

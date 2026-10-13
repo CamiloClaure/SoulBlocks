@@ -70,24 +70,17 @@ namespace SoulBlocks
             },
             new UpgradeDef
             {
-                id = "rayhit_nivel", tree = UpgradeTree.Souls, currency = Currency.Souls,
-                name = "Nivel de Rayhit", description = "Daña prisiones de tier más alto.",
-                maxLevel = (int)Balance.RayhitNivelMaxLevel, baseCost = (int)Balance.RayhitNivelCost, growth = Balance.RayhitNivelGrowth,
-                perLevelEffects = { new UpgradeEffect(StatId.RayLevel, Balance.RayhitNivelEffect) }
+                id = "pico_nivel", tree = UpgradeTree.Souls, currency = Currency.Souls,
+                name = "Nivel de pico", description = "Pica cristales de tier más alto y pega más fuerte.",
+                maxLevel = (int)Balance.PicoNivelMaxLevel, baseCost = (int)Balance.PicoNivelCost, growth = Balance.PicoNivelGrowth,
+                perLevelEffects = { new UpgradeEffect(StatId.PickLevel, Balance.PicoNivelEffect) }
             },
             new UpgradeDef
             {
-                id = "rayhit_longitud", tree = UpgradeTree.Souls, currency = Currency.Souls,
-                name = "Longitud de Rayhit", description = "El Rayhit alcanza más lejos.",
-                maxLevel = (int)Balance.RayhitLongitudMaxLevel, baseCost = (int)Balance.RayhitLongitudCost, growth = Balance.RayhitLongitudGrowth,
-                perLevelEffects = { new UpgradeEffect(StatId.RayLength, Balance.RayhitLongitudEffect) }
-            },
-            new UpgradeDef
-            {
-                id = "rayhit_cargas", tree = UpgradeTree.Souls, currency = Currency.Souls,
-                name = "Cargas de Rayhit", description = "Más disparos de Rayhit antes de recargar.",
-                maxLevel = (int)Balance.RayhitCargasMaxLevel, baseCost = (int)Balance.RayhitCargasCost, growth = Balance.RayhitCargasGrowth,
-                perLevelEffects = { new UpgradeEffect(StatId.RayCharges, Balance.RayhitCargasEffect) }
+                id = "pico_velocidad", tree = UpgradeTree.Souls, currency = Currency.Souls,
+                name = "Velocidad de pico", description = "Menos tiempo entre golpes.",
+                maxLevel = (int)Balance.PicoVelocidadMaxLevel, baseCost = (int)Balance.PicoVelocidadCost, growth = Balance.PicoVelocidadGrowth,
+                perLevelEffects = { new UpgradeEffect(StatId.PickInterval, Balance.PicoVelocidadEffect) }
             },
 
             new UpgradeDef
@@ -142,7 +135,7 @@ namespace SoulBlocks
             new UpgradeDef
             {
                 id = "cadena", tree = UpgradeTree.Wisdom, currency = Currency.Wisdom,
-                name = "Rayhit en cadena", description = "Tras el último impacto salta a la prisión más cercana sin tocar.",
+                name = "Golpe en cadena", description = "Al romper un cristal, el golpe salta al cristal más cercano.",
                 maxLevel = 1, baseCost = (int)Balance.CadenaCost,
                 gateMinTreeStage = 1, unlockId = UnlockIds.Cadena
             },

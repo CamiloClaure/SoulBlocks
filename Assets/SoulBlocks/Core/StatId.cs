@@ -13,11 +13,8 @@ namespace SoulBlocks
         MagnetRadius,
         MagnetDuration,
         MagnetCooldown,
-        RayLevel,
-        RayLength,
-        RayCharges,
-        RaySoulsPerCharge,
-        RayRechargeSeconds,
+        PickLevel,
+        PickInterval,
         BlessingOptions,
         SoulDensity
     }

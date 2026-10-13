@@ -18,8 +18,7 @@ namespace SoulBlocks
             { StatId.DashDistance, "m de distancia de dash" },
             { StatId.MagnetRadius, "m de radio de imán" },
             { StatId.MagnetDuration, "s de duración de imán" },
-            { StatId.RayLength, "m de alcance de Rayhit" },
-            { StatId.RayCharges, "carga(s) de Rayhit" },
+            { StatId.PickInterval, "s entre golpes de pico" },
             { StatId.BlessingOptions, "opción(es) de bendición" }
         };
 
@@ -119,18 +118,18 @@ namespace SoulBlocks
                     return "+" + Fmt(def.perLevelEffects[0].add) + " almas por salida";
                 case "abundancia":
                     return "+" + Fmt(def.perLevelEffects[0].add * 100f) + "% de almas en las cuevas";
-                case "rayhit_nivel":
+                case "pico_nivel":
                     {
                         // nv X damages up to tier index X (0 = T1 .. 3 = T4), nv 4 reaches the Nucleo.
                         string tier = nextLevel <= TierRoman.Length - 1 ? TierRoman[nextLevel] : "Núcleo";
-                        return "nv " + nextLevel + ": daña prisiones " + tier;
+                        return "nv " + nextLevel + ": pica cristales " + tier + ", más daño por golpe";
                     }
                 default:
                     if (def.perLevelEffects.Count > 0)
                     {
                         var effect = def.perLevelEffects[0];
                         string label = StatLabel.TryGetValue(effect.stat, out var l) ? l : effect.stat.ToString();
-                        return "+" + Fmt(effect.add) + " " + label;
+                        return (effect.add >= 0f ? "+" : "") + Fmt(effect.add) + " " + label;
                     }
                     return def.description;
             }

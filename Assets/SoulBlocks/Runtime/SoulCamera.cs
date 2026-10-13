@@ -4,9 +4,9 @@ using UnityEngine.InputSystem;
 namespace SoulBlocks
 {
     // Third-person orbit camera. It turns only while the player drags with the right mouse button
-    // (every rig that swung by itself was dizzying), so the cursor stays free for the left-click
-    // Rayhit aim. Position is rigid, so it stops the instant the player stops; WASD follows its
-    // yaw (SoulPlayer). The wheel zooms. Field names differ from the old rigs so the scene's
+    // (every rig that swung by itself was dizzying); left click stays free for the pick. Position
+    // is rigid, so it stops the instant the player stops; WASD follows its yaw (SoulPlayer). The
+    // wheel zooms, except while a modal (Keys.Blocked) wants the wheel for itself. Field names differ from the old rigs so the scene's
     // stale serialized values do not apply.
     [RequireComponent(typeof(Camera))]
     public sealed class SoulCamera : MonoBehaviour
@@ -35,7 +35,7 @@ namespace SoulBlocks
         {
             if (player == null) return;
             var mouse = Mouse.current;
-            if (readInput && Application.isFocused && mouse != null)
+            if (readInput && Application.isFocused && !Keys.Blocked && mouse != null)
                 orbitDistance = Mathf.Clamp(orbitDistance - mouse.scroll.ReadValue().y * .01f, minDistance, maxDistance);
             if (readInput && Keys.OrbitHeld)
             {

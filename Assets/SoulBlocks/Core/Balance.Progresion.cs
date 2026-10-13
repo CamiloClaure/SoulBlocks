@@ -15,9 +15,8 @@ namespace SoulBlocks
         public static float DashCost = 60f, DashGrowth = 1.5f, DashMaxLevel = 4f, DashEffect = 1.5f, DashMilestoneCharges = 1f;
         public static float ImanRadioCost = 45f, ImanRadioGrowth = 1.5f, ImanRadioMaxLevel = 4f, ImanRadioEffect = 2f;
         public static float ImanDuracionCost = 45f, ImanDuracionGrowth = 1.5f, ImanDuracionMaxLevel = 3f, ImanDuracionEffect = 1f;
-        public static float RayhitNivelCost = 80f, RayhitNivelGrowth = 2f, RayhitNivelMaxLevel = 4f, RayhitNivelEffect = 1f;
-        public static float RayhitLongitudCost = 50f, RayhitLongitudGrowth = 1.5f, RayhitLongitudMaxLevel = 4f, RayhitLongitudEffect = 2f;
-        public static float RayhitCargasCost = 120f, RayhitCargasGrowth = 1.5f, RayhitCargasMaxLevel = 2f, RayhitCargasEffect = 1f;
+        public static float PicoNivelCost = 80f, PicoNivelGrowth = 2f, PicoNivelMaxLevel = 4f, PicoNivelEffect = 1f;
+        public static float PicoVelocidadCost = 60f, PicoVelocidadGrowth = 1.5f, PicoVelocidadMaxLevel = 4f, PicoVelocidadEffect = -.08f;
 
         // Arbol de Wisdom: nucleo (en orden)
         public static float Raiz1Cost = 3f, Raiz2Cost = 8f, Raiz3Cost = 20f, DespertarCost = 40f;

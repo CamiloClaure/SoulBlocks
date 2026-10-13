@@ -85,6 +85,11 @@ namespace SoulBlocks
             return full;
         }
         public void MoveUnchecked(Vector3 delta) => controller.Move(delta);
+        // Turn toward a horizontal direction (the pick faces its crystal); the visual follows in StepMovement.
+        public void Face(Vector3 direction)
+        {
+            if (direction.x * direction.x + direction.z * direction.z > .0001f) Yaw = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
+        }
         public void Teleport(Vector3 position)
         {
             controller.enabled = false;

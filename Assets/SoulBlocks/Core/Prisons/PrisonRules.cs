@@ -14,7 +14,7 @@ namespace SoulBlocks
     }
 
     // Pure tier/phase/HP math for crystal prisons (section 1.5 of the plan). No MonoBehaviour,
-    // no Physics: PrisonView is a thin IRayTarget wrapper around this, PrisonRecord is the only
+    // no Physics: PrisonView is a thin IMineable wrapper around this, PrisonRecord is the only
     // mutable state and it lives in RunState.prisons so damage persists across expeditions.
     public static class PrisonRules
     {
@@ -54,18 +54,18 @@ namespace SoulBlocks
             return phaseIndex0 == phases - 1 ? total - baseShare * (phases - 1) : baseShare;
         }
 
-        static int RayDamage(int rayLevel)
+        static int PickDamage(int pickLevel)
         {
-            var table = Balance.PrisonRayDamageByLevel;
-            int level = Mathf.Clamp(rayLevel, 0, table.Length - 1);
+            var table = Balance.PrisonPickDamageByLevel;
+            int level = Mathf.Clamp(pickLevel, 0, table.Length - 1);
             return (int)table[level];
         }
 
         // ExposedCore only kicks in once the prison has already taken damage before this hit,
         // never on the very first one. damageMultiplier is the external hook (anomalies etc).
-        static int HitDamage(PrisonTier tier, PrisonProp props, int rayLevel, float damageMultiplier, int damageBeforeHit)
+        static int HitDamage(PrisonTier tier, PrisonProp props, int pickLevel, float damageMultiplier, int damageBeforeHit)
         {
-            float raw = RayDamage(rayLevel);
+            float raw = PickDamage(pickLevel);
             if ((props & PrisonProp.ExposedCore) != 0 && damageBeforeHit > 0) raw *= Balance.PrisonExposedCoreMultiplier;
             raw *= damageMultiplier;
             // ponytail: a hit that clears the level gate always deals at least 1, so a fractional
@@ -74,16 +74,16 @@ namespace SoulBlocks
         }
 
         // The aiming preview: Broken / RequiresLevel / Breaks (one more hit finishes it) / Hits n.
-        public static PrisonForecast Forecast(PrisonTier tier, PrisonRecord record, PrisonProp props, int rayLevel, float damageMultiplier = 1f)
+        public static PrisonForecast Forecast(PrisonTier tier, PrisonRecord record, PrisonProp props, int pickLevel, float damageMultiplier = 1f)
         {
             if (record.broken) return new PrisonForecast { Kind = ForecastKind.Broken };
             int required = RequiredLevel(tier);
-            if (rayLevel < required) return new PrisonForecast { Kind = ForecastKind.RequiresLevel, requiredLevel = required };
+            if (pickLevel < required) return new PrisonForecast { Kind = ForecastKind.RequiresLevel, requiredLevel = required };
 
             int total = TotalHp(tier), damage = record.damage, hits = 0;
             for (int guard = 0; guard < 64 && damage < total; guard++)
             {
-                damage += HitDamage(tier, props, rayLevel, damageMultiplier, damage);
+                damage += HitDamage(tier, props, pickLevel, damageMultiplier, damage);
                 hits++;
             }
             return hits <= 1
@@ -92,12 +92,12 @@ namespace SoulBlocks
         }
 
         // Mutates record, returns what happened. Below the required level: 0 damage, no mutation.
-        public static HitResult ApplyHit(PrisonTier tier, PrisonRecord record, PrisonProp props, int rayLevel, float damageMultiplier = 1f)
+        public static HitResult ApplyHit(PrisonTier tier, PrisonRecord record, PrisonProp props, int pickLevel, float damageMultiplier = 1f)
         {
             if (record.broken) return new HitResult { broken = true };
-            if (rayLevel < RequiredLevel(tier)) return new HitResult();
+            if (pickLevel < RequiredLevel(tier)) return new HitResult();
 
-            int dealt = HitDamage(tier, props, rayLevel, damageMultiplier, record.damage);
+            int dealt = HitDamage(tier, props, pickLevel, damageMultiplier, record.damage);
             return ApplyDamage(tier, record, dealt);
         }
 

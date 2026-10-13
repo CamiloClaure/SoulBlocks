@@ -17,7 +17,7 @@ namespace SoulBlocks
             "Rueda: zoom de la cámara",
             "Shift: dash",
             "Q: imán de almas",
-            "Click izquierdo: mantener para apuntar Rayhit, soltar para lanzar",
+            "Click izquierdo (al lado de un cristal): picar",
             "E: interactuar (tienda del árbol, altares, entrega en refugios)",
             "Tab (mantener): mapa",
             "Esc: pausa",

@@ -68,8 +68,8 @@ namespace SoulBlocks.Tests
                         Assert.IsNotNull(target, "fracturar targeted a prison id not in the layout.");
                         Assert.IsTrue(string.IsNullOrEmpty(target.requiresUnlock) || run.HasUnlock(target.requiresUnlock),
                             "fracturar targeted a locked prison.");
-                        Assert.LessOrEqual(PrisonRules.RequiredLevel(target.tier), stats.GetInt(StatId.RayLevel),
-                            "fracturar targeted a prison above the current Rayhit level.");
+                        Assert.LessOrEqual(PrisonRules.RequiredLevel(target.tier), stats.GetInt(StatId.PickLevel),
+                            "fracturar targeted a prison above the current pick level.");
                         Assert.IsFalse(run.Prison(target.id).broken, "fracturar targeted an already-broken prison.");
                     }
                 }

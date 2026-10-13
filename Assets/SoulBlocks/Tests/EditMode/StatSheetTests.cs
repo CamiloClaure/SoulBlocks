@@ -55,8 +55,8 @@ namespace SoulBlocks.Tests
         public void GetIntRounds()
         {
             var sheet = new StatSheet();
-            sheet.SetModifier("test", StatId.RayCharges, .6f);
-            Assert.AreEqual(System.Convert.ToInt32(System.Math.Round(Balance.RayCharges + .6f)), sheet.GetInt(StatId.RayCharges));
+            sheet.SetModifier("test", StatId.DashCharges, .6f);
+            Assert.AreEqual(System.Convert.ToInt32(System.Math.Round(Balance.DashCharges + .6f)), sheet.GetInt(StatId.DashCharges));
         }
     }
 }

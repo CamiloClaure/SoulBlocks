@@ -1,17 +1,22 @@
+using System.Collections;
 using UnityEngine;
 
 namespace SoulBlocks
 {
-    // Placeholder prison + IRayTarget wrapper around PrisonRules. No collider: the player and
-    // Rayhit pass through (ponytail: targeting is purely by RayTargetRegistry + Radius, never
-    // Physics, so a collider here would only ever get in the way of movement).
-    public sealed class PrisonView : MonoBehaviour, IRayTarget
+    // Placeholder crystal prison + IMineable wrapper around PrisonRules. No collider: the player
+    // walks through (ponytail: the pick targets purely by MineableRegistry + Radius, never
+    // Physics, so a collider here would only ever get in the way of movement). Every blow that
+    // lands chips shards off (Burst) and makes the crystal flinch.
+    public sealed class PrisonView : MonoBehaviour, IMineable
     {
         struct Shape { public PrimitiveType type; public Color color; public Vector3 scale; }
 
         PrisonSystem system;
         RunState run;
         PrisonLayout layout;
+        Transform body;
+        Vector3 bodyScale;
+        Color color;
 
         // Drawn by PrisonSystem as a Hud.WorldLabel (opaque box) while the player is close.
         public string Label { get; private set; }
@@ -28,13 +33,15 @@ namespace SoulBlocks
             Build();
         }
 
-        void OnEnable() => RayTargetRegistry.All.Add(this);
-        void OnDisable() => RayTargetRegistry.All.Remove(this);
+        void OnEnable() => MineableRegistry.All.Add(this);
+        void OnDisable() => MineableRegistry.All.Remove(this);
 
         void Build()
         {
             var shape = TierShape(layout.tier);
-            Placeholder.Make(shape.type, shape.color, "Body", transform, transform.position, shape.scale, false, .3f);
+            body = Placeholder.Make(shape.type, shape.color, "Body", transform, transform.position, shape.scale, false, .3f).transform;
+            bodyScale = shape.scale;
+            color = shape.color;
 
             if (layout.tier == PrisonTier.Nucleo)
                 Placeholder.Make(PrimitiveType.Cylinder, Color.white, "Ring", transform, transform.position, new Vector3(3.2f, .05f, 3.2f), false, .2f);
@@ -46,26 +53,26 @@ namespace SoulBlocks
             UpdateLabel(run.Prison(layout.id));
         }
 
-        public PrisonForecast Forecast(int rayLevel)
+        public PrisonForecast Forecast(int pickLevel)
         {
             var record = run.Prison(layout.id);
-            return PrisonRules.Forecast(layout.tier, record, layout.props, rayLevel, CurrentMultiplier());
+            return PrisonRules.Forecast(layout.tier, record, layout.props, pickLevel, CurrentMultiplier());
         }
 
-        public int ApplyRayHit(int rayLevel)
+        public int ApplyPickHit(int pickLevel)
         {
             var record = run.Prison(layout.id);
             if (record.broken) return 0;
 
             int required = PrisonRules.RequiredLevel(layout.tier);
-            if (rayLevel < required)
+            if (pickLevel < required)
             {
-                Hud.Toast("requiere Rayhit nv " + required);
+                Hud.Toast("requiere pico nv " + required);
                 return 0;
             }
 
             int phasesBefore = record.phasesDone;
-            var result = PrisonRules.ApplyHit(layout.tier, record, layout.props, rayLevel, CurrentMultiplier());
+            var result = PrisonRules.ApplyHit(layout.tier, record, layout.props, pickLevel, CurrentMultiplier());
             Resolve(result, record, phasesBefore);
 
             if (result.damage > 0 && (layout.props & PrisonProp.Resonant) != 0)
@@ -89,6 +96,7 @@ namespace SoulBlocks
         void Resolve(HitResult result, PrisonRecord record, int phasesBefore)
         {
             if (result.damage <= 0) return;
+            Burst.Spawn(transform.position + Vector3.up * .5f, color, 14);
 
             int remainingHp = PrisonRules.TotalHp(layout.tier) - record.damage;
             GameEvents.RaisePrisonDamaged(layout.id, result.damage, remainingHp);
@@ -117,7 +125,19 @@ namespace SoulBlocks
             else
             {
                 UpdateLabel(record);
+                StopAllCoroutines();
+                StartCoroutine(Flinch());
             }
+        }
+
+        IEnumerator Flinch()
+        {
+            for (float t = 0f; t < .15f; t += Time.deltaTime)
+            {
+                body.localScale = bodyScale * (1f + .15f * Mathf.Sin(t / .15f * Mathf.PI));
+                yield return null;
+            }
+            body.localScale = bodyScale;
         }
 
         void UpdateLabel(PrisonRecord record)

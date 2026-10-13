@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace SoulBlocks
 {
-    // One left-column line for the three abilities, order 300.
+    // One left-column line for dash, magnet and pick, order 300.
     public sealed class AbilitiesHud : MonoBehaviour
     {
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -27,8 +27,8 @@ namespace SoulBlocks
                     : magnet.CooldownRemaining > 0f ? magnet.CooldownRemaining.ToString("F0") + "s"
                     : "listo"));
 
-            var ray = root.GetComponent<RayhitAbility>();
-            if (ray != null) parts.Add("Rayhit " + ray.Charges + "/" + ray.MaxCharges + " (" + ray.SoulsTowardCharge + "/" + ray.SoulsPerCharge + ")");
+            var pick = root.GetComponent<PickAbility>();
+            if (pick != null) parts.Add("Pico nv " + root.Stats.GetInt(StatId.PickLevel) + (pick.CooldownRemaining > 0f ? "" : " listo"));
 
             if (parts.Count > 0) Hud.Line(string.Join("  ·  ", parts));
         }

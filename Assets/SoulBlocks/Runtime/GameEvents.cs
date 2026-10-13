@@ -32,7 +32,6 @@ namespace SoulBlocks
         public static event Action<int> TileDiscovered;
         public static event Action DashUsed;
         public static event Action MagnetUsed;
-        public static event Action<Vector3, Vector3, int> RayhitFired;
         public static event Action<int> ObjectiveCompleted;
         public static event Action<string> BlessingChosen;
         public static event Action GameWon;
@@ -62,7 +61,6 @@ namespace SoulBlocks
         public static void RaiseTileDiscovered(int index) => TileDiscovered?.Invoke(index);
         public static void RaiseDashUsed() => DashUsed?.Invoke();
         public static void RaiseMagnetUsed() => MagnetUsed?.Invoke();
-        public static void RaiseRayhitFired(Vector3 from, Vector3 to, int hits) => RayhitFired?.Invoke(from, to, hits);
         public static void RaiseObjectiveCompleted(int index) => ObjectiveCompleted?.Invoke(index);
         public static void RaiseBlessingChosen(string id) => BlessingChosen?.Invoke(id);
         public static void RaiseGameWon() => GameWon?.Invoke();
@@ -97,7 +95,6 @@ namespace SoulBlocks
             TileDiscovered = null;
             DashUsed = null;
             MagnetUsed = null;
-            RayhitFired = null;
             ObjectiveCompleted = null;
             BlessingChosen = null;
             GameWon = null;

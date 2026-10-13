@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace SoulBlocks
 {
-    // Pure charge counter shared by Dash and Rayhit: an integer Current, clamped to a max that
+    // Pure charge counter (Dash): an integer Current, clamped to a max that
     // the owner re-supplies every frame (stats can change mid-run via upgrades), filled by two
     // independent progress tracks that never overflow into each other: elapsed time (Tick) and
     // an external push (AddProgress, souls collected). Magnet does not use this: it is a plain

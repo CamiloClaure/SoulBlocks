@@ -36,7 +36,7 @@ namespace SoulBlocks.Tests
         [Test]
         public void ExcludedIdsNeverAppearInTheOffer()
         {
-            var excluded = new List<string> { "rayhit_cadena", "dash_extra" };
+            var excluded = new List<string> { "pico_cadena", "dash_extra" };
             var offer = BlessingTable.Offer(444, 2, 3, excluded);
             Assert.AreEqual(3, offer.Count);
             foreach (var id in excluded) CollectionAssert.DoesNotContain(offer, id);
@@ -45,7 +45,7 @@ namespace SoulBlocks.Tests
         [Test]
         public void RequestingMoreThanWhatIsLeftReturnsOnlyWhatIsLeft()
         {
-            var excluded = new List<string> { "rayhit_cadena", "dash_extra", "iman_amplio" };
+            var excluded = new List<string> { "pico_cadena", "dash_extra", "iman_amplio" };
             var offer = BlessingTable.Offer(555, 1, 4, excluded);
             Assert.AreEqual(2, offer.Count); // only "energia" and "carga" remain
         }
