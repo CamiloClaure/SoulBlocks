@@ -6,14 +6,16 @@ namespace SoulBlocks
     // Escape-triggered pause: continue, save, controls, quit; below that, restart with a seed
     // and copy the seed. Freezes time (energy must not drain while it is open). Never opens
     // while another modal (shop, blessing, the start menu) already holds Keys.Blocked, because
-    // Keys.PausePressed itself reads false whenever Blocked is true.
+    // Keys.PausePressed itself reads false whenever Blocked is true. Also owns F1 (fullscreen),
+    // which works with or without a menu open.
     public sealed class PauseMenu : MonoBehaviour
     {
         // Same table as README.md "Jugar".
         static readonly string[] Controls =
         {
             "WASD: moverse",
-            "Click derecho (mantener) + mouse: girar la cámara",
+            "Mouse: girar la cámara",
+            "Alt (mantener): mostrar el cursor",
             "Rueda: zoom de la cámara",
             "Shift: dash",
             "Q: imán de almas",
@@ -21,6 +23,7 @@ namespace SoulBlocks
             "E: interactuar (tienda del árbol, altares, entrega en refugios)",
             "Tab (mantener): mapa",
             "Esc: pausa",
+            "F1: pantalla completa",
         };
 
         bool open, showControls;
@@ -40,6 +43,7 @@ namespace SoulBlocks
         void Update()
         {
             if (GameRoot.Instance == null) return;
+            if (Keys.FullscreenPressed) ToggleFullscreen();
 
             if (!open)
             {
@@ -101,6 +105,17 @@ namespace SoulBlocks
             }
             if (GUILayout.Button("Copiar seed")) GUIUtility.systemCopyBuffer = run.effectiveSeed.ToString();
             GUILayout.EndHorizontal();
+        }
+
+        // In the editor Screen.fullScreen does nothing, so F1 maximizes the Game view instead.
+        static void ToggleFullscreen()
+        {
+#if UNITY_EDITOR
+            var view = UnityEditor.EditorWindow.focusedWindow;
+            if (view != null) view.maximized = !view.maximized;
+#else
+            Screen.fullScreen = !Screen.fullScreen;
+#endif
         }
 
         // Saves first: quitting from the menu must never lose the run.

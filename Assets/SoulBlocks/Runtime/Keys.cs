@@ -17,7 +17,10 @@ namespace SoulBlocks
         public static bool MapHeld => Allowed && Keyboard.current != null && Keyboard.current.tabKey.isPressed;
         public static bool PausePressed => Allowed && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
         public static bool PickPressed => Allowed && Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
-        public static bool OrbitHeld => Allowed && Mouse.current != null && Mouse.current.rightButton.isPressed;
+        // Alt frees the cursor (SoulCamera keeps it locked for mouse look) to click HUD buttons.
+        public static bool CursorHeld => Keyboard.current != null && Keyboard.current.altKey.isPressed;
+        // Ignores Blocked: fullscreen must toggle with any menu open.
+        public static bool FullscreenPressed => Application.isFocused && Keyboard.current != null && Keyboard.current.f1Key.wasPressedThisFrame;
         public static Vector2 MousePosition => Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero;
     }
 }

@@ -13,7 +13,8 @@ Estado: **obra gruesa**. Todas las mecánicas funcionan de punta a punta con pla
 | Acción | Control |
 |---|---|
 | Moverse | WASD / flechas |
-| Girar cámara | Mantener click derecho y mover el mouse |
+| Girar cámara | Mouse |
+| Mostrar el cursor (botones del HUD) | Alt (mantener) |
 | Zoom de cámara | Rueda |
 | Dash | Shift |
 | Imán de almas | Q |
@@ -21,6 +22,7 @@ Estado: **obra gruesa**. Todas las mecánicas funcionan de punta a punta con pla
 | Interactuar (tienda del árbol, altares, entrega en refugios) | E |
 | Mapa | Tab (mantener) |
 | Pausa (guardar, copiar seed, nueva partida) | Esc |
+| Pantalla completa | F1 |
 
 La partida se guarda sola al terminar cada expedición, al comprar y al salir.
 
