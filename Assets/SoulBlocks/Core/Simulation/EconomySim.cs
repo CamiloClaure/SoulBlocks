@@ -397,7 +397,11 @@ namespace SoulBlocks
             return best;
         }
 
-        static bool CanLevel(string id, RunState run) => run.UpgradeLevel(id) < UpgradeCatalog.Get(id).maxLevel;
+        static bool CanLevel(string id, RunState run)
+        {
+            var def = UpgradeCatalog.Get(id);
+            return run.UpgradeLevel(id) < def.maxLevel && ProgressionRules.RequirementMet(run, def);
+        }
 
         static int NextGatePickLevel(RunState run)
         {

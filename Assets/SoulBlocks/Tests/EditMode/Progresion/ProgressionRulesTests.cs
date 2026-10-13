@@ -57,6 +57,7 @@ namespace SoulBlocks.Tests
             Assert.AreEqual("requiere Raíz I", ProgressionRules.WhyCannotBuy(run, Raiz2));
 
             run.treeStage = 1; // raiz1 bought, T2 still unbroken
+            run.SetUpgradeLevel("raiz1", 1);
             Assert.AreEqual("requiere romper una prisión II", ProgressionRules.WhyCannotBuy(run, Raiz2));
         }
 
@@ -154,9 +155,35 @@ namespace SoulBlocks.Tests
             var run = new RunState { wisdom = 1000 };
             Assert.AreEqual("requiere Raíz I", ProgressionRules.WhyCannotBuy(run, Entrega));
             run.treeStage = 1;
+            run.SetUpgradeLevel("raiz1", 1);
             Assert.IsNull(ProgressionRules.WhyCannotBuy(run, Entrega));
             Assert.IsTrue(ProgressionRules.Buy(run, Entrega));
             Assert.IsTrue(run.HasUnlock(UnlockIds.Entrega));
+        }
+
+        [Test]
+        public void BoardNodeOpensOnlyOnceItsParentReachesTheLevel()
+        {
+            var run = new RunState { reserveSouls = 10000 };
+            var imanDuracion = UpgradeCatalog.Get("iman_duracion");
+            Assert.AreEqual("requiere Radio de imán nv 2", ProgressionRules.WhyCannotBuy(run, imanDuracion));
+            run.SetUpgradeLevel("iman_radio", 1);
+            Assert.IsFalse(ProgressionRules.Buy(run, imanDuracion));
+            run.SetUpgradeLevel("iman_radio", 2);
+            Assert.IsNull(ProgressionRules.WhyCannotBuy(run, imanDuracion));
+            Assert.IsTrue(ProgressionRules.Buy(run, imanDuracion));
+        }
+
+        [Test]
+        public void EveryBoardParentExistsAndNoTwoNodesShareACell()
+        {
+            var cells = new System.Collections.Generic.HashSet<UnityEngine.Vector2>();
+            foreach (var def in UpgradeCatalog.All)
+            {
+                if (!string.IsNullOrEmpty(def.requires)) Assert.IsNotNull(UpgradeCatalog.Get(def.requires), def.id + " requires an unknown node");
+                Assert.IsTrue(cells.Add(def.boardPos), def.id + " overlaps another node on the board");
+                Assert.AreNotEqual(UnityEngine.Vector2.zero, def.boardPos, def.id + " sits on the tree itself");
+            }
         }
 
         [Test]

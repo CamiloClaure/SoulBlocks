@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace SoulBlocks
 {
@@ -35,5 +36,11 @@ namespace SoulBlocks
         public int gateMinTreeStage = -1; // minimum RunState.treeStage required, -1 = no gate
         public string unlockId = ""; // RunState.unlocks id granted on purchase, "" = none
         public int setsTreeStage = -1; // RunState.treeStage raised to this on purchase, -1 = none
+        // Destiny-board placement (Albion style): the parent node that must reach requiresLevel
+        // first ("" = hangs off the tree at the center), and where the node sits in board cells
+        // (x right, y up, center = the tree).
+        public string requires = "";
+        public int requiresLevel = 1;
+        public Vector2 boardPos;
     }
 }

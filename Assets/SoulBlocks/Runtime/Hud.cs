@@ -124,7 +124,7 @@ namespace SoulBlocks
             style.border = new RectOffset(0, 0, 0, 0);
         }
 
-        static Texture2D Solid(Color color)
+        public static Texture2D Solid(Color color)
         {
             var texture = new Texture2D(1, 1);
             texture.SetPixel(0, 0, color);

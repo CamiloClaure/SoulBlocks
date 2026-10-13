@@ -25,11 +25,17 @@ namespace SoulBlocks
         public static int Cost(UpgradeDef def, int level) =>
             Mathf.RoundToInt(def.baseCost * Mathf.Pow(def.growth <= 0f ? 1f : def.growth, level - 1));
 
-        // null = buyable. Checked in order: max level, order/stage gate, broken-tier gate, currency.
+        // null = buyable. Checked in order: max level, board parent, order/stage gate, broken-tier gate, currency.
         public static string WhyCannotBuy(RunState run, UpgradeDef def)
         {
             int level = run.UpgradeLevel(def.id);
             if (level >= def.maxLevel) return "nivel máximo";
+
+            if (!RequirementMet(run, def))
+            {
+                var parent = UpgradeCatalog.Get(def.requires);
+                return "requiere " + parent.name + (parent.maxLevel > 1 ? " nv " + def.requiresLevel : "");
+            }
 
             if (def.gateMinTreeStage > 0 && run.treeStage < def.gateMinTreeStage)
                 return "requiere " + StageName[def.gateMinTreeStage];
@@ -45,6 +51,10 @@ namespace SoulBlocks
 
             return null;
         }
+
+        // The board parent has reached the level this node needs (always true for nodes off the center).
+        public static bool RequirementMet(RunState run, UpgradeDef def) =>
+            string.IsNullOrEmpty(def.requires) || run.UpgradeLevel(def.requires) >= def.requiresLevel;
 
         public static bool Buy(RunState run, UpgradeDef def)
         {
