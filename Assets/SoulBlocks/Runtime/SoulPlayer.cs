@@ -12,9 +12,7 @@ namespace SoulBlocks
         public Camera viewCamera;
         public float moveSpeed = 6f;
         public bool readInput = true;
-        public float Yaw { get; private set; } // facing; SoulCamera swings behind it while moving
-        Vector2 heldInput;
-        float basisYaw;
+        public float Yaw { get; private set; } // facing (last move direction); the dash goes this way
         public float SpeedMultiplier = 1f;
         public bool MovementLocked;
         public float MovementSpeed { get; private set; }
@@ -46,18 +44,11 @@ namespace SoulBlocks
             Vector3 before = transform.position;
             if (!MovementLocked)
             {
-                // WASD relative to the camera, but the camera yaw is sampled only when a key
-                // combination starts or changes: holding D runs straight right in the world while
-                // the camera swings in behind, instead of the player circling with it.
+                // WASD relative to the camera yaw: W runs away from the camera, wherever it was turned.
                 input = Vector2.ClampMagnitude(input, 1);
-                if (input.sqrMagnitude < .0001f) heldInput = Vector2.zero;
-                else
+                if (input.sqrMagnitude >= .0001f)
                 {
-                    if (heldInput == Vector2.zero || (input - heldInput).sqrMagnitude > .0001f)
-                    {
-                        basisYaw = viewCamera != null ? viewCamera.transform.eulerAngles.y : Yaw;
-                        heldInput = input;
-                    }
+                    float basisYaw = viewCamera != null ? viewCamera.transform.eulerAngles.y : Yaw;
                     Vector3 direction = Quaternion.Euler(0f, basisYaw, 0f) * new Vector3(input.x, 0f, input.y);
                     Yaw = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
                     TryMoveSupported(direction * moveSpeed * SpeedMultiplier * deltaTime);

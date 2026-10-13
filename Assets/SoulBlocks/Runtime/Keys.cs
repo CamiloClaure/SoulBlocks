@@ -18,6 +18,7 @@ namespace SoulBlocks
         public static bool PausePressed => Allowed && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
         public static bool RayAimHeld => Allowed && Mouse.current != null && Mouse.current.leftButton.isPressed;
         public static bool RayReleased => Allowed && Mouse.current != null && Mouse.current.leftButton.wasReleasedThisFrame;
+        public static bool OrbitHeld => Allowed && Mouse.current != null && Mouse.current.rightButton.isPressed;
         public static Vector2 MousePosition => Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero;
     }
 }

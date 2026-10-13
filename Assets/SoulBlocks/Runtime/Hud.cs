@@ -9,7 +9,7 @@ namespace SoulBlocks
     // OnGUI, so draw order stays controllable and there is exactly one GUI.skin to agree on.
     // Persistent text is small and translucent, stacked in two side columns: player stats on the
     // left (Line), plan/objective/blessings/toasts on the right (SideLine). Modals (shop, pause,
-    // blessing pick, start menu, victory) still use plain GUI.Window.
+    // blessing pick, start menu, victory) still use plain GUI.Window, on a solid background.
     public sealed class Hud : MonoBehaviour
     {
         struct Entry { public int order; public Action draw; }
@@ -20,6 +20,7 @@ namespace SoulBlocks
         const float LineHeight = 16f, ColumnWidth = 360f, Margin = 8f, ButtonWidth = 56f;
         static float leftY, rightY;
         static GUIStyle subtle, shadow, smallButton;
+        static GUISkin skin;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void RegisterSystem() => GameRoot.Register<Hud>();
@@ -82,7 +83,14 @@ namespace SoulBlocks
 
         static void EnsureStyles()
         {
-            if (subtle != null) return;
+            if (skin != null) return;
+            // A copy, so the builtin skin (which outlives play mode in the editor) stays untouched.
+            skin = Instantiate(GUI.skin);
+            var solid = new Texture2D(1, 1);
+            solid.SetPixel(0, 0, new Color32(28, 26, 38, 255));
+            solid.Apply();
+            skin.window.normal.background = skin.window.onNormal.background = solid;
+            GUI.skin = skin;
             subtle = new GUIStyle(GUI.skin.label) { fontSize = 12, wordWrap = false, clipping = TextClipping.Overflow };
             subtle.normal.textColor = new Color(1f, 1f, 1f, .75f);
             shadow = new GUIStyle(subtle);
@@ -93,6 +101,7 @@ namespace SoulBlocks
         void OnGUI()
         {
             EnsureStyles();
+            GUI.skin = skin;
             leftY = rightY = Margin;
             foreach (var entry in entries.OrderBy(e => e.order).ToArray())
                 entry.draw?.Invoke();

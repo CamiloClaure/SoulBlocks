@@ -12,7 +12,8 @@ Estado: **obra gruesa**. Todas las mecánicas funcionan de punta a punta con pla
 
 | Acción | Control |
 |---|---|
-| Moverse | WASD / flechas (la cámara se acomoda detrás) |
+| Moverse | WASD / flechas |
+| Girar cámara | Mantener click derecho y mover el mouse |
 | Zoom de cámara | Rueda |
 | Dash | Shift |
 | Imán de almas | Q |

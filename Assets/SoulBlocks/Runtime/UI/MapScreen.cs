@@ -170,7 +170,7 @@ namespace SoulBlocks
         Vector2 ToScreen(Vector3 world)
         {
             float x = area.x + area.width * .5f + (world.x - (minX + maxX) * .5f) * scale;
-            float y = area.y + area.height * .5f + (world.z - (minZ + maxZ) * .5f) * scale;
+            float y = area.y + area.height * .5f - (world.z - (minZ + maxZ) * .5f) * scale; // +z (north) up, like SoulCamera at its starting yaw
             return new Vector2(x, y);
         }
 

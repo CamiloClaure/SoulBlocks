@@ -12,7 +12,8 @@ namespace SoulBlocks
         // Same table as README.md "Jugar".
         static readonly string[] Controls =
         {
-            "WASD: moverse (la cámara se acomoda detrás)",
+            "WASD: moverse",
+            "Click derecho (mantener) + mouse: girar la cámara",
             "Rueda: zoom de la cámara",
             "Shift: dash",
             "Q: imán de almas",
