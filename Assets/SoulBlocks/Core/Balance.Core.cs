@@ -4,7 +4,7 @@ namespace SoulBlocks
     // without touching call sites. Every later feature adds its own Balance.<Feature>.cs partial.
     public static partial class Balance
     {
-        public static float TileSize = 10f; // path width: 5 blocks of 2 m, one generator cell
+        public static float TileSize = 30f; // cave width, one generator cell
         public static float TileThickness = .25f;
         public static float HubPickupTreeRange = 4f;
 

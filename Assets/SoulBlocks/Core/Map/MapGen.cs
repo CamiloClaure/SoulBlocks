@@ -335,11 +335,15 @@ namespace SoulBlocks
             var patterns = new List<PrisonPattern> { PrisonPattern.Line, PrisonPattern.Arc, PrisonPattern.Compact, PrisonPattern.Connected };
             SeededRng.Stream(seed, "map.branch." + branch.id + ".patterns").Shuffle(patterns);
 
+            int previousIdx = -1;
             for (int g = 0; g < GroupTiers.Length; g++)
             {
                 float frac = (g + 1) / (GroupTiers.Length + 1.5f);
                 int idx = Mathf.Clamp(Mathf.RoundToInt(frac * (baseSteps - 1)) + spotsRng.Next(-2, 3), 3, Mathf.Max(3, baseSteps - 2));
+                // Few wide tiles per branch: two groups must never share (and overlap on) one tile.
+                idx = Mathf.Max(idx, previousIdx + 1);
                 if (idx >= steps.Count) continue;
+                previousIdx = idx;
                 var center = steps[idx];
                 var pattern = patterns[g % patterns.Count];
                 string unlock = center.deep ? UnlockIds.Raiz3 : "";
@@ -363,8 +367,8 @@ namespace SoulBlocks
             }
         }
 
-        // The pattern fits inside the center tile: PrisonGroupSpacing keeps the group within
-        // Rayhit's 8 m, and the 10 m wide path leaves room to walk around it.
+        // The pattern fits inside the center tile, and the 30 m wide cave leaves room to walk
+        // around it.
         static List<Vector3> PrisonPositions(Step center, PrisonPattern pattern)
         {
             Vector3 forward = center.heading, right = TurnRight(forward);
@@ -465,9 +469,9 @@ namespace SoulBlocks
         {
             var rng = SeededRng.Stream(seed, "map.branch." + branch.id + ".altars");
             int count = rng.Chance(.5f) ? 2 : 1;
-            for (int i = 0; i < count && actualBase > 4; i++)
+            for (int i = 0; i < count && actualBase > 2; i++)
             {
-                int idx = rng.Next(4, actualBase - 1);
+                int idx = rng.Next(2, actualBase - 1);
                 layout.altars.Add(new AltarLayout { id = altarId++, position = steps[idx].pos, branchId = branch.id });
             }
         }

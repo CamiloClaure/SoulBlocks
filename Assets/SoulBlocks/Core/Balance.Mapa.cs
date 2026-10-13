@@ -12,15 +12,17 @@ namespace SoulBlocks
         public static float DeepExtensionLength = 240f;
 
         public static float TurnChance = .25f;
-        // Natural look: tile centers jitter off the 10 m grid and a Catmull-Rom ribbon of
+        // Natural look: tile centers jitter off the 30 m grid and a Catmull-Rom ribbon of
         // varying width runs through them (PathShape). The grid stays the topology.
-        public static float PathJitter = 2.5f;
-        public static float PathHalfWidth = 5f;
-        public static float PathWidthNoise = .2f; // half width 4..6 m, so 8..12 m wide
+        public static float PathJitter = 7.5f;
+        public static float PathHalfWidth = 15f;
+        public static float PathWidthNoise = .2f; // half width 12..18 m, so 24..36 m wide
+        // Cave shell over every ribbon (MapBuilder): rock walls along both edges, a ceiling on top.
+        public static float CaveHeight = 12f;
         public static int PathSamplesPerSegment = 8;
         public static float GapMaxLength = 4f; // base dash is 6 m, keep gaps comfortably shorter
         public static float ShelterSpacing = 140f;
-        public static float ShelterRadius = 4.5f; // covers the 10 m path width
+        public static float ShelterRadius = 13.5f; // covers most of the 30 m cave width
 
         // Optional side platforms: a PlatformSize square one GapMaxLength off the path edge,
         // reachable only by dash, holding PlatformSouls.
@@ -29,12 +31,13 @@ namespace SoulBlocks
         public static float PlatformSize = 4f;
         public static int PlatformSouls = 15;
 
-        public static int SoulsBranchPrisonInterval = 4; // tiles between solo T1s on the Souls branch
-        public static float PrisonGroupSpacing = 2.5f; // meters between prisons of one pattern group
+        public static int SoulsBranchPrisonInterval = 2; // tiles (60 m) between solo T1s on the Souls branch
+        public static float PrisonGroupSpacing = 6f; // meters between prisons of one pattern group
         // One soul spawn per centerline tile; souls scatter at random over the tile square.
-        public static int SoulsPerTileSouls = 12;
-        public static int SoulsPerTilePrisons = 6;
-        public static int SoulsPerTileExploration = 4;
+        // Counts at full SoulDensity (StatId.SoulDensity scales them, Abundancia raises it).
+        public static int SoulsPerTileSouls = 36;
+        public static int SoulsPerTilePrisons = 18;
+        public static int SoulsPerTileExploration = 12;
         public static int SoulsDeepMultiplier = 2;
 
         public static float ExposedCoreChance = .25f;

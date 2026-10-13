@@ -36,14 +36,15 @@ namespace SoulBlocks
             return go;
         }
 
-        // A custom mesh (path ribbons) with the shared material and a matching MeshCollider.
-        public static GameObject MakeMesh(Mesh mesh, Color color, string name, Transform parent)
+        // A custom mesh (path ribbons, cave shells) with the shared material and, unless told
+        // otherwise, a matching MeshCollider.
+        public static GameObject MakeMesh(Mesh mesh, Color color, string name, Transform parent, bool collider = true)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
             go.AddComponent<MeshFilter>().sharedMesh = mesh;
             go.AddComponent<MeshRenderer>().sharedMaterial = SharedMaterial();
-            go.AddComponent<MeshCollider>().sharedMesh = mesh;
+            if (collider) go.AddComponent<MeshCollider>().sharedMesh = mesh;
             SetColor(go, color);
             return go;
         }

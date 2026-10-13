@@ -9,6 +9,6 @@ namespace SoulBlocks
         public static float HabilidadesSampleStep = .25f;
         public static float MagnetPullSpeed = 14f;
         public static float RayhitTravelSpeed = 40f;
-        public static float ChainRange = 6f;
+        public static float ChainRange = 18f;
     }
 }

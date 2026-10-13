@@ -60,6 +60,22 @@ namespace SoulBlocks.Tests.Mapa
                 Assert.LessOrEqual(Vector3.Distance(PathShape.RandomPoint(platform, rng, .5f), platform.position), Balance.PlatformSize * .5f - .5f + 1e-4f);
         }
 
+        [Test]
+        public void OnAnyFloorSeesOtherRibbonsAndPlatformsButNotItself()
+        {
+            var tiles = Corner(5f);
+            var platform = new TileLayout { index = 9, position = new Vector3(0, 0, -12), shortcut = true };
+            var layout = new MapLayout();
+            layout.tiles.AddRange(tiles);
+            layout.tiles.Add(platform);
+
+            Assert.IsTrue(PathShape.OnAnyFloor(layout, new Vector3(0, 0, 0)), "center of tile 0");
+            Assert.IsFalse(PathShape.OnAnyFloor(layout, new Vector3(0, 0, 0), tiles[0]), "tile 0 itself is excluded");
+            Assert.IsTrue(PathShape.OnAnyFloor(layout, new Vector3(0, 0, -12)), "platform disc");
+            Assert.IsFalse(PathShape.OnAnyFloor(layout, new Vector3(0, 0, -8)), "the gap between ribbon and platform");
+            Assert.IsFalse(PathShape.OnAnyFloor(layout, new Vector3(-3, 0, 15)), "inside the bend, off every ribbon");
+        }
+
         internal static float DistanceToSegment(Vector3 p, Vector3 a, Vector3 b)
         {
             Vector3 ab = b - a;
