@@ -26,10 +26,10 @@ namespace SoulBlocks.Tests
         [Test]
         public void CostUsesPerUpgradeGrowth()
         {
-            // pico_nivel: growth 2.0, base 80.
-            Assert.AreEqual(80, ProgressionRules.Cost(PicoNivel, 1));
-            Assert.AreEqual(160, ProgressionRules.Cost(PicoNivel, 2));
-            Assert.AreEqual(320, ProgressionRules.Cost(PicoNivel, 3));
+            // pico_nivel: growth 2.0, base 180.
+            Assert.AreEqual(180, ProgressionRules.Cost(PicoNivel, 1));
+            Assert.AreEqual(360, ProgressionRules.Cost(PicoNivel, 2));
+            Assert.AreEqual(720, ProgressionRules.Cost(PicoNivel, 3));
         }
 
         [Test]
