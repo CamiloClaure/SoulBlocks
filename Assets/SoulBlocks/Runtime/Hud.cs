@@ -10,7 +10,8 @@ namespace SoulBlocks
     // The skin is flat and fully opaque (no default bevels, no translucency): every piece of text
     // sits on its own solid box. Persistent text is stacked in two side columns: player stats on
     // the left (Line), plan/objective/blessings/toasts on the right (SideLine). Modals (shop,
-    // pause, blessing pick, start menu, victory) use plain GUI.Window on the same skin.
+    // pause, blessing pick, start menu, victory) use plain GUI.Window on the same skin, over a
+    // dark scrim that hides the world and the HUD behind them.
     public sealed class Hud : MonoBehaviour
     {
         struct Entry { public int order; public Action draw; }
@@ -23,6 +24,7 @@ namespace SoulBlocks
         static GUIStyle boxed, smallButton;
         static GUISkin skin;
         public static readonly Color PanelColor = new Color32(28, 26, 38, 255);
+        static readonly Color Scrim = new Color(0f, 0f, 0f, .85f);
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void RegisterSystem() => GameRoot.Register<Hud>();
@@ -124,9 +126,11 @@ namespace SoulBlocks
             style.border = new RectOffset(0, 0, 0, 0);
         }
 
+        // DontUnloadUnusedAsset: UnloadUnusedAssets (every GameRoot.Restart scene load) unloads
+        // runtime textures held only by a GUIStyle (Unity UUM-22819), which stripped every box.
         public static Texture2D Solid(Color color)
         {
-            var texture = new Texture2D(1, 1);
+            var texture = new Texture2D(1, 1) { hideFlags = HideFlags.DontUnloadUnusedAsset };
             texture.SetPixel(0, 0, color);
             texture.Apply();
             return texture;
@@ -139,6 +143,15 @@ namespace SoulBlocks
             leftY = rightY = Margin;
             foreach (var entry in entries.OrderBy(e => e.order).ToArray())
                 entry.draw?.Invoke();
+
+            // Every modal holds Keys.Blocked: dim the world and the HUD lines under it so the
+            // window reads on its own. Windows draw after every plain control, so they stay on top.
+            if (Keys.Blocked)
+            {
+                GUI.color = Scrim;
+                GUI.DrawTexture(new Rect(0f, 0f, Screen.width, Screen.height), Texture2D.whiteTexture);
+                GUI.color = Color.white;
+            }
 
             toasts.RemoveAll(t => t.expires <= Time.unscaledTime);
             if (toasts.Count > 0) rightY += 6f;

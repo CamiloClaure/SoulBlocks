@@ -4,20 +4,21 @@ using UnityEngine.InputSystem;
 namespace SoulBlocks
 {
     // Shop at the tree: world prompt when close and not on an expedition, and on E an
-    // Albion-style destiny board: every upgrade is a node around the tree (UpgradeDef.boardPos),
-    // linked to the parent it needs, drag to pan, wheel to zoom, click a node for its details
-    // and the buy button. Owns Run.upgrades, the Wisdom-node unlocks, treeStage and the
+    // Albion-style destiny board: a full-screen opaque window (the HUD's scrim and this window
+    // hide the world), every upgrade a node around the tree (UpgradeDef.boardPos) linked to the
+    // parent it needs. It opens framed on the whole board; drag pans, the wheel zooms, a click on
+    // a node shows its details and the buy button. Owns Run.upgrades, the Wisdom-node unlocks, treeStage and the
     // "upgrade.<id>" stat sources.
     public sealed class ProgressionSystem : MonoBehaviour
     {
-        const float CellX = 150f, CellY = 84f, NodeWidth = 124f, NodeHeight = 50f, SideWidth = 300f;
+        const float CellX = 150f, CellY = 84f, NodeWidth = 124f, NodeHeight = 50f, SideWidth = 300f, MinZoom = .7f, MaxZoom = 1.6f;
         static readonly Color EdgeOpen = new Color(.85f, .8f, 1f), EdgeLocked = new Color(.32f, .3f, .4f), Selection = new Color(1f, .85f, .35f);
 
         bool open;
         Vector2 pan;
         float zoom = 1f;
         string selected;
-        GUIStyle maxedNode, openNode, buyableNode, lockedNode, hubNode;
+        static GUIStyle maxedNode, openNode, buyableNode, lockedNode, hubNode; // static: built once, not per scene load
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Register() => GameRoot.Register<ProgressionSystem>();
@@ -74,6 +75,7 @@ namespace SoulBlocks
         void OpenShop()
         {
             open = true;
+            FrameBoard();
             Keys.Blocked = true;
             if (GameRoot.Instance.Player != null) GameRoot.Instance.Player.MovementLocked = true;
         }
@@ -98,7 +100,24 @@ namespace SoulBlocks
 
             // A window, not a plain panel, so it draws above every later Hud line. Fixed rect
             // redrawn every frame (no GUI.DragWindow): the board pans inside it instead.
-            GUI.Window(947001, new Rect(20f, 20f, Screen.width - 40f, Screen.height - 40f), DrawBoard, "Árbol");
+            GUI.Window(947001, new Rect(0f, 0f, Screen.width, Screen.height), DrawBoard, "Árbol");
+        }
+
+        static Rect BoardArea() => new Rect(8f, 48f, Screen.width - SideWidth - 24f, Screen.height - 56f);
+
+        // Center the bounds of every node (and the hub) and zoom so they fit, kept readable.
+        void FrameBoard()
+        {
+            Vector2 min = Vector2.zero, max = Vector2.zero;
+            foreach (var def in UpgradeCatalog.All)
+            {
+                var point = new Vector2(def.boardPos.x * CellX, -def.boardPos.y * CellY);
+                min = Vector2.Min(min, point);
+                max = Vector2.Max(max, point);
+            }
+            Vector2 size = max - min + new Vector2(NodeWidth, NodeHeight), area = BoardArea().size;
+            zoom = Mathf.Clamp(Mathf.Min(area.x / size.x, area.y / size.y), MinZoom, 1.2f);
+            pan = -(min + max) * .5f * zoom;
         }
 
         void DrawBoard(int windowId)
@@ -106,11 +125,11 @@ namespace SoulBlocks
             EnsureStyles();
             var root = GameRoot.Instance;
             var run = root.Run;
-            float width = Screen.width - 40f, height = Screen.height - 40f;
+            float width = Screen.width, height = Screen.height;
             GUI.Label(new Rect(12f, 22f, width - 24f, 22f), "Almas " + run.reserveSouls + "   ·   Wisdom " + run.wisdom
                 + "        arrastrá para mover · rueda para zoom · click en un nodo · E / Esc cierra");
 
-            var area = new Rect(8f, 48f, width - SideWidth - 24f, height - 56f);
+            var area = BoardArea();
             HandleBoardInput(area);
 
             GUI.BeginGroup(area);
@@ -157,7 +176,7 @@ namespace SoulBlocks
             }
             else if (e.type == EventType.ScrollWheel)
             {
-                float next = Mathf.Clamp(zoom * (1f - e.delta.y * .05f), .5f, 1.6f);
+                float next = Mathf.Clamp(zoom * (1f - e.delta.y * .05f), MinZoom, MaxZoom);
                 Vector2 cursor = e.mousePosition - area.position - area.size * .5f;
                 pan = cursor - (cursor - pan) * (next / zoom);
                 zoom = next;
@@ -214,7 +233,7 @@ namespace SoulBlocks
 
         void EnsureStyles()
         {
-            int fontSize = Mathf.RoundToInt(12f * zoom);
+            int fontSize = Mathf.Max(9, Mathf.RoundToInt(13f * zoom));
             if (maxedNode == null)
             {
                 GUIStyle Node(Color32 fill, Color32 hover, Color text)
