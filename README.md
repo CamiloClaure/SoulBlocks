@@ -23,6 +23,7 @@ Estado: **obra gruesa**. Todas las mecánicas funcionan de punta a punta con pla
 | Mapa | Tab (mantener) |
 | Pausa (guardar, copiar seed, nueva partida) | Esc |
 | Pantalla completa | F1 |
+| Cambiar modelo del personaje (mago / clásico) | F2 |
 
 La partida se guarda sola al terminar cada expedición, al comprar y al salir.
 

@@ -16,6 +16,7 @@ namespace SoulBlocks
         public static bool InteractPressed => Allowed && Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame;
         public static bool MapHeld => Allowed && Keyboard.current != null && Keyboard.current.tabKey.isPressed;
         public static bool PausePressed => Allowed && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
+        public static bool ModelSwapPressed => Allowed && Keyboard.current != null && Keyboard.current.f2Key.wasPressedThisFrame;
         public static bool PickPressed => Allowed && Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
         // Alt frees the cursor (SoulCamera keeps it locked for mouse look) to click HUD buttons.
         public static bool CursorHeld => Keyboard.current != null && Keyboard.current.altKey.isPressed;

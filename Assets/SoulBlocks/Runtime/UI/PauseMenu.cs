@@ -24,6 +24,7 @@ namespace SoulBlocks
             "Tab (mantener): mapa",
             "Esc: pausa",
             "F1: pantalla completa",
+            "F2: cambiar modelo del personaje",
         };
 
         bool open, showControls;

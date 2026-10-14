@@ -21,16 +21,25 @@ namespace SoulBlocks
         int animationState;
         static readonly int Idle = Animator.StringToHash("Base Layer.Idle");
         static readonly int Walk = Animator.StringToHash("Base Layer.Walk");
+        // The Spirit Path wizard (Blender FBX with Legacy Idle/Walk clips, see
+        // SpiritPathWizardImport) is the default look; the classic model stays under `visual`,
+        // hidden, and F2 swaps between them.
+        const string WizardPath = "Characters/TheSpiritPath_Wizard_Idle_Walk";
+        GameObject classicModel, wizardModel;
+        Animation wizardAnimation;
+        string wizardIdle, wizardWalk;
 
         void Awake() { controller = GetComponent<CharacterController>(); }
         void Start()
         {
             if (visual != null) visual.localPosition = Vector3.down * (controller.skinWidth + .19f);
             Yaw = visual != null ? visual.eulerAngles.y : transform.eulerAngles.y;
-            BuildWizardHat();
+            BuildWizardHat(); // needs the classic rig's animator active, before the wizard hides it
+            BuildSpiritPathWizard();
         }
         void Update()
         {
+            if (Keys.ModelSwapPressed && wizardModel != null) ShowWizard(!wizardModel.activeSelf);
             var k = Keyboard.current;
             Vector2 input = Vector2.zero;
             if (readInput && Application.isFocused && k != null)
@@ -60,9 +69,10 @@ namespace SoulBlocks
             MovementSpeed = planar.magnitude / deltaTime;
             if (visual != null) visual.rotation = Quaternion.RotateTowards(visual.rotation, Quaternion.Euler(0f, Yaw, 0f), 1080f * deltaTime);
             int next = MovementSpeed > .08f ? Walk : Idle;
-            if (animator != null && animationState != next)
+            if (animationState != next)
             {
-                animator.CrossFadeInFixedTime(next, .14f);
+                if (animator != null && animator.isActiveAndEnabled) animator.CrossFadeInFixedTime(next, .14f);
+                if (wizardAnimation != null && wizardAnimation.isActiveAndEnabled) wizardAnimation.CrossFade(next == Walk ? wizardWalk : wizardIdle, .14f);
                 animationState = next;
             }
         }
@@ -99,6 +109,47 @@ namespace SoulBlocks
         }
         public static bool IsSupportedAt(Vector3 point) => Supported(point);
         static bool Supported(Vector3 point) => Physics.Raycast(point + Vector3.up, Vector3.down, 3f, (1 << 8) | (1 << 9), QueryTriggerInteraction.Ignore);
+        void BuildSpiritPathWizard()
+        {
+            var prefab = Resources.Load<GameObject>(WizardPath);
+            if (prefab == null || visual == null || animator == null) return;
+            classicModel = animator.gameObject;
+            wizardModel = Instantiate(prefab, visual);
+            wizardModel.name = "Spirit Path wizard";
+            wizardModel.transform.localRotation = Quaternion.Euler(0f, 180f, 0f); // the Blender export faces -Z
+            // Same height and feet line as the classic model, whatever units the FBX came in.
+            Bounds classic = Encapsulate(classicModel.GetComponentsInChildren<SkinnedMeshRenderer>()), wizard = Encapsulate(wizardModel.GetComponentsInChildren<Renderer>());
+            if (wizard.size.y > .001f) wizardModel.transform.localScale *= classic.size.y / wizard.size.y;
+            wizard = Encapsulate(wizardModel.GetComponentsInChildren<Renderer>());
+            wizardModel.transform.position += Vector3.up * (classic.min.y - wizard.min.y);
+            wizardAnimation = wizardModel.GetComponent<Animation>();
+            if (wizardAnimation != null)
+            {
+                wizardAnimation.cullingType = AnimationCullingType.AlwaysAnimate; // like the classic Animator (SoulBlocksSetup)
+                foreach (AnimationState state in wizardAnimation)
+                {
+                    state.wrapMode = WrapMode.Loop;
+                    if (state.name.EndsWith("Idle")) wizardIdle = state.name;
+                    else if (state.name.EndsWith("Walk")) wizardWalk = state.name;
+                }
+            }
+            ShowWizard(true);
+        }
+
+        void ShowWizard(bool show)
+        {
+            wizardModel.SetActive(show);
+            classicModel.SetActive(!show);
+            animationState = 0; // the shown model replays the current idle/walk next step
+        }
+
+        static Bounds Encapsulate(Renderer[] renderers)
+        {
+            var bounds = renderers.Length > 0 ? renderers[0].bounds : new Bounds();
+            foreach (var renderer in renderers) bounds.Encapsulate(renderer.bounds);
+            return bounds;
+        }
+
         void BuildWizardHat()
         {
             if(animator==null)return;
