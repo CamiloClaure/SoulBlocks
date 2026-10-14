@@ -23,7 +23,7 @@ namespace SoulBlocks
             var root = GameRoot.Instance;
             if (root == null || root.Player == null) return;
 
-            if (cooldownRemaining > 0f) cooldownRemaining -= Time.deltaTime;
+            if (cooldownRemaining > 0f) cooldownRemaining -= Time.deltaTime * SpecialBlockSystem.PlayerTempo;
 
             if (activeRemaining > 0f)
             {

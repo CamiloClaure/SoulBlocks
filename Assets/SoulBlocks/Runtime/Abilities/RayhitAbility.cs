@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace SoulBlocks
 {
-    // Hold left click to aim (a ground-plane point under the cursor, clamped to RayLength),
+    // Hold R to aim (a ground-plane point under the cursor, clamped to RayLength),
     // release to fire: the player travels the clamped segment at Balance.RayhitTravelSpeed,
     // hitting every IRayTarget it crosses as it passes (a misaligned shot still hits whatever
     // is on the line). Charges recharge from time and from souls collected.
@@ -74,9 +74,10 @@ namespace SoulBlocks
 
             maxCharges = root.Stats.GetInt(StatId.RayCharges);
             meter.Configure(maxCharges, root.Stats.Get(StatId.RayRechargeSeconds), SoulsPerCharge);
-            meter.Tick(Time.deltaTime);
+            meter.Tick(Time.deltaTime * SpecialBlockSystem.PlayerTempo);
 
             if (running != null) { aimingNow = false; HideLine(); return; }
+            if (root.Player.IsMining || Keys.Blocked) { lastAimValid = false; aimingNow = false; HideLine(); return; }
 
             if (Keys.RayAimHeld && TryComputeAimPoint(root, out var aimPoint))
             {
@@ -169,6 +170,7 @@ namespace SoulBlocks
         {
             var root = GameRoot.Instance;
             if (root == null || root.Player == null || meter == null || running != null) return false;
+            if (root.Player.IsMining) return false;
             if (!meter.TryConsume()) return false;
 
             Vector3 from = root.Player.transform.position;

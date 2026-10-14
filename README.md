@@ -13,16 +13,33 @@ Estado: **obra gruesa**. Todas las mecánicas funcionan de punta a punta con pla
 | Acción | Control |
 |---|---|
 | Moverse | WASD / flechas |
-| Girar cámara | Mantener click derecho y mover el mouse |
-| Zoom de cámara | Rueda |
+| Girar cámara | Mover el mouse, sin mantener botones |
+| Liberar cursor para la interfaz | Mantener Alt (también se libera en menús) |
+| Zoom de cámara | Teclas + / − |
+| Seleccionar bloque especial | Rueda |
+| Usar activo del bloque | Clic derecho |
+| Centrar cámara detrás del jugador | Click de la rueda |
 | Dash | Shift |
 | Imán de almas | Q |
-| Rayhit | Mantener click izquierdo para apuntar, soltar para lanzar |
+| Picar cristal cercano en bucle | Mantener click izquierdo, apuntando hacia el cristal |
+| Rayhit | Mantener R para apuntar con el mouse, soltar para lanzar |
 | Interactuar (tienda del árbol, altares, entrega en refugios) | E |
 | Mapa | Tab (mantener) |
 | Pausa (guardar, copiar seed, nueva partida) | Esc |
 
 La partida se guarda sola al terminar cada expedición, al comprar y al salir.
+
+La cámara empieza detrás del jugador y gira directamente con el mouse. Conserva la dirección
+que elegiste; no se recentra sola. El clic de la rueda la vuelve a colocar detrás.
+El cursor se bloquea durante el juego y se libera en menús o manteniendo Alt.
+El picado y Rayhit apuntan desde el centro de la pantalla. WASD sigue la orientación
+de la cámara. Los obstáculos acercan la cámara para evitar que atraviese sus colliders.
+
+Zona de prueba junto al árbol: 15 cristales de cinco colores y tres tamaños; los azules
+empiezan ocultos. Cinco bloques desbloqueados con pasivas siempre activas, bomba con
+cuenta atrás y ayudantes temporales. E abre mejoras gratuitas y restauración de cristales.
+Reglas y valores en [docs/BLOQUES-ESPECIALES.md](docs/BLOQUES-ESPECIALES.md).
+Prefab reemplazable por un modelo de Blender en [docs/CRISTALES.md](docs/CRISTALES.md).
 
 ## Estructura
 

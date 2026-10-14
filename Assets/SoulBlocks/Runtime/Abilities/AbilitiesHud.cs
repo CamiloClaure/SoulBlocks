@@ -31,6 +31,7 @@ namespace SoulBlocks
             if (ray != null) parts.Add("Rayhit " + ray.Charges + "/" + ray.MaxCharges + " (" + ray.SoulsTowardCharge + "/" + ray.SoulsPerCharge + ")");
 
             if (parts.Count > 0) Hud.Line(string.Join("  ·  ", parts));
+            Hud.Line("Picar: mantener click izquierdo · Rayhit: mantener R y soltar");
         }
     }
 }

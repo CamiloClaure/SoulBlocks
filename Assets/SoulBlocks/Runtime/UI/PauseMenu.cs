@@ -13,11 +13,15 @@ namespace SoulBlocks
         static readonly string[] Controls =
         {
             "WASD: moverse",
-            "Click derecho (mantener) + mouse: girar la cámara",
-            "Rueda: zoom de la cámara",
+            "Mover mouse: girar la cámara (sin botones)",
+            "Mantener Alt: liberar cursor para interactuar con la interfaz",
+            "Rueda: seleccionar bloque especial; click derecho: usar",
+            "+ / -: zoom de la cámara",
+            "Click de la rueda: centrar cámara detrás del jugador",
             "Shift: dash",
             "Q: imán de almas",
-            "Click izquierdo: mantener para apuntar Rayhit, soltar para lanzar",
+            "Mantener click izquierdo: picar repetidamente hacia el centro de la pantalla",
+            "R: mantener para apuntar Rayhit, soltar para lanzar",
             "E: interactuar (tienda del árbol, altares, entrega en refugios)",
             "Tab (mantener): mapa",
             "Esc: pausa",

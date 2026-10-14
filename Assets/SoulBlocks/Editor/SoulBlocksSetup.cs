@@ -114,7 +114,8 @@ namespace SoulBlocks.Editor
                 PlayerSettings.companyName = "CamiloClaure";
                 EditorSettings.enterPlayModeOptionsEnabled = false;
                 EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
-                Require(scene.GetRootGameObjects().Length == 5, "Unexpected scene root object.");
+                Require(scene.GetRootGameObjects().Length == 6 && Object.FindAnyObjectByType<BreakableCrystal>() != null,
+                    "Expected the original scene roots and the authored mining crystal.");
                 Require(Object.FindObjectsByType<MonoBehaviour>().All(m => m != null && (m.GetType().Namespace.StartsWith("SoulBlocks") || m.GetType().Namespace.StartsWith("UnityEngine.Rendering"))), "Unexpected gameplay script.");
                 foreach (var root in scene.GetRootGameObjects())
                     foreach (var t in root.GetComponentsInChildren<Transform>(true))

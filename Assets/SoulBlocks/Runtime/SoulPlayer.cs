@@ -16,6 +16,9 @@ namespace SoulBlocks
         public float SpeedMultiplier = 1f;
         public bool MovementLocked;
         public float MovementSpeed { get; private set; }
+        public bool HasMovementInput { get; private set; }
+        CrystalMiningAttack mining;
+        public bool IsMining => mining != null && mining.DirectionLocked;
         CharacterController controller;
         float fallingSpeed;
         int animationState;
@@ -25,6 +28,7 @@ namespace SoulBlocks
         void Awake() { controller = GetComponent<CharacterController>(); }
         void Start()
         {
+            mining = GetComponent<CrystalMiningAttack>();
             if (visual != null) visual.localPosition = Vector3.down * (controller.skinWidth + .19f);
             Yaw = visual != null ? visual.eulerAngles.y : transform.eulerAngles.y;
             BuildWizardHat();
@@ -40,6 +44,7 @@ namespace SoulBlocks
         }
         public void StepMovement(Vector2 input, float deltaTime)
         {
+            HasMovementInput = !MovementLocked && input.sqrMagnitude >= .0001f;
             if (deltaTime <= 0) return;
             Vector3 before = transform.position;
             if (!MovementLocked)
@@ -48,9 +53,10 @@ namespace SoulBlocks
                 input = Vector2.ClampMagnitude(input, 1);
                 if (input.sqrMagnitude >= .0001f)
                 {
-                    float basisYaw = viewCamera != null ? viewCamera.transform.eulerAngles.y : Yaw;
+                    // While mining, strafe relative to the fixed attack direction, independently of camera orbit.
+                    float basisYaw = IsMining ? Yaw : viewCamera != null ? viewCamera.transform.eulerAngles.y : Yaw;
                     Vector3 direction = Quaternion.Euler(0f, basisYaw, 0f) * new Vector3(input.x, 0f, input.y);
-                    Yaw = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
+                    if (!IsMining) Yaw = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
                     TryMoveSupported(direction * moveSpeed * SpeedMultiplier * deltaTime);
                 }
             }
@@ -58,13 +64,20 @@ namespace SoulBlocks
             controller.Move(Vector3.up * fallingSpeed * deltaTime);
             Vector3 planar = Vector3.ProjectOnPlane(transform.position - before, Vector3.up);
             MovementSpeed = planar.magnitude / deltaTime;
-            if (visual != null) visual.rotation = Quaternion.RotateTowards(visual.rotation, Quaternion.Euler(0f, Yaw, 0f), 1080f * deltaTime);
+            if (visual != null && !IsMining) visual.rotation = Quaternion.RotateTowards(visual.rotation, Quaternion.Euler(0f, Yaw, 0f), 1080f * deltaTime);
             int next = MovementSpeed > .08f ? Walk : Idle;
             if (animator != null && animationState != next)
             {
                 animator.CrossFadeInFixedTime(next, .14f);
                 animationState = next;
             }
+        }
+        public void FaceDirection(Vector3 direction)
+        {
+            direction.y = 0;
+            if (direction.sqrMagnitude < .0001f) return;
+            Yaw = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
+            if (visual != null) visual.rotation = Quaternion.Euler(0, Yaw, 0);
         }
         // Sweeps delta in short supported steps to keep walking on the only island, sliding
         // along an edge when the full step would walk off it. Returns false if any step
