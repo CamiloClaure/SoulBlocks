@@ -31,6 +31,7 @@ namespace SoulBlocks
             if (pick != null) parts.Add("Pico nv " + root.Stats.GetInt(StatId.PickLevel) + (pick.CooldownRemaining > 0f ? "" : " listo"));
 
             if (parts.Count > 0) Hud.Line(string.Join("  ·  ", parts));
+            Hud.Line("Picar: mantener click izquierdo");
         }
     }
 }

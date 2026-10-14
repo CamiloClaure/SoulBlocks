@@ -3,8 +3,9 @@ using UnityEngine;
 
 namespace SoulBlocks
 {
-    // Left click next to a crystal: one pick blow on the nearest unbroken one within PickRange,
-    // at most once per StatId.PickInterval; the player turns to face it. With Golpe en cadena
+    // Left click held next to a prison crystal: pick blows on the nearest unbroken one within
+    // PickRange, one per StatId.PickInterval; the player turns to face it. The same click swings
+    // CrystalMiningAttack, which only hurts BreakableCrystal (the lab), so the two never overlap. With Golpe en cadena
     // (Wisdom node or blessing), the blow that breaks a crystal jumps on to the nearest other
     // crystal within ChainRange. The crystal shows the hit itself (PrisonView: burst + punch).
     public sealed class PickAbility : MonoBehaviour
@@ -22,7 +23,7 @@ namespace SoulBlocks
         void Update()
         {
             var root = GameRoot.Instance;
-            if (root == null || root.Player == null || !Keys.PickPressed) return;
+            if (root == null || root.Player == null || !Keys.MineHeld) return;
             var target = InReach(root.Player.transform.position);
             if (target != null) TryHit(target);
         }
@@ -34,7 +35,7 @@ namespace SoulBlocks
             var root = GameRoot.Instance;
             if (root == null || root.Player == null || target == null || Time.time < readyAt) return false;
             readyAt = Time.time + Mathf.Max(.05f, root.Stats.Get(StatId.PickInterval));
-            root.Player.Face(target.Position - root.Player.transform.position);
+            root.Player.FaceDirection(target.Position - root.Player.transform.position);
 
             int level = root.Stats.GetInt(StatId.PickLevel);
             target.ApplyPickHit(level);
@@ -73,7 +74,7 @@ namespace SoulBlocks
             if (root == null || root.Player == null || Keys.Blocked) return;
             var target = InReach(root.Player.transform.position);
             if (target == null) return;
-            Hud.WorldLabel(target.Position + Vector3.up * .4f, "Click: picar (" + target.Forecast(root.Stats.GetInt(StatId.PickLevel)).Describe() + ")");
+            Hud.WorldLabel(target.Position + Vector3.up * .4f, "Mantener click: picar (" + target.Forecast(root.Stats.GetInt(StatId.PickLevel)).Describe() + ")");
         }
     }
 }

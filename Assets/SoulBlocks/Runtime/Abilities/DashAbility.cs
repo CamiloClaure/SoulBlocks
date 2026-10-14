@@ -39,7 +39,7 @@ namespace SoulBlocks
 
             maxCharges = root.Stats.GetInt(StatId.DashCharges);
             meter.Configure(maxCharges, root.Stats.Get(StatId.DashRechargeSeconds));
-            meter.Tick(Time.deltaTime);
+            meter.Tick(Time.deltaTime * SpecialBlockSystem.PlayerTempo);
 
             if (running == null && Keys.DashPressed) TryDash(FacingDirection(root.Player));
         }
@@ -51,6 +51,7 @@ namespace SoulBlocks
         {
             var root = GameRoot.Instance;
             if (root == null || root.Player == null || meter == null || running != null) return false;
+            if (root.Player.IsMining) return false;
             direction.y = 0f;
             if (direction.sqrMagnitude < .0001f) return false;
             direction.Normalize();

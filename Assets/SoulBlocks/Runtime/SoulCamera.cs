@@ -4,64 +4,151 @@ using UnityEngine.InputSystem;
 namespace SoulBlocks
 {
     // Third-person orbit camera with mouse look: while playing, the cursor is locked and hidden
-    // and the mouse turns the camera around the player. Holding Alt (Keys.CursorHeld) or any
-    // modal (Keys.Blocked) frees the cursor for clicking. Left click stays free for the pick.
-    // Position is rigid, so it stops the instant the mouse stops; WASD follows its yaw
-    // (SoulPlayer). The wheel zooms ZoomStep per notch (Input System reports +-1 per notch),
-    // except while a modal wants the wheel for itself. Field names differ from the old rigs so
-    // the scene's stale serialized values do not apply.
+    // and the mouse turns the camera around the player. Holding Alt (Keys.FreeCursorHeld) or any
+    // modal (Keys.Blocked) frees the cursor for clicking. +/- zoom (the wheel picks the special
+    // block), middle click recenters behind the player, and walls pull the camera in.
+    // Automatic centering waits for movement to stop, avoiding feedback with camera-relative WASD.
     [RequireComponent(typeof(Camera))]
     public sealed class SoulCamera : MonoBehaviour
     {
-        const float ZoomStep = 1.5f;
-
         public Transform player;
-        public float orbitYaw = 0f; // starts north-up, same as MapScreen
-        public float orbitPitch = 20f;
-        public float minPitch = 5f, maxPitch = 65f;
-        public float orbitSensitivity = .2f; // degrees per pixel of mouse movement
+        [Header("Encuadre detrás del jugador")]
+        public float orbitYaw;
+        public float orbitPitch = 15f;
+        public float minPitch = 5f, maxPitch = 55f;
         public float orbitDistance = 11.5f;
-        public float minDistance = 3f, maxDistance = 20f;
-        public float lookHeight = 1.5f;
+        public float minDistance = 2.5f, maxDistance = 20f;
+        public float lookHeight = 1.1f;
+        public float lookAhead = .65f;
+        [Header("Giro y centrado")]
+        public float orbitSensitivity = .2f;
+        public bool autoCenter = false;
+        public float manualOrbitHold = 2.5f;
+        public float centerSmoothTime = .22f;
+        [Header("Obstáculos")]
+        public float collisionRadius = .22f;
+        public float collisionPadding = .08f;
+        public LayerMask obstructionMask = ~0;
         public bool readInput = true;
-        bool looked; // mouse look was on last frame
 
-        void Start() => SnapToPlayer();
+        SoulPlayer soulPlayer;
+        float manualHoldRemaining, stationaryTime, yawVelocity;
+        bool centering;
+        bool controllingMouse;
+        const float StopDelay = .35f;
 
-        void OnDisable() => FreeCursor(true);
+        void Start()
+        {
+            if (player == null) return;
+            soulPlayer = player.GetComponent<SoulPlayer>();
+            // Read the visual so this does not depend on SoulPlayer.Start order.
+            orbitYaw = soulPlayer != null && soulPlayer.visual != null
+                ? soulPlayer.visual.eulerAngles.y : player.eulerAngles.y;
+            SnapToPlayer();
+        }
 
-        // ponytail: no wall/terrain collision, the camera can clip into tall props; add a SphereCast pull-in if it shows up in playtests.
+        public void RotateOrbit(Vector2 degrees)
+        {
+            orbitYaw = Mathf.Repeat(orbitYaw + degrees.x, 360f);
+            orbitPitch = Mathf.Clamp(orbitPitch - degrees.y, minPitch, maxPitch);
+            manualHoldRemaining = manualOrbitHold;
+            centering = false;
+            yawVelocity = 0f;
+        }
+
+        public void RecenterBehindPlayer()
+        {
+            centering = true;
+            manualHoldRemaining = 0f;
+            orbitPitch = 15f;
+        }
+
+        // Also used by scene tools and after teleports.
         public void SnapToPlayer()
         {
             if (player == null) return;
-            transform.rotation = Quaternion.Euler(orbitPitch, orbitYaw, 0f);
-            transform.position = player.position + Vector3.up * lookHeight - transform.forward * orbitDistance;
+            orbitPitch = Mathf.Clamp(orbitPitch, minPitch, maxPitch);
+            orbitDistance = Mathf.Clamp(orbitDistance, minDistance, maxDistance);
+            var rotation = Quaternion.Euler(orbitPitch, orbitYaw, 0f);
+            Vector3 forward = Quaternion.Euler(0, orbitYaw, 0) * Vector3.forward;
+            Vector3 pivot = player.position + Vector3.up * lookHeight;
+            Vector3 focus = pivot + forward * lookAhead;
+            Vector3 desired = focus - rotation * Vector3.forward * orbitDistance;
+            Vector3 ray = desired - pivot;
+            float distance = ray.magnitude;
+            if (distance > .001f)
+            {
+                // Ignore the player's controller and held tool, but include walls and crystals.
+                foreach (var hit in Physics.SphereCastAll(pivot, collisionRadius, ray / distance,
+                    distance, obstructionMask, QueryTriggerInteraction.Ignore))
+                {
+                    if (hit.transform == player || hit.transform.IsChildOf(player)) continue;
+                    distance = Mathf.Min(distance, Mathf.Max(.05f, hit.distance - collisionPadding));
+                }
+                desired = pivot + ray.normalized * distance;
+            }
+            transform.SetPositionAndRotation(desired, Quaternion.LookRotation(focus - desired, Vector3.up));
+        }
+
+        public void StepCamera(float deltaTime, bool orbitHeld = false)
+        {
+            if (player == null || deltaTime <= 0f) return;
+            if (soulPlayer == null) soulPlayer = player.GetComponent<SoulPlayer>();
+            bool moving = soulPlayer != null && (soulPlayer.HasMovementInput || soulPlayer.MovementSpeed > .08f || soulPlayer.IsMining || soulPlayer.MovementLocked);
+            stationaryTime = moving ? 0f : stationaryTime + deltaTime;
+            manualHoldRemaining = Mathf.Max(0, manualHoldRemaining - deltaTime);
+            if (!Keys.Blocked && !orbitHeld && (centering || (autoCenter && !moving && stationaryTime >= StopDelay && manualHoldRemaining <= 0)))
+            {
+                float targetYaw = soulPlayer != null ? soulPlayer.Yaw : player.eulerAngles.y;
+                orbitYaw = Mathf.SmoothDampAngle(orbitYaw, targetYaw, ref yawVelocity, centerSmoothTime, Mathf.Infinity, deltaTime);
+                if (Mathf.Abs(Mathf.DeltaAngle(orbitYaw, targetYaw)) < .1f) centering = false;
+            }
+            SnapToPlayer();
         }
 
         void LateUpdate()
         {
             if (player == null) return;
+            bool wasControlling = controllingMouse;
+            UpdateCursorState(Application.isFocused);
+            bool orbitHeld = false;
             var mouse = Mouse.current;
-            bool playing = readInput && Application.isFocused && !Keys.Blocked && mouse != null;
-            bool look = playing && !Keys.CursorHeld;
-            if (readInput) FreeCursor(!look);
-            if (playing)
-                orbitDistance = Mathf.Clamp(orbitDistance - mouse.scroll.ReadValue().y * ZoomStep, minDistance, maxDistance);
-            // Skips the first frame after locking: the cursor warp to the center reads as a big delta.
-            if (look && looked)
+            if (controllingMouse && wasControlling && mouse != null)
             {
-                Vector2 delta = mouse.delta.ReadValue() * orbitSensitivity;
-                orbitYaw += delta.x;
-                orbitPitch = Mathf.Clamp(orbitPitch - delta.y, minPitch, maxPitch);
+                var keyboard = Keyboard.current;
+                if (keyboard != null)
+                {
+                    float zoom = (keyboard.minusKey.isPressed || keyboard.numpadMinusKey.isPressed ? 1 : 0)
+                        - (keyboard.equalsKey.isPressed || keyboard.numpadPlusKey.isPressed ? 1 : 0);
+                    orbitDistance = Mathf.Clamp(orbitDistance + zoom * 4 * Time.deltaTime, minDistance, maxDistance);
+                }
+                Vector2 delta = mouse.delta.ReadValue();
+                orbitHeld = delta.sqrMagnitude > .001f;
+                if (orbitHeld) RotateOrbit(delta * orbitSensitivity);
+                if (mouse.middleButton.wasPressedThisFrame) RecenterBehindPlayer();
             }
-            looked = look;
-            SnapToPlayer();
+            StepCamera(Time.deltaTime, orbitHeld);
         }
 
-        static void FreeCursor(bool free)
+        public void UpdateCursorState(bool focused)
         {
-            Cursor.lockState = free ? CursorLockMode.None : CursorLockMode.Locked;
-            Cursor.visible = free;
+            controllingMouse = readInput && focused && !Keys.Blocked && !Keys.FreeCursorHeld;
+            Cursor.lockState = controllingMouse ? CursorLockMode.Locked : CursorLockMode.None;
+            Cursor.visible = !controllingMouse;
+        }
+
+        void OnApplicationFocus(bool focused)
+        {
+            if (!focused) ReleaseCursor();
+        }
+
+        void OnDisable() => ReleaseCursor();
+
+        void ReleaseCursor()
+        {
+            controllingMouse = false;
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
         }
     }
 }

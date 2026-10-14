@@ -61,7 +61,11 @@ namespace SoulBlocks
 
             if (!open)
             {
-                if (NearTree() && Keys.InteractPressed) OpenShop();
+                if (NearTree() && Keys.InteractPressed)
+                {
+                    if (SpecialBlockSystem.Instance != null && SpecialBlockSystem.Instance.Ready) SpecialBlockSystem.Instance.OpenShop();
+                    else OpenShop();
+                }
                 return;
             }
 
@@ -72,7 +76,7 @@ namespace SoulBlocks
             if (closePressed || !NearTree()) Close();
         }
 
-        void OpenShop()
+        public void OpenShop()
         {
             open = true;
             FrameBoard();

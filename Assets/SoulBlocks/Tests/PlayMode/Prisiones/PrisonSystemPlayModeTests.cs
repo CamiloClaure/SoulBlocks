@@ -22,7 +22,9 @@ namespace SoulBlocks.Tests
             for (int i = 0; i < 10; i++) yield return null;
 
             var run = GameRoot.Instance.Run;
-            var layoutPrison = GameRoot.Instance.Layout.prisons.FirstOrDefault(p => p.tier == PrisonTier.T1);
+            // Not a Resonant one: its resonance can break a neighbour too, which also raises
+            // PrisonBroken (the seed is random every run, so that made this test flaky).
+            var layoutPrison = GameRoot.Instance.Layout.prisons.FirstOrDefault(p => p.tier == PrisonTier.T1 && (p.props & PrisonProp.Resonant) == 0);
             if (layoutPrison == null)
             {
                 // ponytail: never assume the map shape (og/mapa is replacing the stand-in);
