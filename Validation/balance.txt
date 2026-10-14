@@ -3,11 +3,11 @@ EconomySim balance report (200 seeds)
 blocked seeds: 0
 
 milestone            min  median     p90     max   never
-first purchase      1.43    1.71    1.94    1.99       0
-Raiz I              1.48    2.72    3.44    3.62       0
-Raiz II             4.19    6.70    8.27    8.75       0
-Raiz III            7.24   11.76   14.18   22.22       0
-Despertar          12.10   18.69   22.21   27.01       0
-Nucleo broken      18.31   27.08   33.02   36.95       0
+first purchase      0.99    1.51    1.61    1.61       0
+Raiz I              0.99    1.51    1.61    1.61       0
+Raiz II             3.44    5.14    5.86    6.34       0
+Raiz III            6.07    9.24   10.69   13.06       0
+Despertar          14.03   17.53   19.54   23.06       0
+Nucleo broken      20.77   25.74   30.00   36.83       0
 
-expeditions: min=14 median=18 p90=21 max=23
+expeditions: min=20 median=21 p90=25 max=30

@@ -72,7 +72,6 @@ namespace SoulBlocks
         {
             var pillar = Placeholder.Make(PrimitiveType.Cylinder, new Color(.55f, .1f, .75f), "Altar " + altar.id,
                 root, altar.position + Vector3.up * .6f, new Vector3(.6f, .6f, .6f), false, .5f);
-            Placeholder.Label(pillar.transform, "", new Vector3(0, 1.1f, 0), Color.white);
         }
 
         void Update()

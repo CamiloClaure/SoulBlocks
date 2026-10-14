@@ -8,7 +8,7 @@ namespace SoulBlocks
     // useful with the player's current abilities (plan: "solo opciones utiles").
     public static class BlessingTable
     {
-        public static readonly string[] AllIds = { "dash_extra", "iman_amplio", "rayhit_cadena", "energia", "carga" };
+        public static readonly string[] AllIds = { "dash_extra", "iman_amplio", "pico_cadena", "energia", "carga" };
 
         public static List<string> Offer(int effectiveSeed, int prisonId, int count, ICollection<string> excluded)
         {

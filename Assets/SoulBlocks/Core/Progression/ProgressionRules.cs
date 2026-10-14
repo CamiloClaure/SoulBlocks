@@ -18,19 +18,24 @@ namespace SoulBlocks
             { StatId.DashDistance, "m de distancia de dash" },
             { StatId.MagnetRadius, "m de radio de imán" },
             { StatId.MagnetDuration, "s de duración de imán" },
-            { StatId.RayLength, "m de alcance de Rayhit" },
-            { StatId.RayCharges, "carga(s) de Rayhit" },
+            { StatId.PickInterval, "s entre golpes de pico" },
             { StatId.BlessingOptions, "opción(es) de bendición" }
         };
 
         public static int Cost(UpgradeDef def, int level) =>
             Mathf.RoundToInt(def.baseCost * Mathf.Pow(def.growth <= 0f ? 1f : def.growth, level - 1));
 
-        // null = buyable. Checked in order: max level, order/stage gate, broken-tier gate, currency.
+        // null = buyable. Checked in order: max level, board parent, order/stage gate, broken-tier gate, currency.
         public static string WhyCannotBuy(RunState run, UpgradeDef def)
         {
             int level = run.UpgradeLevel(def.id);
             if (level >= def.maxLevel) return "nivel máximo";
+
+            if (!RequirementMet(run, def))
+            {
+                var parent = UpgradeCatalog.Get(def.requires);
+                return "requiere " + parent.name + (parent.maxLevel > 1 ? " nv " + def.requiresLevel : "");
+            }
 
             if (def.gateMinTreeStage > 0 && run.treeStage < def.gateMinTreeStage)
                 return "requiere " + StageName[def.gateMinTreeStage];
@@ -46,6 +51,10 @@ namespace SoulBlocks
 
             return null;
         }
+
+        // The board parent has reached the level this node needs (always true for nodes off the center).
+        public static bool RequirementMet(RunState run, UpgradeDef def) =>
+            string.IsNullOrEmpty(def.requires) || run.UpgradeLevel(def.requires) >= def.requiresLevel;
 
         public static bool Buy(RunState run, UpgradeDef def)
         {
@@ -117,18 +126,20 @@ namespace SoulBlocks
                     }
                 case "carga":
                     return "+" + Fmt(def.perLevelEffects[0].add) + " almas por salida";
-                case "rayhit_nivel":
+                case "abundancia":
+                    return "+" + Fmt(def.perLevelEffects[0].add * 100f) + "% de almas en las cuevas";
+                case "pico_nivel":
                     {
                         // nv X damages up to tier index X (0 = T1 .. 3 = T4), nv 4 reaches the Nucleo.
                         string tier = nextLevel <= TierRoman.Length - 1 ? TierRoman[nextLevel] : "Núcleo";
-                        return "nv " + nextLevel + ": daña prisiones " + tier;
+                        return "nv " + nextLevel + ": pica cristales " + tier + ", más daño por golpe";
                     }
                 default:
                     if (def.perLevelEffects.Count > 0)
                     {
                         var effect = def.perLevelEffects[0];
                         string label = StatLabel.TryGetValue(effect.stat, out var l) ? l : effect.stat.ToString();
-                        return "+" + Fmt(effect.add) + " " + label;
+                        return (effect.add >= 0f ? "+" : "") + Fmt(effect.add) + " " + label;
                     }
                     return def.description;
             }

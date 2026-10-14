@@ -5,10 +5,12 @@ using SoulBlocks;
 using UnityEngine;
 
 // Runs the seeded map generator + validator outside Unity. Usage: dotnet run -- [seedCount] [anchors: synthetic|realistic]
+// or `dotnet run -- econ`: the EconomySimTests 200 seeds, printing the same pacing table.
 static class Program
 {
     static int Main(string[] args)
     {
+        if (args.Length > 0 && args[0] == "econ") return Econ();
         int count = args.Length > 0 ? int.Parse(args[0]) : 200;
         bool realistic = args.Length > 1 && args[1] == "realistic";
         var input = new MapGenInput
@@ -46,6 +48,35 @@ static class Program
         Console.WriteLine($"per map: {tiles / seeds.Count} tiles, {gaps / (float)seeds.Count:0.0} dash gaps, {souls / seeds.Count} spawn souls");
         foreach (var kv in reasons) Console.WriteLine($"  {kv.Value}x {kv.Key}");
         return failed == 0 ? 0 : 1;
+    }
+
+    static int Econ()
+    {
+        var results = new List<EconomySimResult>();
+        for (int i = 0; i < 200; i++) results.Add(EconomySim.Run(i * 131 + 3)); // EconomySimTests' seeds
+        int blocked = results.FindAll(r => r.blocked).Count;
+        Console.WriteLine($"blocked seeds: {blocked}");
+        foreach (var r in results) if (r.blocked) Console.WriteLine($"  seed {r.seed} after {r.expeditions} expeditions");
+        Console.WriteLine($"{"milestone",-16}{"min",8}{"median",8}{"p90",8}{"max",8}{"never",8}");
+        Row("first purchase", results.ConvertAll(r => r.minutesFirstPurchase));
+        Row("Raiz I", results.ConvertAll(r => r.minutesRaiz1));
+        Row("Raiz II", results.ConvertAll(r => r.minutesRaiz2));
+        Row("Raiz III", results.ConvertAll(r => r.minutesRaiz3));
+        Row("Despertar", results.ConvertAll(r => r.minutesDespertar));
+        Row("Nucleo broken", results.ConvertAll(r => r.minutesNucleoBroken));
+        var expeditions = results.ConvertAll(r => (float)r.expeditions);
+        expeditions.Sort();
+        Console.WriteLine($"expeditions: min={expeditions[0]} median={expeditions[100]} p90={expeditions[179]} max={expeditions[199]}");
+        return blocked == 0 ? 0 : 1;
+    }
+
+    static void Row(string label, List<float> values)
+    {
+        var reached = values.FindAll(v => v >= 0f);
+        reached.Sort();
+        if (reached.Count == 0) { Console.WriteLine($"{label,-16}  (never reached)"); return; }
+        float P(float p) => reached[(int)(p * (reached.Count - 1) + .5f)];
+        Console.WriteLine($"{label,-16}{reached[0],8:0.00}{P(.5f),8:0.00}{P(.9f),8:0.00}{reached[reached.Count - 1],8:0.00}{values.Count - reached.Count,8}");
     }
 
     static MapAnchor A(float x, float z, Vector3 dir) => new MapAnchor { position = new Vector3(x, 0, z), direction = dir };

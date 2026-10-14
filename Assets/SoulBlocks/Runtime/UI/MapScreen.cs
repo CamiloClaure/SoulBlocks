@@ -67,7 +67,7 @@ namespace SoulBlocks
             float spanX = Mathf.Max(1f, maxX - minX), spanZ = Mathf.Max(1f, maxZ - minZ);
             scale = Mathf.Min(area.width / spanX, area.height / spanZ) * .9f;
 
-            GUI.color = new Color(0f, 0f, 0f, .75f);
+            GUI.color = Hud.PanelColor;
             GUI.DrawTexture(area, Pixel());
             GUI.color = Color.white;
 
@@ -123,8 +123,7 @@ namespace SoulBlocks
             string label = discovered ? TierSymbol(prison.tier) : PropsLabel(prison.props);
             if (string.IsNullOrEmpty(label)) return;
             GUI.color = Color.white;
-            var labelSize = GUI.skin.label.CalcSize(new GUIContent(label));
-            GUI.Label(new Rect(pos.x - labelSize.x * .5f, pos.y - labelSize.y - 2f, labelSize.x, labelSize.y), label);
+            Hud.TextBox(new Rect(pos.x, pos.y - 14f, 0f, 0f), label, TextAnchor.MiddleCenter);
         }
 
         // ponytail: og/mundo (Fase 3, not in this worktree yet) owns real portal activation.

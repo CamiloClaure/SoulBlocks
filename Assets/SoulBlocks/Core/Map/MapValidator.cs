@@ -162,9 +162,9 @@ namespace SoulBlocks
             float radius = Balance.EnergyMax * Balance.MoveSpeed / 2f;
             float requiredSouls = 1.5f * Balance.ValidatorFirstUpgradeCost;
 
-            int reachableSouls = 0;
+            float reachableSouls = 0f;
             foreach (var soul in layout.soulSpawns)
-                if (MapGen.PathDistanceAt(layout, soul.branchId, soul.position) <= radius) reachableSouls += soul.baseCount;
+                if (MapGen.PathDistanceAt(layout, soul.branchId, soul.position) <= radius) reachableSouls += soul.baseCount * Balance.SoulDensity;
             if (reachableSouls < requiredSouls)
                 failures.Add("souls reachable within the base round trip (" + reachableSouls + ") fall short of " + requiredSouls);
 

@@ -16,21 +16,35 @@ namespace SoulBlocks
         public float SpeedMultiplier = 1f;
         public bool MovementLocked;
         public float MovementSpeed { get; private set; }
+        public bool HasMovementInput { get; private set; }
+        CrystalMiningAttack mining;
+        public bool IsMining => mining != null && mining.DirectionLocked;
         CharacterController controller;
         float fallingSpeed;
         int animationState;
         static readonly int Idle = Animator.StringToHash("Base Layer.Idle");
         static readonly int Walk = Animator.StringToHash("Base Layer.Walk");
+        // The Spirit Path wizard (Blender FBX with Legacy Idle/Walk clips, see
+        // SpiritPathWizardImport) is the default look; the classic model stays under `visual`,
+        // hidden, and F2 swaps between them.
+        const string WizardPath = "Characters/TheSpiritPath_Wizard_Idle_Walk";
+        GameObject classicModel, wizardModel;
+        Animation wizardAnimation;
+        Transform wizardUpperArm, wizardForearm, wizardHand, classicHand;
+        string wizardIdle, wizardWalk;
 
         void Awake() { controller = GetComponent<CharacterController>(); }
         void Start()
         {
+            mining = GetComponent<CrystalMiningAttack>();
             if (visual != null) visual.localPosition = Vector3.down * (controller.skinWidth + .19f);
             Yaw = visual != null ? visual.eulerAngles.y : transform.eulerAngles.y;
-            BuildWizardHat();
+            BuildWizardHat(); // needs the classic rig's animator active, before the wizard hides it
+            BuildSpiritPathWizard();
         }
         void Update()
         {
+            if (Keys.ModelSwapPressed && wizardModel != null) ShowWizard(!wizardModel.activeSelf);
             var k = Keyboard.current;
             Vector2 input = Vector2.zero;
             if (readInput && Application.isFocused && k != null)
@@ -40,6 +54,7 @@ namespace SoulBlocks
         }
         public void StepMovement(Vector2 input, float deltaTime)
         {
+            HasMovementInput = !MovementLocked && input.sqrMagnitude >= .0001f;
             if (deltaTime <= 0) return;
             Vector3 before = transform.position;
             if (!MovementLocked)
@@ -48,9 +63,10 @@ namespace SoulBlocks
                 input = Vector2.ClampMagnitude(input, 1);
                 if (input.sqrMagnitude >= .0001f)
                 {
-                    float basisYaw = viewCamera != null ? viewCamera.transform.eulerAngles.y : Yaw;
+                    // While mining, strafe relative to the fixed attack direction, independently of camera orbit.
+                    float basisYaw = IsMining ? Yaw : viewCamera != null ? viewCamera.transform.eulerAngles.y : Yaw;
                     Vector3 direction = Quaternion.Euler(0f, basisYaw, 0f) * new Vector3(input.x, 0f, input.y);
-                    Yaw = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
+                    if (!IsMining) Yaw = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
                     TryMoveSupported(direction * moveSpeed * SpeedMultiplier * deltaTime);
                 }
             }
@@ -58,13 +74,21 @@ namespace SoulBlocks
             controller.Move(Vector3.up * fallingSpeed * deltaTime);
             Vector3 planar = Vector3.ProjectOnPlane(transform.position - before, Vector3.up);
             MovementSpeed = planar.magnitude / deltaTime;
-            if (visual != null) visual.rotation = Quaternion.RotateTowards(visual.rotation, Quaternion.Euler(0f, Yaw, 0f), 1080f * deltaTime);
+            if (visual != null && !IsMining) visual.rotation = Quaternion.RotateTowards(visual.rotation, Quaternion.Euler(0f, Yaw, 0f), 1080f * deltaTime);
             int next = MovementSpeed > .08f ? Walk : Idle;
-            if (animator != null && animationState != next)
+            if (animationState != next)
             {
-                animator.CrossFadeInFixedTime(next, .14f);
+                if (animator != null && animator.isActiveAndEnabled) animator.CrossFadeInFixedTime(next, .14f);
+                if (wizardAnimation != null && wizardAnimation.isActiveAndEnabled) wizardAnimation.CrossFade(next == Walk ? wizardWalk : wizardIdle, .14f);
                 animationState = next;
             }
+        }
+        public void FaceDirection(Vector3 direction)
+        {
+            direction.y = 0;
+            if (direction.sqrMagnitude < .0001f) return;
+            Yaw = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
+            if (visual != null) visual.rotation = Quaternion.Euler(0, Yaw, 0);
         }
         // Sweeps delta in short supported steps to keep walking on the only island, sliding
         // along an edge when the full step would walk off it. Returns false if any step
@@ -94,6 +118,70 @@ namespace SoulBlocks
         }
         public static bool IsSupportedAt(Vector3 point) => Supported(point);
         static bool Supported(Vector3 point) => Physics.Raycast(point + Vector3.up, Vector3.down, 3f, (1 << 8) | (1 << 9), QueryTriggerInteraction.Ignore);
+        void BuildSpiritPathWizard()
+        {
+            var prefab = Resources.Load<GameObject>(WizardPath);
+            if (prefab == null || visual == null || animator == null) return;
+            classicModel = animator.gameObject;
+            wizardModel = Instantiate(prefab, visual);
+            wizardModel.name = "Spirit Path wizard";
+            wizardModel.transform.localRotation = Quaternion.Euler(0f, 180f, 0f); // the Blender export faces -Z
+            // Same height and feet line as the classic model, whatever units the FBX came in.
+            Bounds classic = Encapsulate(classicModel.GetComponentsInChildren<SkinnedMeshRenderer>()), wizard = Encapsulate(wizardModel.GetComponentsInChildren<Renderer>());
+            if (wizard.size.y > .001f) wizardModel.transform.localScale *= classic.size.y / wizard.size.y;
+            wizard = Encapsulate(wizardModel.GetComponentsInChildren<Renderer>());
+            wizardModel.transform.position += Vector3.up * (classic.min.y - wizard.min.y);
+            wizardAnimation = wizardModel.GetComponent<Animation>();
+            if (wizardAnimation != null)
+            {
+                wizardAnimation.cullingType = AnimationCullingType.AlwaysAnimate; // like the classic Animator (SoulBlocksSetup)
+                foreach (AnimationState state in wizardAnimation)
+                {
+                    state.wrapMode = WrapMode.Loop;
+                    if (state.name.EndsWith("Idle")) wizardIdle = state.name;
+                    else if (state.name.EndsWith("Walk")) wizardWalk = state.name;
+                }
+            }
+            foreach (var bone in wizardModel.GetComponentsInChildren<Transform>(true))
+                if (bone.name == "UpperArm.R") wizardUpperArm = bone;
+                else if (bone.name == "ForeArms.R") wizardForearm = bone;
+                else if (bone.name == "Hand.R") wizardHand = bone;
+            ShowWizard(true);
+        }
+
+        void ShowWizard(bool show)
+        {
+            wizardModel.SetActive(show);
+            classicModel.SetActive(!show);
+            animationState = 0; // the shown model replays the current idle/walk next step
+            // The scene hangs the mining pickaxe from the classic rig's right hand: carry it to
+            // the shown model's hand, keeping its world size.
+            var pick = mining != null && mining.pickaxe != null ? mining.pickaxe.transform : null;
+            if (pick == null) return;
+            if (classicHand == null) classicHand = pick.parent;
+            pick.SetParent(show && wizardHand != null ? wizardHand : classicHand, true);
+            pick.localPosition = Vector3.zero;
+        }
+
+        // Shoulder, elbow and hand bones of the shown model, posed by the mining swing
+        // (CrystalMiningAttack). Null when the model has no such bones.
+        public void RightArm(out Transform upper, out Transform fore, out Transform hand)
+        {
+            if (wizardModel != null && wizardModel.activeSelf) { upper = wizardUpperArm; fore = wizardForearm; hand = wizardHand; return; }
+            upper = fore = hand = null;
+            if (animator == null || !animator.isHuman) return;
+            upper = animator.GetBoneTransform(HumanBodyBones.RightUpperArm);
+            fore = animator.GetBoneTransform(HumanBodyBones.RightLowerArm);
+            hand = animator.GetBoneTransform(HumanBodyBones.RightHand);
+        }
+
+        static Bounds Encapsulate(Renderer[] renderers)
+        {
+            var bounds = renderers.Length > 0 ? renderers[0].bounds : new Bounds();
+            foreach (var renderer in renderers) bounds.Encapsulate(renderer.bounds);
+            return bounds;
+        }
+
         void BuildWizardHat()
         {
             if(animator==null)return;

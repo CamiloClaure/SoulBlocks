@@ -39,12 +39,10 @@ namespace SoulBlocks
                 case StatId.MagnetRadius: return Balance.MagnetRadius;
                 case StatId.MagnetDuration: return Balance.MagnetDuration;
                 case StatId.MagnetCooldown: return Balance.MagnetCooldown;
-                case StatId.RayLevel: return Balance.RayLevel;
-                case StatId.RayLength: return Balance.RayLength;
-                case StatId.RayCharges: return Balance.RayCharges;
-                case StatId.RaySoulsPerCharge: return Balance.RaySoulsPerCharge;
-                case StatId.RayRechargeSeconds: return Balance.RayRechargeSeconds;
+                case StatId.PickLevel: return Balance.PickLevel;
+                case StatId.PickInterval: return Balance.PickInterval;
                 case StatId.BlessingOptions: return Balance.BlessingOptions;
+                case StatId.SoulDensity: return Balance.SoulDensity;
                 default: return 0f;
             }
         }

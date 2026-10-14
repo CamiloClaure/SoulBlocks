@@ -43,7 +43,9 @@ namespace SoulBlocks.Tests.Mapa
 
             var root = GameRoot.Instance;
             Assert.IsNotNull(root, "GameRoot did not boot.");
-            var tile = root.Layout.tiles.First(t => string.IsNullOrEmpty(t.requiresUnlock));
+            // Past the first tile: the first one, 30 m wide, overlaps the island and is already
+            // discovered from the spawn point.
+            var tile = root.Layout.tiles.First(t => string.IsNullOrEmpty(t.requiresUnlock) && !t.shortcut && t.pathDistance >= Balance.TileSize);
 
             bool discovered = false;
             GameEvents.TileDiscovered += idx => { if (idx == tile.index) discovered = true; };

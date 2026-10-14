@@ -19,7 +19,7 @@ namespace SoulBlocks
         static readonly List<Type> systems = new List<Type>();
 
         public RunState Run;
-        public StatSheet Stats;
+        [NonSerialized] public StatSheet Stats;
         public MapLayout Layout;
         public SoulPlayer Player;
         public Transform Tree;

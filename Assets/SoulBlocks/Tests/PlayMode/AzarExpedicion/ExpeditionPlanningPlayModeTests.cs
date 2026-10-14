@@ -49,16 +49,16 @@ namespace SoulBlocks.Tests
             run.plan.chosenObjective = chosenIndex;
             var objective = run.plan.offered[chosenIndex];
 
-            IRayTarget target = null;
-            foreach (var candidate in RayTargetRegistry.All)
+            IMineable target = null;
+            foreach (var candidate in MineableRegistry.All)
                 if (candidate.PrisonId == objective.targetId) target = candidate;
             Assert.IsNotNull(target, "No PrisonView registered for the objective's prison.");
 
             int wisdomBefore = run.wisdom;
-            int rayLevel = root.Stats.GetInt(StatId.RayLevel);
-            for (int guard = 0; guard < 20 && !objective.done; guard++)
+            int pickLevel = root.Stats.GetInt(StatId.PickLevel);
+            for (int guard = 0; guard < 64 && !objective.done; guard++)
             {
-                target.ApplyRayHit(rayLevel);
+                target.ApplyPickHit(pickLevel);
                 yield return null;
             }
 

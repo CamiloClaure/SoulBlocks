@@ -1,6 +1,6 @@
 # SoulBlocks
 
-Incremental de exploración en Unity 6000.6.0f1 (URP, Input System). Salís del árbol central por caminos generados por seed, recogés almas, rompés prisiones cristalinas con Rayhit, volvés, mejorás y el mundo se transforma hasta despertar al Núcleo.
+Incremental de exploración en Unity 6000.6.0f1 (URP, Input System). Salís del árbol central por caminos generados por seed, recogés almas, picás prisiones cristalinas, volvés, mejorás y el mundo se transforma hasta despertar al Núcleo.
 
 Estado: **obra gruesa**. Todas las mecánicas funcionan de punta a punta con placeholders (primitivas, colores, IMGUI). Sin animaciones ni modelos nuevos. Diseño completo y plan de construcción en [`docs/PLAN-OBRA-GRUESA.md`](docs/PLAN-OBRA-GRUESA.md); contratos entre sistemas en [`docs/CONTRATOS.md`](docs/CONTRATOS.md).
 
@@ -13,16 +13,35 @@ Estado: **obra gruesa**. Todas las mecánicas funcionan de punta a punta con pla
 | Acción | Control |
 |---|---|
 | Moverse | WASD / flechas |
-| Girar cámara | Mantener click derecho y mover el mouse |
-| Zoom de cámara | Rueda |
+| Girar cámara | Mouse |
+| Mostrar el cursor (botones del HUD) | Alt (mantener; también se libera en menús) |
+| Zoom de cámara | Teclas + / − |
+| Seleccionar bloque especial | Rueda |
+| Usar activo del bloque | Click derecho |
+| Centrar cámara detrás del jugador | Click de la rueda |
 | Dash | Shift |
 | Imán de almas | Q |
-| Rayhit | Mantener click izquierdo para apuntar, soltar para lanzar |
+| Picar cristal | Mantener click izquierdo: el cristal de prisión más cercano, o hacia el centro de la pantalla |
 | Interactuar (tienda del árbol, altares, entrega en refugios) | E |
 | Mapa | Tab (mantener) |
 | Pausa (guardar, copiar seed, nueva partida) | Esc |
+| Pantalla completa | F1 |
+| Cambiar modelo del personaje (mago / clásico) | F2 |
 
 La partida se guarda sola al terminar cada expedición, al comprar y al salir.
+
+La cámara empieza detrás del jugador y gira directamente con el mouse. Conserva la dirección
+que elegiste; no se recentra sola. El clic de la rueda la vuelve a colocar detrás.
+El cursor se bloquea durante el juego y se libera en menús o manteniendo Alt.
+El picado apunta desde el centro de la pantalla. WASD sigue la orientación
+de la cámara. Los obstáculos acercan la cámara para evitar que atraviese sus colliders.
+
+Zona de prueba junto al árbol: 15 cristales de cinco colores y tres tamaños; los azules
+empiezan ocultos. Cinco bloques desbloqueados con pasivas siempre activas, bomba con
+cuenta atrás y ayudantes temporales. E en el árbol abre sus mejoras gratuitas y la restauración
+de cristales; desde ahí, "Mejoras originales del árbol" abre el tablero de mejoras.
+Reglas y valores en [docs/BLOQUES-ESPECIALES.md](docs/BLOQUES-ESPECIALES.md).
+Prefab reemplazable por un modelo de Blender en [docs/CRISTALES.md](docs/CRISTALES.md).
 
 ## Estructura
 

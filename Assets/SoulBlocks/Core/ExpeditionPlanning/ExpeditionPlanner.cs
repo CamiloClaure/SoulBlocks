@@ -117,14 +117,14 @@ namespace SoulBlocks
         // round trip qualifies: "always achievable with current power" (section 1.8).
         static ObjectiveRecord RollFracturar(MapLayout layout, RunState run, StatSheet stats, SeededRng rng)
         {
-            int rayLevel = stats.GetInt(StatId.RayLevel);
+            int pickLevel = stats.GetInt(StatId.PickLevel);
             float budget = ReachBudget(stats);
             var candidates = new List<PrisonLayout>();
             foreach (var prison in layout.prisons)
             {
                 if (run.Prison(prison.id).broken) continue;
                 if (!string.IsNullOrEmpty(prison.requiresUnlock) && !run.HasUnlock(prison.requiresUnlock)) continue;
-                if (PrisonRules.RequiredLevel(prison.tier) > rayLevel) continue;
+                if (PrisonRules.RequiredLevel(prison.tier) > pickLevel) continue;
                 if (MapGen.PathDistanceAt(layout, prison.branchId, prison.position) > budget) continue;
                 candidates.Add(prison);
             }

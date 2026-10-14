@@ -27,11 +27,11 @@ namespace SoulBlocks.Tests
             GameEvents.RaiseUnlockGranted(UnlockIds.Despertar);
             yield return null;
 
-            var target = RayTargetRegistry.All.FirstOrDefault(t => t.PrisonId == nucleoLayout.id);
-            Assert.IsNotNull(target, "Nucleo PrisonView not found in RayTargetRegistry.All after granting Despertar.");
+            var target = MineableRegistry.All.FirstOrDefault(t => t.PrisonId == nucleoLayout.id);
+            Assert.IsNotNull(target, "Nucleo PrisonView not found in MineableRegistry.All after granting Despertar.");
 
-            for (int guard = 0; guard < 40 && !run.Prison(nucleoLayout.id).broken; guard++)
-                target.ApplyRayHit(4);
+            for (int guard = 0; guard < 64 && !run.Prison(nucleoLayout.id).broken; guard++)
+                target.ApplyPickHit(4);
             yield return null;
 
             Assert.IsTrue(run.Prison(nucleoLayout.id).broken, "Nucleo never broke.");

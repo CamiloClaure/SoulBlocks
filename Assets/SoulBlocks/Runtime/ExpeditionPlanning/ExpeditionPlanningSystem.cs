@@ -235,7 +235,7 @@ namespace SoulBlocks
 
         void DrawHubPanel(GameRoot root, RunState run)
         {
-            Hud.SideLine("Próxima expedición");
+            Hud.SideLine("Próxima expedición (Alt + click)");
             for (int i = 0; i < run.plan.offered.Count; i++)
             {
                 var objective = run.plan.offered[i];

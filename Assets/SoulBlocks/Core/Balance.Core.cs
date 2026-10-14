@@ -4,7 +4,7 @@ namespace SoulBlocks
     // without touching call sites. Every later feature adds its own Balance.<Feature>.cs partial.
     public static partial class Balance
     {
-        public static float TileSize = 10f; // path width: 5 blocks of 2 m, one generator cell
+        public static float TileSize = 30f; // cave width, one generator cell
         public static float TileThickness = .25f;
         public static float HubPickupTreeRange = 4f;
 
@@ -18,11 +18,9 @@ namespace SoulBlocks
         public static float MagnetRadius = 8f;
         public static float MagnetDuration = 3f;
         public static float MagnetCooldown = 12f;
-        public static float RayLevel = 0f;
-        public static float RayLength = 8f;
-        public static float RayCharges = 1f;
-        public static float RaySoulsPerCharge = 25f;
-        public static float RayRechargeSeconds = 20f;
+        public static float PickLevel = 0f;
+        public static float PickInterval = .6f; // seconds between pick blows
         public static float BlessingOptions = 3f;
+        public static float SoulDensity = .5f; // fraction of each spawn's souls that appear; Abundancia raises it
     }
 }

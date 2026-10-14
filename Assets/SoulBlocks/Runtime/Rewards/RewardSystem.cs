@@ -112,7 +112,7 @@ namespace SoulBlocks
         void OfferBlessing(int prisonId)
         {
             var excluded = new List<string>(run.activeBlessings);
-            if (run.HasUnlock(UnlockIds.Cadena)) excluded.Add("rayhit_cadena");
+            if (run.HasUnlock(UnlockIds.Cadena)) excluded.Add("pico_cadena");
 
             int count = stats.GetInt(StatId.BlessingOptions);
             var offer = BlessingTable.Offer(run.effectiveSeed, prisonId, count, excluded);
@@ -167,8 +167,8 @@ namespace SoulBlocks
                 case "carga":
                     stats.SetModifier("blessing.carga", StatId.CargoCapacity, Balance.BlessingCargoCapacityAdd, 1f);
                     break;
-                // "rayhit_cadena" has no stat of its own: RayhitAbility already reads
-                // Run.activeBlessings.Contains("rayhit_cadena") directly (see CONTRATOS.md).
+                // "pico_cadena" has no stat of its own: PickAbility already reads
+                // Run.activeBlessings.Contains("pico_cadena") directly (see CONTRATOS.md).
             }
         }
 
@@ -178,7 +178,7 @@ namespace SoulBlocks
             {
                 case "dash_extra": return "carga de dash extra";
                 case "iman_amplio": return "imán amplio";
-                case "rayhit_cadena": return "Rayhit encadenado";
+                case "pico_cadena": return "Golpe en cadena";
                 case "energia": return "energía máxima";
                 case "carga": return "carga extra";
                 default: return id;

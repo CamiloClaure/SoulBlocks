@@ -7,7 +7,7 @@ namespace SoulBlocks
     // centers, with a half width per tile. Tile i owns exactly one Bezier piece: from the
     // midpoint with its previous neighbor, control point at its own center, to the midpoint
     // with its next neighbor. Neighboring pieces meet at that midpoint with the same tangent,
-    // so the curve is smooth and never has a corner; the 10 m grid stays the topology
+    // so the curve is smooth and never has a corner; the 30 m grid stays the topology
     // (occupancy, A*, validator), this only decides the shape. Locking tiles one by one (deep
     // segments, bridges) still works because each tile has its own piece.
     public static class PathShape
@@ -74,7 +74,7 @@ namespace SoulBlocks
         }
 
         // Positive curvature turns toward the left normal, so it caps the left (inner) side.
-        // ponytail: 32 samples per piece is plenty for a 10 m quadratic; solve for the curvature
+        // ponytail: 32 samples per piece is plenty for a 30 m quadratic; solve for the curvature
         // peak analytically if this ever shows up in a profile.
         static void PieceCaps(List<Vector3> points, int i, out float leftCap, out float rightCap)
         {
@@ -131,6 +131,45 @@ namespace SoulBlocks
             left = tile.edgeLeft.Count > 0 ? tile.edgeLeft[best] : tile.position;
             right = tile.edgeRight.Count > 0 ? tile.edgeRight[best] : tile.position;
         }
+
+        // Whether `point` (horizontally) lies on any tile's ribbon or platform disc other than
+        // `except` (and those `skip` rules out): the cave walls open wherever another floor continues.
+        public static bool OnAnyFloor(MapLayout layout, Vector3 point, TileLayout except = null, System.Func<TileLayout, bool> skip = null)
+        {
+            foreach (var tile in layout.tiles)
+            {
+                if (tile == except || (skip != null && skip(tile))) continue;
+                float dx = point.x - tile.position.x, dz = point.z - tile.position.z;
+                if (tile.shortcut)
+                {
+                    float r = Balance.PlatformSize * .5f;
+                    if (dx * dx + dz * dz <= r * r) return true;
+                    continue;
+                }
+                float reach = Balance.TileSize * 1.5f; // a piece never strays further than this from its tile
+                if (dx * dx + dz * dz > reach * reach) continue;
+                if (OnRibbon(tile, point)) return true;
+            }
+            return false;
+        }
+
+        // Point-in-polygon over the tile's quads (edgeLeft[k], edgeLeft[k+1], edgeRight[k+1], edgeRight[k]).
+        public static bool OnRibbon(TileLayout tile, Vector3 point)
+        {
+            for (int k = 0; k + 1 < tile.edgeLeft.Count; k++)
+                if (InTriangle(point, tile.edgeLeft[k], tile.edgeLeft[k + 1], tile.edgeRight[k + 1]) ||
+                    InTriangle(point, tile.edgeLeft[k], tile.edgeRight[k + 1], tile.edgeRight[k])) return true;
+            return false;
+        }
+
+        static bool InTriangle(Vector3 p, Vector3 a, Vector3 b, Vector3 c)
+        {
+            float d1 = Side(p, a, b), d2 = Side(p, b, c), d3 = Side(p, c, a);
+            bool negative = d1 < 0f || d2 < 0f || d3 < 0f, positive = d1 > 0f || d2 > 0f || d3 > 0f;
+            return !(negative && positive);
+        }
+
+        static float Side(Vector3 p, Vector3 a, Vector3 b) => (p.x - b.x) * (a.z - b.z) - (a.x - b.x) * (p.z - b.z);
 
         // A random point on the left-right segment, keeping `margin` meters from both ends, or
         // its middle when the segment is narrower than two margins.

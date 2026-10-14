@@ -8,7 +8,7 @@ namespace SoulBlocks
         Broken
     }
 
-    // What IRayTarget.Forecast(rayLevel) returns: the Rayhit aiming preview shown to the player.
+    // What IMineable.Forecast(pickLevel) returns: the pick preview shown next to the crystal.
     public struct PrisonForecast
     {
         public ForecastKind Kind;
@@ -19,9 +19,9 @@ namespace SoulBlocks
         {
             switch (Kind)
             {
-                case ForecastKind.Breaks: return "ruptura inmediata";
-                case ForecastKind.Hits: return hits + " impactos";
-                case ForecastKind.RequiresLevel: return "requiere Rayhit nv " + requiredLevel;
+                case ForecastKind.Breaks: return "último golpe";
+                case ForecastKind.Hits: return hits + " golpes";
+                case ForecastKind.RequiresLevel: return "requiere pico nv " + requiredLevel;
                 case ForecastKind.Broken: return "rota";
                 default: return "";
             }

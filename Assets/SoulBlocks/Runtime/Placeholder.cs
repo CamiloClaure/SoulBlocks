@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace SoulBlocks
 {
-    // Primitives + MaterialPropertyBlock colour, TextMesh labels: the only "art" allowed in
+    // Primitives + MaterialPropertyBlock colour (text goes through Hud): the only "art" allowed in
     // obra gruesa. One shared URP Lit material, coloured per instance so nothing new leaks
     // into the asset database.
     public static class Placeholder
@@ -36,14 +36,15 @@ namespace SoulBlocks
             return go;
         }
 
-        // A custom mesh (path ribbons) with the shared material and a matching MeshCollider.
-        public static GameObject MakeMesh(Mesh mesh, Color color, string name, Transform parent)
+        // A custom mesh (path ribbons, cave shells) with the shared material and, unless told
+        // otherwise, a matching MeshCollider.
+        public static GameObject MakeMesh(Mesh mesh, Color color, string name, Transform parent, bool collider = true)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
             go.AddComponent<MeshFilter>().sharedMesh = mesh;
             go.AddComponent<MeshRenderer>().sharedMaterial = SharedMaterial();
-            go.AddComponent<MeshCollider>().sharedMesh = mesh;
+            if (collider) go.AddComponent<MeshCollider>().sharedMesh = mesh;
             SetColor(go, color);
             return go;
         }
@@ -57,24 +58,6 @@ namespace SoulBlocks
             block.SetColor("_BaseColor", color);
             block.SetColor("_EmissionColor", color * emission);
             renderer.SetPropertyBlock(block);
-        }
-
-        public static TextMesh Label(Transform parent, string text, Vector3 localOffset, Color color, float size = .25f)
-        {
-            var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            var go = new GameObject("Label");
-            go.transform.SetParent(parent, false);
-            go.transform.localPosition = localOffset;
-            var mesh = go.AddComponent<TextMesh>();
-            mesh.text = text;
-            mesh.color = color;
-            mesh.characterSize = size;
-            mesh.anchor = TextAnchor.MiddleCenter;
-            mesh.font = font;
-            var renderer = go.GetComponent<MeshRenderer>();
-            if (renderer == null) renderer = go.AddComponent<MeshRenderer>(); // TextMesh needs one; added defensively either way
-            renderer.sharedMaterial = font.material;
-            return mesh;
         }
     }
 }

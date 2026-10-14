@@ -52,19 +52,16 @@ namespace SoulBlocks
             public bool nucleoBroken;
             public bool cargoWasFull;
             public bool stoppedByEnergyBudget;
-            public bool chargesStarved; // ran out of Rayhit charges while a reachable prison was still unbroken
+            public bool miningBound; // the energy budget ran out mid-crystal: blows were too slow
             public float value;
             public int[] brokenByTier; // indexed like RunState.brokenByTier, applied by the caller only for the winning branch
         }
 
         static readonly string[] CoreOrder = { "raiz1", "raiz2", "raiz3", "despertar" };
-        // rayhit_cargas is not one of the plan's named constraints (energy/cargo/rayhit level),
-        // but a 1-charge Rayhit can only ever land one hit per trip: without it, multi-member
-        // prison groups never finish in one visit and the branch that still owns them stops
-        // scoring above a pure souls run, stalling wisdom forever once cargo/energy/level cap
-        // out. Folding "charges" in as a fourth binding constraint is the bot being as sensible
-        // as a human player idling on a stockpile of unspent souls would be.
-        static readonly string[] BindingCandidates = { "carga", "energia", "rayhit_nivel", "rayhit_cargas" };
+        // Energy/cargo/pick level are the plan's named constraints; pick speed (blows too slow to
+        // finish a crystal before energy runs out) and Abundancia (more souls per trip) are what
+        // a human idling on unspent souls would buy next.
+        static readonly string[] BindingCandidates = { "carga", "energia", "pico_nivel", "abundancia", "pico_velocidad" };
 
         public static EconomySimResult Run(int seed)
         {
@@ -76,12 +73,12 @@ namespace SoulBlocks
 
             float timeSeconds = 0f;
             int staleStreak = 0;
-            bool cargoWasFullLast = false, stoppedByEnergyLast = false, chargesStarvedLast = false;
+            bool cargoWasFullLast = false, stoppedByEnergyLast = false, miningBoundLast = false;
 
             for (int exped = 0; exped < Balance.EconMaxExpeditions; exped++)
             {
                 ProgressionRules.ApplyStats(run, stats);
-                bool bought = ShopAtHub(run, stats, cargoWasFullLast, stoppedByEnergyLast, chargesStarvedLast, timeSeconds, result);
+                bool bought = ShopAtHub(run, stats, cargoWasFullLast, stoppedByEnergyLast, miningBoundLast, timeSeconds, result);
                 if (bought) ProgressionRules.ApplyStats(run, stats);
 
                 var outcome = RunOneExpedition(layout, cache, run, stats);
@@ -99,7 +96,7 @@ namespace SoulBlocks
 
                 cargoWasFullLast = outcome.cargoWasFull;
                 stoppedByEnergyLast = outcome.stoppedByEnergyBudget;
-                chargesStarvedLast = outcome.chargesStarved;
+                miningBoundLast = outcome.miningBound;
 
                 if (outcome.nucleoBroken)
                 {
@@ -156,7 +153,7 @@ namespace SoulBlocks
             return result;
         }
 
-        // Tries every branch (fresh Rayhit charges each time, as if freshly departed from the
+        // Tries every branch (from a fresh start each time, as if freshly departed from the
         // tree), keeps the one with the highest value, reverts the prison damage the other
         // branches would have dealt (PrisonRules.ApplyHit mutates RunState.prisons in place, so
         // the losing trials are undone with a snapshot rather than a parallel read-only copy of
@@ -164,7 +161,7 @@ namespace SoulBlocks
         static ExpeditionOutcome RunOneExpedition(MapLayout layout, List<Poi>[] cache, RunState run, StatSheet stats)
         {
             // Souls only score while they can still buy something: once carga/energia/
-            // rayhit_nivel/rayhit_cargas are all maxed, a human player sitting on a dead
+            // pico_nivel/pico_velocidad are all maxed, a human player sitting on a dead
             // stockpile would obviously go finish off whatever prison is left rather than keep
             // "optimizing" for a currency with nothing left to spend it on. Without this, the
             // bot keeps picking the branch with the biggest soul count forever and never lands
@@ -220,7 +217,7 @@ namespace SoulBlocks
         }
 
         // One out-and-back trip down a single branch: walk the cached points of interest in
-        // order, spending energy-budget seconds on travel + Rayhit impacts + a per-soul-spawn
+        // order, spending energy-budget seconds on travel + pick blows + a per-soul-spawn
         // collection overhead, always keeping enough budget to get back (on foot, or free once
         // this branch's end portal is active). Mutates run.prisons for every hit actually thrown;
         // the caller reverts that for every branch except the one it keeps (see above).
@@ -230,18 +227,14 @@ namespace SoulBlocks
             float moveSpeed = Mathf.Max(.01f, stats.Get(StatId.MoveSpeed));
             float energyBudget = Mathf.Max(0f, stats.Get(StatId.EnergyMax));
             int cargoCap = Mathf.Max(1, stats.GetInt(StatId.CargoCapacity));
-            int rayLevel = stats.GetInt(StatId.RayLevel);
-            int rayChargesMax = Mathf.Max(0, stats.GetInt(StatId.RayCharges));
-            float rayRecharge = Mathf.Max(.0001f, stats.Get(StatId.RayRechargeSeconds));
-            float raySoulsPerCharge = stats.Get(StatId.RaySoulsPerCharge);
+            float soulDensity = stats.Get(StatId.SoulDensity);
+            int pickLevel = stats.GetInt(StatId.PickLevel);
+            float blowSeconds = Mathf.Max(.05f, stats.Get(StatId.PickInterval)) + Balance.EconHitOverheadSeconds;
 
             var branch = FindBranch(layout, branchId);
             bool hasRaiz1 = run.HasUnlock(UnlockIds.Raiz1);
             bool endBroken = branch != null && branch.endPrisonId >= 0 && run.Prison(branch.endPrisonId).broken;
             bool portalActive = PortalRules.IsActive(hasRaiz1, endBroken);
-
-            var charges = new ChargeMeter(rayChargesMax, rayRecharge, rayChargesMax);
-            charges.Configure(rayChargesMax, rayRecharge, raySoulsPerCharge);
 
             float elapsed = 0f, lastPos = 0f;
             int cargoSouls = 0;
@@ -257,38 +250,34 @@ namespace SoulBlocks
 
                 elapsed += stepCost;
                 lastPos = poi.distance;
-                charges.Tick(stepCost);
 
                 if (poi.isSoul)
                 {
-                    int accepted = Cargo.Add(ref cargoSouls, poi.soul.baseCount, cargoCap);
+                    int spawned = Mathf.RoundToInt(poi.soul.baseCount * soulDensity);
+                    int accepted = Cargo.Add(ref cargoSouls, spawned, cargoCap);
                     outcome.soulsCollected += accepted;
-                    if (accepted < poi.soul.baseCount) outcome.cargoWasFull = true;
-                    charges.AddProgress(accepted);
+                    if (accepted < spawned) outcome.cargoWasFull = true;
                     continue;
                 }
 
                 var tier = poi.prison.tier;
                 var record = run.Prison(poi.prison.id);
-                if (rayLevel < PrisonRules.RequiredLevel(tier)) continue; // reached it, can't scratch it yet
+                if (pickLevel < PrisonRules.RequiredLevel(tier)) continue; // reached it, can't scratch it yet
 
                 bool ranOutOfBudget = false;
                 while (!record.broken)
                 {
                     float returnNow = portalActive ? 0f : lastPos / moveSpeed;
-                    if (elapsed + Balance.EconHitSeconds + returnNow > energyBudget) { ranOutOfBudget = true; break; }
-                    if (!charges.TryConsume()) { outcome.chargesStarved = true; break; } // no charge left; finish this prison on a later expedition
+                    if (elapsed + blowSeconds + returnNow > energyBudget) { ranOutOfBudget = true; outcome.miningBound = true; break; }
 
-                    var hit = PrisonRules.ApplyHit(tier, record, poi.prison.props, rayLevel);
-                    elapsed += Balance.EconHitSeconds;
-                    charges.Tick(Balance.EconHitSeconds);
+                    var hit = PrisonRules.ApplyHit(tier, record, poi.prison.props, pickLevel);
+                    elapsed += blowSeconds;
                     outcome.wisdomGained += hit.fragments;
                     outcome.value += hit.damage * Balance.EconDamageValueWeight;
 
                     int acceptedSouls = Cargo.Add(ref cargoSouls, hit.souls, cargoCap);
                     outcome.soulsCollected += acceptedSouls;
                     if (acceptedSouls < hit.souls) outcome.cargoWasFull = true;
-                    charges.AddProgress(acceptedSouls);
 
                     if (hit.broken)
                     {
@@ -329,9 +318,9 @@ namespace SoulBlocks
         }
 
         // Greedy shopping at the tree: buy every affordable core node (in Wisdom-tree order),
-        // then spend Souls on whichever of carga/energia/rayhit_nivel the bot most needs right
+        // then spend Souls on whichever of carga/energia/pico_nivel the bot most needs right
         // now, repeating until nothing more is affordable.
-        static bool ShopAtHub(RunState run, StatSheet stats, bool cargoFull, bool energyBound, bool chargesStarved, float nowSeconds, EconomySimResult result)
+        static bool ShopAtHub(RunState run, StatSheet stats, bool cargoFull, bool energyBound, bool miningBound, float nowSeconds, EconomySimResult result)
         {
             bool boughtAny = false;
             for (int guard = 0; guard < 64; guard++)
@@ -349,14 +338,14 @@ namespace SoulBlocks
                     boughtThisPass = true;
                 }
 
-                string target = PickBindingUpgrade(run, stats, cargoFull, energyBound, chargesStarved);
+                string target = PickBindingUpgrade(run, stats, cargoFull, energyBound, miningBound);
                 if (target != null)
                 {
                     var def = UpgradeCatalog.Get(target);
                     if (ProgressionRules.WhyCannotBuy(run, def) == null)
                     {
                         ProgressionRules.Buy(run, def);
-                        ProgressionRules.ApplyStats(run, stats); // keep RayLevel live for this same pass's gate check
+                        ProgressionRules.ApplyStats(run, stats); // keep PickLevel live for this same pass's gate check
                         RecordFirstPurchase(nowSeconds, result);
                         boughtThisPass = true;
                     }
@@ -385,14 +374,14 @@ namespace SoulBlocks
             }
         }
 
-        // energy/cargo/rayhit level, the three binding constraints the plan calls out for the
-        // greedy bot: whichever the last expedition actually ran into, else the next unmet core
-        // gate's Rayhit level, else the cheapest of the three that is still affordable.
-        static string PickBindingUpgrade(RunState run, StatSheet stats, bool cargoFull, bool energyBound, bool chargesStarved)
+        // energy/cargo/pick level, the binding constraints the plan calls out for the greedy bot:
+        // whichever the last expedition actually ran into, else the next unmet core gate's pick
+        // level, else the cheapest candidate that is still affordable.
+        static string PickBindingUpgrade(RunState run, StatSheet stats, bool cargoFull, bool energyBound, bool miningBound)
         {
-            int neededLevel = NextGateRayLevel(run);
-            if (CanLevel("rayhit_nivel", run) && stats.GetInt(StatId.RayLevel) < neededLevel) return "rayhit_nivel";
-            if (chargesStarved && CanLevel("rayhit_cargas", run)) return "rayhit_cargas";
+            int neededLevel = NextGatePickLevel(run);
+            if (CanLevel("pico_nivel", run) && stats.GetInt(StatId.PickLevel) < neededLevel) return "pico_nivel";
+            if (miningBound && CanLevel("pico_velocidad", run)) return "pico_velocidad";
             if (cargoFull && CanLevel("carga", run)) return "carga";
             if (energyBound && CanLevel("energia", run)) return "energia";
 
@@ -408,9 +397,13 @@ namespace SoulBlocks
             return best;
         }
 
-        static bool CanLevel(string id, RunState run) => run.UpgradeLevel(id) < UpgradeCatalog.Get(id).maxLevel;
+        static bool CanLevel(string id, RunState run)
+        {
+            var def = UpgradeCatalog.Get(id);
+            return run.UpgradeLevel(id) < def.maxLevel && ProgressionRules.RequirementMet(run, def);
+        }
 
-        static int NextGateRayLevel(RunState run)
+        static int NextGatePickLevel(RunState run)
         {
             if (run.UpgradeLevel("raiz1") == 0) return PrisonRules.RequiredLevel(PrisonTier.T1);
             if (run.UpgradeLevel("raiz2") == 0) return PrisonRules.RequiredLevel(PrisonTier.T2);

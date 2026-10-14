@@ -110,11 +110,12 @@ namespace SoulBlocks.Tests.Humo
             Assert.AreEqual(0, run.cargoSouls, "Cargo was not deposited into the reserve on return.");
             Assert.Greater(run.reserveSouls, 0, "Reserve did not grow from the deposited cargo.");
 
-            // 2. Buy the cheapest affordable Souls upgrade with TryBuy.
+            // 2. Buy the cheapest Souls upgrade already open on the board (its parent requirement met) with TryBuy.
             var progression = root.GetComponent<ProgressionSystem>();
             Assert.IsNotNull(progression, "ProgressionSystem was not attached.");
 
             var cheapest = UpgradeCatalog.Tree(UpgradeTree.Souls)
+                .Where(d => ProgressionRules.RequirementMet(run, d))
                 .OrderBy(d => ProgressionRules.Cost(d, run.UpgradeLevel(d.id) + 1))
                 .First();
             int cost = ProgressionRules.Cost(cheapest, run.UpgradeLevel(cheapest.id) + 1);
@@ -151,9 +152,8 @@ namespace SoulBlocks.Tests.Humo
             Assert.AreEqual(PrisonTier.T1, endPrison.tier, "Souls branch end prison is not T1.");
 
             // Last two required (non-deep, non-shortcut) tiles on the branch: the branch-end
-            // prison sits at the same position as the last one, so firing from the second-to-last
-            // keeps the shot well inside the default 8 m RayLength (same pattern as
-            // DashAbilityPlayModeTests' "last two tiles" search).
+            // prison sits at the same position as the last one; walking in from the second-to-last
+            // starts the expedition (same pattern as DashAbilityPlayModeTests' "last two tiles" search).
             TileLayout last = null, nearEnd = null;
             foreach (var tile in root.Layout.tiles)
             {
@@ -161,15 +161,15 @@ namespace SoulBlocks.Tests.Humo
                 if (last == null || tile.pathDistance > last.pathDistance) { nearEnd = last; last = tile; }
                 else if (nearEnd == null || tile.pathDistance > nearEnd.pathDistance) nearEnd = tile;
             }
-            Assert.IsNotNull(nearEnd, "Souls branch needs at least two required tiles to fire Rayhit from close range.");
+            Assert.IsNotNull(nearEnd, "Souls branch needs at least two required tiles to approach the end prison.");
 
             player.Teleport(nearEnd.position);
             for (int i = 0; i < 10; i++) yield return null;
             Assert.IsTrue(run.inExpedition, "Approaching the branch-end prison did not start an expedition.");
 
-            var rayhit = root.GetComponent<RayhitAbility>();
-            Assert.IsNotNull(rayhit, "RayhitAbility was not attached.");
-            var target = RayTargetRegistry.All.FirstOrDefault(t => t.PrisonId == endPrison.id);
+            var pickAbility = root.GetComponent<PickAbility>();
+            Assert.IsNotNull(pickAbility, "PickAbility was not attached.");
+            var target = MineableRegistry.All.FirstOrDefault(t => t.PrisonId == endPrison.id);
             Assert.IsNotNull(target, "No PrisonView registered for the branch-end T1 prison.");
 
             int wisdomBefore = run.wisdom;
@@ -177,34 +177,16 @@ namespace SoulBlocks.Tests.Humo
             Action<Vector3, int> onReleased = (pos, count) => soulsReleasedTotal += count;
             GameEvents.SoulsReleased += onReleased;
 
-            // 3. Break the T1 with RayhitAbility.Fire aimed through it. T1 has 2 HP and the
-            // default charge is 1, so the loop recharges via GameEvents.SoulsCollected (the
-            // documented "1 charge per 25 souls" path) between shots instead of waiting the
-            // real 20 s timer; ApplyRayHit is only the fallback if Fire ever refuses to fire.
-            bool usedFallback = false;
-            for (int guard = 0; guard < 20 && !run.Prison(endPrison.id).broken; guard++)
+            // 3. Break the T1 with PickAbility.TryHit, one blow per PickInterval (real time: batchmode
+            // frames are ~1 ms). T1 has 8 HP and the base pick deals 1, so this takes ~5 s.
+            for (int guard = 0; guard < 40 && !run.Prison(endPrison.id).broken; guard++)
             {
-                if (rayhit.Charges <= 0)
-                {
-                    GameEvents.RaiseSoulsCollected(Mathf.Max(1, root.Stats.GetInt(StatId.RaySoulsPerCharge)));
-                    yield return null;
-                }
-
-                if (rayhit.Charges > 0 && rayhit.Fire(endPrison.position))
-                {
-                    yield return new WaitForSeconds(.6f); // time, not frames: batchmode frames are ~1 ms
-                }
-                else
-                {
-                    usedFallback = true;
-                    target.ApplyRayHit(root.Stats.GetInt(StatId.RayLevel));
-                    yield return null;
-                }
+                pickAbility.TryHit(target);
+                yield return new WaitForSeconds(root.Stats.Get(StatId.PickInterval) + .05f);
             }
             GameEvents.SoulsReleased -= onReleased;
 
-            Assert.IsTrue(run.Prison(endPrison.id).broken, "T1 branch-end prison never broke."
-                + (usedFallback ? " (used ApplyRayHit fallback for at least one hit)" : ""));
+            Assert.IsTrue(run.Prison(endPrison.id).broken, "T1 branch-end prison never broke.");
             Assert.GreaterOrEqual(run.brokenByTier[(int)PrisonTier.T1], 1, "brokenByTier[T1] did not increase.");
             Assert.Greater(run.wisdom, wisdomBefore, "Run.wisdom did not increase after breaking the T1 prison.");
             Assert.Greater(soulsReleasedTotal, 0, "No loose souls were released when the prison broke.");
@@ -220,10 +202,8 @@ namespace SoulBlocks.Tests.Humo
             yield return null;
             Assert.IsFalse(Keys.Blocked, "Keys.Blocked stayed true after choosing a blessing.");
 
-            // Rayhit travel left the player on the branch end, which is where the portal sits:
-            // step back first so the portal does not fire the instant raiz1 activates it.
-            player.Teleport(nearEnd.position);
-            yield return new WaitForSeconds(.2f);
+            // The player stays at nearEnd (the pick does not move them), off the branch-end portal,
+            // so it cannot fire the instant raiz1 activates it.
 
             // 4. Grant enough wisdom and buy raiz1 -> portal at the broken branch end activates.
             run.wisdom = 1000; // shortcut: grant wisdom instead of farming more prisons for it
@@ -260,7 +240,7 @@ namespace SoulBlocks.Tests.Humo
 
             // 5. SaveSystem.SaveNow(), then GameRoot.Restart(null, SaveSystem.TryLoad()): seed,
             // unlocks, wisdom, reserve and the broken prison must all match what was saved, and
-            // the broken prison must not respawn as a live Rayhit target.
+            // the broken prison must not respawn as a live pick target.
             int expectedWisdom = run.wisdom;
             int expectedReserve = run.reserveSouls;
             int expectedEffectiveSeed = run.effectiveSeed;
@@ -288,8 +268,8 @@ namespace SoulBlocks.Tests.Humo
             Assert.IsTrue(reloadedRun.Prison(endPrison.id).broken, "The broken prison did not survive the save/load round trip.");
             Assert.AreEqual(expectedBrokenT1Count, reloadedRun.brokenByTier[(int)PrisonTier.T1], "brokenByTier[T1] did not survive the save/load round trip.");
 
-            bool respawnedAsLiveTarget = RayTargetRegistry.All.Any(t => t.PrisonId == endPrison.id);
-            Assert.IsFalse(respawnedAsLiveTarget, "A broken prison was respawned as a live Rayhit target after loading the save.");
+            bool respawnedAsLiveTarget = MineableRegistry.All.Any(t => t.PrisonId == endPrison.id);
+            Assert.IsFalse(respawnedAsLiveTarget, "A broken prison was respawned as a live pick target after loading the save.");
 
             LogAssert.NoUnexpectedReceived();
         }
@@ -328,10 +308,10 @@ namespace SoulBlocks.Tests.Humo
 
             for (int level = 1; level <= 4; level++)
             {
-                Assert.IsTrue(progression.TryBuy("rayhit_nivel"), "TryBuy(rayhit_nivel) failed at level " + level + ".");
+                Assert.IsTrue(progression.TryBuy("pico_nivel"), "TryBuy(pico_nivel) failed at level " + level + ".");
                 yield return null;
             }
-            Assert.AreEqual(4, root.Stats.GetInt(StatId.RayLevel), "RayLevel is not 4 after 4 levels of rayhit_nivel.");
+            Assert.AreEqual(4, root.Stats.GetInt(StatId.PickLevel), "RayLevel is not 4 after 4 levels of pico_nivel.");
 
             bool won = false;
             Action onWon = () => won = true;
@@ -340,11 +320,11 @@ namespace SoulBlocks.Tests.Humo
             Assert.IsTrue(progression.TryBuy("despertar"), "TryBuy(despertar) failed with the gates granted directly.");
             yield return null;
 
-            var nucleoTarget = RayTargetRegistry.All.FirstOrDefault(t => t.PrisonId == nucleoLayout.id);
-            Assert.IsNotNull(nucleoTarget, "Nucleo did not appear in RayTargetRegistry.All after buying despertar.");
+            var nucleoTarget = MineableRegistry.All.FirstOrDefault(t => t.PrisonId == nucleoLayout.id);
+            Assert.IsNotNull(nucleoTarget, "Nucleo did not appear in MineableRegistry.All after buying despertar.");
 
-            for (int guard = 0; guard < 40 && !run.Prison(nucleoLayout.id).broken; guard++)
-                nucleoTarget.ApplyRayHit(4);
+            for (int guard = 0; guard < 64 && !run.Prison(nucleoLayout.id).broken; guard++)
+                nucleoTarget.ApplyPickHit(4);
             yield return null;
             GameEvents.GameWon -= onWon;
 

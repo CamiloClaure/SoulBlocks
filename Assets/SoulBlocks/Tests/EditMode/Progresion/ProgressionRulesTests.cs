@@ -8,7 +8,7 @@ namespace SoulBlocks.Tests
     {
         static UpgradeDef Carga => UpgradeCatalog.Get("carga");
         static UpgradeDef Dash => UpgradeCatalog.Get("dash");
-        static UpgradeDef RayhitNivel => UpgradeCatalog.Get("rayhit_nivel");
+        static UpgradeDef PicoNivel => UpgradeCatalog.Get("pico_nivel");
         static UpgradeDef Raiz1 => UpgradeCatalog.Get("raiz1");
         static UpgradeDef Raiz2 => UpgradeCatalog.Get("raiz2");
         static UpgradeDef Raiz3 => UpgradeCatalog.Get("raiz3");
@@ -26,10 +26,10 @@ namespace SoulBlocks.Tests
         [Test]
         public void CostUsesPerUpgradeGrowth()
         {
-            // rayhit_nivel: growth 2.0, base 80.
-            Assert.AreEqual(80, ProgressionRules.Cost(RayhitNivel, 1));
-            Assert.AreEqual(160, ProgressionRules.Cost(RayhitNivel, 2));
-            Assert.AreEqual(320, ProgressionRules.Cost(RayhitNivel, 3));
+            // pico_nivel: growth 2.0, base 180.
+            Assert.AreEqual(180, ProgressionRules.Cost(PicoNivel, 1));
+            Assert.AreEqual(360, ProgressionRules.Cost(PicoNivel, 2));
+            Assert.AreEqual(720, ProgressionRules.Cost(PicoNivel, 3));
         }
 
         [Test]
@@ -57,6 +57,7 @@ namespace SoulBlocks.Tests
             Assert.AreEqual("requiere Raíz I", ProgressionRules.WhyCannotBuy(run, Raiz2));
 
             run.treeStage = 1; // raiz1 bought, T2 still unbroken
+            run.SetUpgradeLevel("raiz1", 1);
             Assert.AreEqual("requiere romper una prisión II", ProgressionRules.WhyCannotBuy(run, Raiz2));
         }
 
@@ -154,9 +155,35 @@ namespace SoulBlocks.Tests
             var run = new RunState { wisdom = 1000 };
             Assert.AreEqual("requiere Raíz I", ProgressionRules.WhyCannotBuy(run, Entrega));
             run.treeStage = 1;
+            run.SetUpgradeLevel("raiz1", 1);
             Assert.IsNull(ProgressionRules.WhyCannotBuy(run, Entrega));
             Assert.IsTrue(ProgressionRules.Buy(run, Entrega));
             Assert.IsTrue(run.HasUnlock(UnlockIds.Entrega));
+        }
+
+        [Test]
+        public void BoardNodeOpensOnlyOnceItsParentReachesTheLevel()
+        {
+            var run = new RunState { reserveSouls = 10000 };
+            var imanDuracion = UpgradeCatalog.Get("iman_duracion");
+            Assert.AreEqual("requiere Radio de imán nv 2", ProgressionRules.WhyCannotBuy(run, imanDuracion));
+            run.SetUpgradeLevel("iman_radio", 1);
+            Assert.IsFalse(ProgressionRules.Buy(run, imanDuracion));
+            run.SetUpgradeLevel("iman_radio", 2);
+            Assert.IsNull(ProgressionRules.WhyCannotBuy(run, imanDuracion));
+            Assert.IsTrue(ProgressionRules.Buy(run, imanDuracion));
+        }
+
+        [Test]
+        public void EveryBoardParentExistsAndNoTwoNodesShareACell()
+        {
+            var cells = new System.Collections.Generic.HashSet<UnityEngine.Vector2>();
+            foreach (var def in UpgradeCatalog.All)
+            {
+                if (!string.IsNullOrEmpty(def.requires)) Assert.IsNotNull(UpgradeCatalog.Get(def.requires), def.id + " requires an unknown node");
+                Assert.IsTrue(cells.Add(def.boardPos), def.id + " overlaps another node on the board");
+                Assert.AreNotEqual(UnityEngine.Vector2.zero, def.boardPos, def.id + " sits on the tree itself");
+            }
         }
 
         [Test]
