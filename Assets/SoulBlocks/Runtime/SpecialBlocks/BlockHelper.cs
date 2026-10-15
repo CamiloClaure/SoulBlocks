@@ -21,6 +21,7 @@ namespace SoulBlocks
             Vector3 target = owner.Lab.tree.position;
             BreakableCrystal crystal = null;
             ISoul pickup = null;
+            CrystalFragment fragment = null;
             if (cargo == 0)
             {
                 float nearest = 12f;
@@ -29,7 +30,13 @@ namespace SoulBlocks
                     float distance = Vector3.Distance(soul.Position, transform.position);
                     if (soul.Available && distance < nearest) { nearest = distance; pickup = soul; }
                 }
-                if (pickup != null) target = pickup.Position - Vector3.up * SoulPickup.FloatHeight;
+                foreach (var item in FindObjectsByType<CrystalFragment>(FindObjectsSortMode.None))
+                {
+                    float distance = Vector3.Distance(item.transform.position, transform.position);
+                    if (!item.Collected && distance < nearest) { nearest = distance; fragment = item; }
+                }
+                if (fragment != null) target = fragment.transform.position;
+                else if (pickup != null) target = pickup.Position - Vector3.up * SoulPickup.FloatHeight;
                 else
                 {
                     nearest = 20f;
@@ -51,6 +58,7 @@ namespace SoulBlocks
                 transform.rotation = Quaternion.LookRotation(delta.normalized);
             }
             else if (cargo > 0) Deposit();
+            else if (fragment != null) fragment.TryCollectAt(transform.position);
             else if (pickup != null && pickup.Available) { cargo += pickup.Value; pickup.Collect(); }
             else if (crystal != null && hitCooldown <= 0)
             {

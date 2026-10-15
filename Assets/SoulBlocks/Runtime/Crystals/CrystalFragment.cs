@@ -39,11 +39,13 @@ namespace SoulBlocks
             if (root != null) TryCollect(root.Player);
         }
         public bool TryCollect(SoulPlayer player)
+            => player != null && TryCollectAt(player.transform.position);
+        public bool TryCollectAt(Vector3 collectorPosition)
         {
             var root = GameRoot.Instance;
             if (Collected || !initialized || Time.time - born < Mathf.Max(pickupDelay, ScatterSeconds)
-                || Keys.Blocked || Time.timeScale <= 0 || player == null || root == null || root.Run == null) return false;
-            Vector3 delta = player.transform.position - transform.position;
+                || Keys.Blocked || Time.timeScale <= 0 || root == null || root.Run == null) return false;
+            Vector3 delta = collectorPosition - transform.position;
             if (Mathf.Abs(delta.y) > 2 || new Vector2(delta.x, delta.z).sqrMagnitude > pickupRadius * pickupRadius) return false;
             Collected = true;
             root.Run.collectedCrystals += Value;

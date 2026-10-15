@@ -9,7 +9,7 @@ Abre WorldBuilding. Junto al árbol está el cilindro **Altar** y una antorcha f
 - **T**: encender/apagar mientras la llevas o estás cerca de ella.
 - **E** conserva la tienda del árbol; la antorcha usa F para evitar conflictos.
 
-Las 18 almas son esferas luminosas moradas con una estela corta. Merodean fuera del
+Las almas son esferas luminosas moradas con una estela corta. Merodean fuera del
 camino a una velocidad máxima de 4 m/s; su movimiento libre evita entrar en él.
 Coloca la antorcha encendida con F: el radio empieza en 4 m y aumenta 2 m cada 3 s
 hasta 12 m (12 s en total). El anillo y el HUD muestran el alcance y la próxima

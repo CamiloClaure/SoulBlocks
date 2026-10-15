@@ -29,3 +29,26 @@ Longitud aproximada: 222 m. Hay 24 cristales amarillos colocados en la escena, b
 `Mundo manual > Cristales amarillos del camino`: 18 pequeños y 6 medianos.
 Puedes mover cada cristal individualmente. No se recolocan automáticamente al editar
 los puntos del camino y todavía no existe reposición nocturna.
+
+## Población de todos los caminos y prueba de bloques
+
+Al entrar en Play, **Poblacion de caminos dibujados** lee todos los componentes
+AuthoredPath activos. No modifica el trazado ni usa seed. Distribuye almas por
+ambos lados aproximadamente cada 10 m y añade grupos de tres cristales amarillos
+cada 14 m, evitando superponerlos con los cristales colocados a mano. Hay un límite
+editable de 120 almas y 120 cristales añadidos. Estos objetos aparecen al jugar;
+para aplicar cambios a tus caminos sal de Play, edita, guarda y vuelve a jugar.
+
+Las almas flotan fuera de los caminos, incluso donde aún no has modelado terreno.
+La antorcha puede atraerlas desde allí. El suelo lateral anterior sigue siendo una
+malla fija: la población no construye nuevo terreno alrededor de las rutas.
+
+Al final del Camino primario está **Prueba de cinco bloques**, sobre una plataforma
+amplia con 15 cristales de cinco colores y tres tamaños. Rueda selecciona el bloque,
+clic derecho usa el activo y E dentro de esa zona abre mejoras y restauración.
+Los cinco están desbloqueados y sus pasivas activas en esta prueba. Las mejoras
+siguen siendo gratuitas; el desbloqueo progresivo por nivel del árbol no se aplica
+al laboratorio. Los ayudantes celestes ahora también recogen fragmentos de cristal.
+
+La plataforma de prueba permanece donde fue colocada: si cambias el final del
+camino, mueve también la plataforma y la zona de prueba para mantener la conexión.

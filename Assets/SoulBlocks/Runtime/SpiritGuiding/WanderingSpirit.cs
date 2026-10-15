@@ -10,6 +10,8 @@ namespace SoulBlocks
         public float wanderSpeed = 4f;
         public float followSpeed = 9f;
         public float phase;
+        public bool allowFloatingOutsideGround;
+        PathPopulation population;
         public bool Following { get; private set; }
         public bool Ascending { get; private set; }
         Vector3 home;
@@ -20,6 +22,7 @@ namespace SoulBlocks
         void Start()
         {
             home = transform.position;
+            population = FindAnyObjectByType<PathPopulation>();
             var go = GameObject.Find("Camino primario");
             var path = go != null ? go.GetComponent<AuthoredPath>() : null;
             if (path == null) return;
@@ -29,6 +32,7 @@ namespace SoulBlocks
         }
         bool InsideRoad(Vector3 position)
         {
+            if (population != null) return population.InsideRoad(position);
             if (road == null) return false;
             for (int i = 0; i < road.Length; i++)
             {
@@ -70,6 +74,11 @@ namespace SoulBlocks
                 next.y = floor.point.y;
                 transform.position = next;
                 if (delta.sqrMagnitude > .01f) transform.rotation = Quaternion.LookRotation(delta.normalized);
+            }
+            else if (allowFloatingOutsideGround)
+            {
+                next.y = Following ? Mathf.MoveTowards(transform.position.y, target.y - .5f, followSpeed * Time.deltaTime) : home.y;
+                transform.position = next;
             }
             if (visual != null) visual.localPosition = Vector3.up * (.55f + Mathf.Sin(Time.time * 3 + phase) * .08f);
         }

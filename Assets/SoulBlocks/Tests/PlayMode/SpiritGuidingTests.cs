@@ -16,7 +16,8 @@ namespace SoulBlocks.Tests
             for(int i=0;i<15;i++) yield return null;
             torch=Object.FindAnyObjectByType<GuidingTorch>(); player=GameRoot.Instance.Player;
             player.readInput=false; path=GameObject.Find("Camino primario").GetComponent<AuthoredPath>();
-            Assert.IsNotNull(torch); Assert.AreEqual(18,Object.FindObjectsByType<WanderingSpirit>(FindObjectsSortMode.None).Length);
+            Assert.IsNotNull(torch); Assert.GreaterOrEqual(Object.FindObjectsByType<WanderingSpirit>(FindObjectsSortMode.None).Length,18);
+            if(SpecialBlockSystem.Instance != null) SpecialBlockSystem.Instance.PassivesEnabled=false;
         }
         [UnityTearDown] public IEnumerator Cleanup()
         {
@@ -28,7 +29,7 @@ namespace SoulBlocks.Tests
         {
             Assert.IsNull(GameObject.Find("Generated Souls"));
             int before=GameRoot.Instance.Run.collectedCrystals;
-            var crystal=Object.FindObjectsByType<BreakableCrystal>(FindObjectsSortMode.None).First();
+            var crystal=Object.FindObjectsByType<BreakableCrystal>(FindObjectsSortMode.None).First(c=>c.Available);
             int reward=3*(int)crystal.size;
             var color=crystal.color;
             player.Teleport(crystal.transform.position+Vector3.right*15);
@@ -145,6 +146,39 @@ namespace SoulBlocks.Tests
                     Assert.Greater(delta.magnitude,path.width*.5f,"An idle spirit entered the road");
                 }
             }
+        }
+        [UnityTest] public IEnumerator PopulationFollowsDrawnPathsAndBlockLabIsAvailable()
+        {
+            var population=Object.FindAnyObjectByType<PathPopulation>();
+            Assert.Greater(population.SpiritCount,18);Assert.Greater(population.CrystalCount,10);
+            int count=population.SpiritCount;population.Populate();Assert.AreEqual(count,population.SpiritCount);
+            var system=SpecialBlockSystem.Instance;Assert.IsTrue(system.Ready);
+            Assert.AreEqual(5,system.Lab.blockDisplays.Length);Assert.AreEqual(15,system.Lab.slots.Length);
+            Assert.Greater(Vector3.Distance(system.Lab.transform.position,GameRoot.Instance.Tree.position),30);
+            player.Teleport(system.Lab.transform.position+Vector3.up*.1f);
+            for(int i=0;i<5;i++){system.Select(i);Assert.IsTrue(system.TryUseSelected(),"Block "+i);}
+            Assert.Greater(system.HelperCount,0);Assert.AreEqual(1,system.ActiveBombs);
+            system.ResetLab();yield return null;
+            Assert.AreEqual(15,system.Lab.slots.Count(s=>s.crystal!=null));
+            var extra=new GameObject("Additional drawn road");extra.transform.position=new Vector3(500,5,500);
+            var extraPath=extra.AddComponent<AuthoredPath>();extraPath.Rebuild();
+            var host=new GameObject("Extra population");var second=host.AddComponent<PathPopulation>();
+            second.spiritPrefab=population.spiritPrefab;second.crystalPrefab=population.crystalPrefab;second.torch=torch;
+            second.Populate();yield return null;
+            Assert.IsTrue(second.GetComponentsInChildren<WanderingSpirit>().Any(s=>Vector3.Distance(s.transform.position,extra.transform.position)<40));
+            Object.Destroy(host);Object.Destroy(extra);
+        }
+        [UnityTest] public IEnumerator CelesteHelperCollectsCrystalFragments()
+        {
+            var system=SpecialBlockSystem.Instance;
+            Vector3 point=system.Lab.transform.position;
+            player.Teleport(torch.AltarPosition+Vector3.right*2);
+            int before=GameRoot.Instance.Run.collectedCrystals;
+            var fragment=Object.Instantiate(Resources.Load<CrystalFragment>("Crystals/CrystalFragment"));
+            fragment.Initialize(point+Vector3.up*.2f,point+Vector3.up*.15f,CrystalColor.Yellow,Color.yellow);
+            Assert.IsTrue(system.SpawnHelper(point+Vector3.right*.5f));
+            yield return new WaitForSeconds(1.2f);
+            Assert.IsTrue(fragment==null);Assert.AreEqual(before+1,GameRoot.Instance.Run.collectedCrystals);
         }
         void Capture()
         {
