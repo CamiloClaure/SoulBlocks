@@ -30,7 +30,7 @@ namespace SoulBlocks
         const string WizardPath = "Characters/TheSpiritPath_Wizard_Idle_Walk";
         GameObject classicModel, wizardModel;
         Animation wizardAnimation;
-        Transform wizardUpperArm, wizardForearm, wizardHand, classicHand;
+        Transform wizardUpperArm, wizardForearm, wizardHand, classicHand, wizardLeftHand;
         string wizardIdle, wizardWalk;
 
         void Awake() { controller = GetComponent<CharacterController>(); }
@@ -146,6 +146,7 @@ namespace SoulBlocks
                 if (bone.name == "UpperArm.R") wizardUpperArm = bone;
                 else if (bone.name == "ForeArms.R") wizardForearm = bone;
                 else if (bone.name == "Hand.R") wizardHand = bone;
+                else if (bone.name == "Hand.L") wizardLeftHand = bone;
             ShowWizard(true);
         }
 
@@ -165,6 +166,9 @@ namespace SoulBlocks
 
         // Shoulder, elbow and hand bones of the shown model, posed by the mining swing
         // (CrystalMiningAttack). Null when the model has no such bones.
+        public Transform TorchHand => wizardModel != null && wizardModel.activeSelf ? wizardLeftHand
+            : animator != null && animator.isHuman ? animator.GetBoneTransform(HumanBodyBones.LeftHand) : null;
+
         public void RightArm(out Transform upper, out Transform fore, out Transform hand)
         {
             if (wizardModel != null && wizardModel.activeSelf) { upper = wizardUpperArm; fore = wizardForearm; hand = wizardHand; return; }

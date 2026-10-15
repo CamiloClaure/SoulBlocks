@@ -56,6 +56,7 @@ namespace SoulBlocks
 
         void OnMapBuilt(MapLayout layout)
         {
+            if (GameRoot.Instance.ManualWorld) return;
             if (firstPlanDone) return;
             firstPlanDone = true;
             GameEvents.RaiseExpeditionPlanned();
@@ -67,7 +68,7 @@ namespace SoulBlocks
         void OnLeftHub()
         {
             var root = GameRoot.Instance;
-            if (root == null || root.Run == null || root.Run.inExpedition) return;
+            if (root == null || root.Run == null || root.Run.inExpedition || root.ManualWorld) return;
             StartExpedition(root);
         }
 

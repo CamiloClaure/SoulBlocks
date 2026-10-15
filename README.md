@@ -1,5 +1,9 @@
 # SoulBlocks
 
+Construcción manual: abre `Assets/Scenes/WorldBuilding.unity` y selecciona
+`Mundo manual > Camino primario`. Mueve sus puntos en Scene para dibujar el recorrido
+en X/Y/Z. Guía: [docs/WORLD-BUILDING.md](docs/WORLD-BUILDING.md).
+
 Incremental de exploración en Unity 6000.6.0f1 (URP, Input System). Salís del árbol central por caminos generados por seed, recogés almas, picás prisiones cristalinas, volvés, mejorás y el mundo se transforma hasta despertar al Núcleo.
 
 Estado: **obra gruesa**. Todas las mecánicas funcionan de punta a punta con placeholders (primitivas, colores, IMGUI). Sin animaciones ni modelos nuevos. Diseño completo y plan de construcción en [`docs/PLAN-OBRA-GRUESA.md`](docs/PLAN-OBRA-GRUESA.md); contratos entre sistemas en [`docs/CONTRATOS.md`](docs/CONTRATOS.md).

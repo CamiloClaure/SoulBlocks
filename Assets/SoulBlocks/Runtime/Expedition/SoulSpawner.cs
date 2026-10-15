@@ -37,6 +37,8 @@ namespace SoulBlocks
 
         void OnMapBuilt(MapLayout mapLayout)
         {
+            // Authored worlds use living spirits guided by the torch, not loose pickups.
+            if (GameRoot.Instance.ManualWorld) return;
             layout = mapLayout;
             run = GameRoot.Instance.Run;
             root = new GameObject("Generated Souls").transform;

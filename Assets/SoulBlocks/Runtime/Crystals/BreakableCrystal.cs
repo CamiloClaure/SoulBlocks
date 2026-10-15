@@ -14,6 +14,8 @@ namespace SoulBlocks
         public CrystalSize size = CrystalSize.Small;
         public bool startsHidden;
         public int rewardSouls;
+        [Tooltip("Prefab de los fragmentos recolectables. Si no se asigna, usa Resources/Crystals/CrystalFragment.")]
+        public CrystalFragment fragmentPrefab;
         public bool Revealed { get; private set; }
         public bool Available => isActiveAndEnabled && !Broken && Revealed;
         public static readonly System.Collections.Generic.List<BreakableCrystal> All = new System.Collections.Generic.List<BreakableCrystal>();
@@ -111,7 +113,7 @@ namespace SoulBlocks
             if (Broken)
             {
                 body.enabled = false;
-                if (rewardSouls > 0) GameEvents.RaiseSoulsReleased(transform.position, rewardSouls);
+                CrystalFragment.Scatter(this);
             }
             return true;
         }
