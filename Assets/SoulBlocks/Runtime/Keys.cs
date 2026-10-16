@@ -12,6 +12,8 @@ namespace SoulBlocks
         // Alt frees the cursor (SoulCamera keeps it locked for mouse look) to click HUD buttons.
         public static bool FreeCursorHeld => Keyboard.current != null && (Keyboard.current.leftAltKey.isPressed || Keyboard.current.rightAltKey.isPressed);
         static bool Allowed => Application.isFocused && !Blocked && !FreeCursorHeld
+            && !SpiritDialogue.HandledInputThisFrame
+            && !(TreeUpgradeAltar.Instance != null && TreeUpgradeAltar.Instance.HandledInputThisFrame)
             && !(SpecialBlockSystem.Instance != null && SpecialBlockSystem.Instance.HandledInteractionThisFrame);
 
         public static bool DashPressed => Allowed && Keyboard.current != null && Keyboard.current.leftShiftKey.wasPressedThisFrame;
@@ -21,6 +23,9 @@ namespace SoulBlocks
         public static bool PausePressed => Allowed && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
         public static bool ModelSwapPressed => Allowed && Keyboard.current != null && Keyboard.current.f2Key.wasPressedThisFrame;
         public static bool MineHeld => Allowed && Mouse.current != null && Mouse.current.leftButton.isPressed;
+        static readonly Key[] PowerKeys = { Key.Digit1, Key.Digit2, Key.Digit3, Key.Digit4, Key.Digit5 };
+        public static bool PowerPressed(int index) => Allowed && Keyboard.current != null &&
+            index >= 0 && index < PowerKeys.Length && Keyboard.current[PowerKeys[index]].wasPressedThisFrame;
         // Ignores Blocked: fullscreen must toggle with any menu open.
         public static bool FullscreenPressed => Application.isFocused && Keyboard.current != null && Keyboard.current.f1Key.wasPressedThisFrame;
         public static Vector2 MousePosition => Cursor.lockState == CursorLockMode.Locked

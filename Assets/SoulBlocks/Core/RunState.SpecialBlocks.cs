@@ -6,5 +6,6 @@ namespace SoulBlocks
         public int specialBlockClothingLevel;
         public int selectedSpecialBlock;
         public int collectedCrystals;
+        public int pickaxeLevel = 1;
     }
 }

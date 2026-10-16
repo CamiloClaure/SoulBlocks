@@ -57,7 +57,7 @@ namespace SoulBlocks
         {
             var prefab = crystal.fragmentPrefab != null ? crystal.fragmentPrefab : Resources.Load<CrystalFragment>("Crystals/CrystalFragment");
             if (prefab == null) { Debug.LogError("Falta el prefab Resources/Crystals/CrystalFragment.", crystal); return; }
-            int count = 3 * Mathf.Max(1, (int)crystal.size);
+            int count = crystal.FragmentReward;
             Vector3 origin = crystal.transform.position;
             var root = GameRoot.Instance;
             Transform parent = root != null ? root.transform : null;

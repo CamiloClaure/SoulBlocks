@@ -16,7 +16,7 @@ namespace SoulBlocks
             "WASD: moverse",
             "Mouse: girar la cámara",
             "Alt (mantener): mostrar el cursor para usar la interfaz",
-            "Rueda: seleccionar bloque especial; click derecho: usar",
+            "1–5: activar amarillo, azul, verde, celeste y rojo; rueda: ver descripción",
             "+ / -: zoom de la cámara",
             "Click de la rueda: centrar la cámara detrás del jugador",
             "Shift: dash",

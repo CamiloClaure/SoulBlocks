@@ -7,7 +7,7 @@ namespace SoulBlocks
 {
     public sealed partial class SpecialBlockSystem : MonoBehaviour
     {
-        sealed class Area { public SpecialBlock kind; public Vector3 position; public float radius, until; public GameObject visual; }
+        sealed class Area { public SpecialBlock kind; public Vector3 position; public float radius, until, nextPulse; public GameObject visual; }
         sealed class Bomb { public Vector3 position; public float until; public int level; public GameObject visual; }
         public static SpecialBlockSystem Instance { get; private set; }
         public SpecialBlockLab Lab { get; private set; }
@@ -69,6 +69,27 @@ namespace SoulBlocks
         }
         public int Level(SpecialBlock block) => Ready ? Run.specialBlockLevels[(int)block] : 1;
         bool Roll() => (RandomValue != null ? RandomValue() : rng.NextFloat()) < BlockRules.Chance(Run.specialBlockClothingLevel);
+        public float RewardRoll() => RandomValue != null ? RandomValue() : UnityEngine.Random.value;
+        public bool TryNourishCrystal(BreakableCrystal crystal, bool passive)
+        {
+            if (!Ready || (passive && !PassivesEnabled) || crystal == null || !crystal.Available || crystal.Nourished || !Roll()) return false;
+            crystal.Nourish(.5f + .25f * (Level(SpecialBlock.Blue) - 1), .5f);
+            return true;
+        }
+        float yellowUntil;
+        Light yellowGlow;
+        void ActivateTrees(Vector3 position, float radius)
+        {
+            foreach (var tree in NourishableTree.All)
+                if (tree != null && Vector3.Distance(tree.transform.position, position) <= radius)
+                    tree.Revive(20 + 5 * (Level(SpecialBlock.Yellow) - 1));
+        }
+        void BluePulse(Vector3 position, float radius)
+        {
+            foreach (var crystal in BreakableCrystal.All)
+                if (crystal != null && Vector3.Distance(crystal.transform.position, position) <= radius)
+                    TryNourishCrystal(crystal, false);
+        }
         public void Select(int index) { if (Ready) Run.selectedSpecialBlock = ((index % 5) + 5) % 5; }
 
         void Update()
@@ -86,8 +107,10 @@ namespace SoulBlocks
             {
                 float wheel = Mouse.current.scroll.ReadValue().y;
                 if (Mathf.Abs(wheel) > .01f) Select((int)Selected + (wheel > 0 ? 1 : -1));
-                if (Mouse.current.rightButton.wasPressedThisFrame) TryUseSelected();
             }
+            if (root.Player.readInput)
+                for (int i = 0; i < 5; i++)
+                    if (Keys.PowerPressed(i)) TryUse((SpecialBlock)i);
             float tempo = SpeedAt(root.Player.transform.position);
             for (int i = 0; i < cooldowns.Length; i++) cooldowns[i] = Mathf.Max(0, cooldowns[i] - Time.deltaTime * tempo);
             float distance = Vector3.Distance(root.Player.transform.position, lastPlayer);
@@ -102,6 +125,13 @@ namespace SoulBlocks
                 root.Stats.SetModifier("special.green", StatId.MoveSpeed, 0, tempo);
                 GameEvents.RaiseStatsChanged();
             }
+        }
+
+        public bool TryUse(SpecialBlock block)
+        {
+            if (!Ready || Keys.Blocked || Time.timeScale <= 0 || (int)block < 0 || (int)block >= 5) return false;
+            Select((int)block);
+            return TryUseSelected();
         }
 
         public bool TryUseSelected()
@@ -124,7 +154,7 @@ namespace SoulBlocks
                     break;
                 case SpecialBlock.Blue:
                     AddArea(Selected, point, BlockRules.Radius(Selected, level), BlockRules.Duration(Selected, level));
-                    Reveal(point, BlockRules.Radius(Selected, level));
+                    BluePulse(point, BlockRules.Radius(Selected, level));
                     break;
                 case SpecialBlock.Green:
                     AddArea(Selected, point, BlockRules.Radius(Selected, level), BlockRules.Duration(Selected, level));
@@ -143,6 +173,34 @@ namespace SoulBlocks
         public void NotifyMiningHit(Vector3 position, bool helper)
         {
             if (!Ready || !PassivesEnabled) return;
+            if (Roll())
+            {
+                if (helper) ActivateTrees(position, 3);
+                else
+                {
+                    yellowUntil = Time.time + 5;
+                    if (yellowGlow == null)
+                    {
+                        var glow = new GameObject("Luz amarilla de nutrición");
+                        glow.transform.SetParent(GameRoot.Instance.Player.transform, false);
+                        glow.transform.localPosition = Vector3.up;
+                        yellowGlow = glow.AddComponent<Light>();
+                        yellowGlow.color = Color.yellow; yellowGlow.range = 6; yellowGlow.intensity = 4;
+                        var ring = glow.AddComponent<LineRenderer>();
+                        ring.sharedMaterial = EffectMaterial; ring.useWorldSpace = false;
+                        ring.startWidth = ring.endWidth = .05f; ring.positionCount = 49;
+                        var tint = new MaterialPropertyBlock(); tint.SetColor("_BaseColor", Color.yellow);
+                        ring.SetPropertyBlock(tint);
+                        for (int i = 0; i <= 48; i++)
+                        {
+                            float angle = i * Mathf.PI * 2 / 48;
+                            ring.SetPosition(i, new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle)) * .6f);
+                        }
+                    }
+                    yellowGlow.gameObject.SetActive(true);
+                    Hud.Toast("Luz amarilla: acércate a un árbol gris");
+                }
+            }
             // Explosion damage never calls this method, so procs cannot recursively proc.
             if (Roll()) Explode(position, Level(SpecialBlock.Red), helper);
             GreenHits++;
@@ -163,23 +221,15 @@ namespace SoulBlocks
 
         public void NotifyStep(Vector3 position)
         {
-            if (Ready && PassivesEnabled && Roll())
-            {
-                Illuminate(position, BlockRules.Radius(SpecialBlock.Yellow, Level(SpecialBlock.Yellow)), 5 + Level(SpecialBlock.Yellow));
-            }
+            // Walking no longer rolls yellow or blue; their passives come from mining.
         }
         void Illuminate(Vector3 position, float radius, float seconds)
         {
+            ActivateTrees(position, radius);
             foreach (var surface in Lab.surfaces)
             {
                 if (surface == null || !surface.darkPath || Vector3.Distance(surface.transform.position, position) > radius) continue;
-                bool newlyLit = !surface.Lit;
                 surface.Illuminate(seconds);
-                if (newlyLit && PassivesEnabled && Roll())
-                {
-                    Reveal(surface.transform.position, BlockRules.Radius(SpecialBlock.Blue, Level(SpecialBlock.Blue)));
-                    Hud.Toast("Pasiva azul: revelación al iluminar");
-                }
             }
         }
         public void Reveal(Vector3 position, float radius)
@@ -196,18 +246,29 @@ namespace SoulBlocks
                     return BlockRules.Speed(Level(SpecialBlock.Green));
             return 1;
         }
-        bool InBlue(Vector3 position)
-        {
-            foreach (var area in areas)
-                if (area.kind == SpecialBlock.Blue && Time.time < area.until && Vector3.Distance(position, area.position) <= area.radius) return true;
-            return false;
-        }
         void UpdateEffects()
         {
+            if (yellowGlow != null) yellowGlow.gameObject.SetActive(Time.time < yellowUntil);
+            if (Time.time < yellowUntil) ActivateTrees(GameRoot.Instance.Player.transform.position, 3);
             for (int i = areas.Count - 1; i >= 0; i--)
-                if (Time.time >= areas[i].until) { Destroy(areas[i].visual); areas.RemoveAt(i); }
-            foreach (var surface in Lab.surfaces) if (surface != null) surface.Refresh(InBlue(surface.transform.position));
-            foreach (var crystal in BreakableCrystal.All) if (crystal != null) crystal.SetInverted(InBlue(crystal.transform.position));
+            {
+                var area = areas[i];
+                if (Time.time >= area.until) { Destroy(area.visual); areas.RemoveAt(i); continue; }
+                if (area.kind == SpecialBlock.Blue)
+                {
+                    // The expanding ring is visual only; pulses never inflict damage.
+                    var line = area.visual.GetComponent<LineRenderer>();
+                    float radius = area.radius * Mathf.Repeat(Time.time - area.nextPulse + 1, 1);
+                    for (int j = 0; j <= 64; j++)
+                    {
+                        float angle = j * Mathf.PI * 2 / 64;
+                        line.SetPosition(j, area.position + new Vector3(Mathf.Cos(angle) * radius, .1f, Mathf.Sin(angle) * radius));
+                    }
+                    if (Time.time >= area.nextPulse) { BluePulse(area.position, area.radius); area.nextPulse = Time.time + 1; }
+                }
+                if (area.kind == SpecialBlock.Yellow) ActivateTrees(area.position, area.radius);
+            }
+            foreach (var surface in Lab.surfaces) if (surface != null) surface.Refresh(false);
             for (int i = bombs.Count - 1; i >= 0; i--)
             {
                 var bomb = bombs[i];
@@ -240,7 +301,7 @@ namespace SoulBlocks
                 light.type = LightType.Point; light.color = Color.yellow; light.intensity = 3; light.range = radius * 2;
                 go.transform.position += Vector3.up * 2;
             }
-            areas.Add(new Area { kind = kind, position = point, radius = radius, until = Time.time + seconds, visual = go });
+            areas.Add(new Area { kind = kind, position = point, radius = radius, until = Time.time + seconds, nextPulse = Time.time + 1, visual = go });
         }
         Material effectMaterial;
         Material EffectMaterial => effectMaterial != null ? effectMaterial : effectMaterial = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
@@ -283,6 +344,9 @@ namespace SoulBlocks
             Array.Clear(cooldowns, 0, cooldowns.Length);
             GreenHits = CelesteHits = 0;
             buffUntil = 0;
+            yellowUntil = 0;
+            if (yellowGlow != null) yellowGlow.gameObject.SetActive(false);
+            foreach (var tree in NourishableTree.All) if (tree != null) tree.ResetTree();
             Lab.RestoreCrystals();
         }
     }

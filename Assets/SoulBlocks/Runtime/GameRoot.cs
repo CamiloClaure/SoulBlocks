@@ -92,7 +92,8 @@ namespace SoulBlocks
             built = true;
             Player = FindAnyObjectByType<SoulPlayer>();
             var treeRoot = GameObject.Find("Wisdom Tree");
-            Tree = treeRoot != null ? treeRoot.transform : null;
+            var centralTree = FindAnyObjectByType<CentralSpiritTree>();
+            Tree = centralTree != null ? centralTree.transform : treeRoot != null ? treeRoot.transform : null;
             var islandRoot = GameObject.Find("Main Island");
             Island = islandRoot != null ? islandRoot.transform : null;
             ViewCamera = Player != null && Player.viewCamera != null ? Player.viewCamera : Camera.main;

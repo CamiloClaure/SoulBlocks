@@ -8,10 +8,12 @@ namespace SoulBlocks
         public WanderingSpirit spiritPrefab;
         public BreakableCrystal crystalPrefab;
         public GuidingTorch torch;
-        [Min(4)] public float spiritSpacing = 10;
+        [Min(4)] public float spiritSpacing = 6;
+        [Range(1, 3)] public int spiritRows = 2;
         [Min(5)] public float crystalSpacing = 14;
-        [Min(1)] public int maxSpirits = 120;
+        [Min(1)] public int maxSpirits = 240;
         [Min(1)] public int maxCrystals = 120;
+        [Min(0)] public int freeSpiritCount = 64;
         public int SpiritCount { get; private set; }
         public int CrystalCount { get; private set; }
         bool built;
@@ -54,9 +56,10 @@ namespace SoulBlocks
                     {
                         nextSpirit+=Mathf.Max(4,spiritSpacing);
                         for(int sign=-1;sign<=1;sign+=2)
+                        for(int row=0;row<spiritRows;row++)
                         {
                             if(SpiritCount>=maxSpirits)break;
-                            Vector3 point=road.points[i]+side*sign*(road.halfWidth+3.5f);
+                            Vector3 point=road.points[i]+side*sign*(road.halfWidth+3.5f+row*3f)+forward*row*1.5f;
                             if(InsideRoad(point,2.2f))continue;
                             if(Physics.Raycast(point+Vector3.up,Vector3.down,out var floor,3,(1<<8)|(1<<9)))point.y=floor.point.y;
                             var soul=Instantiate(spiritPrefab,point,Quaternion.identity,souls);
@@ -79,6 +82,31 @@ namespace SoulBlocks
                             Physics.SyncTransforms();
                         }
                     }
+                }
+            }
+            // Populate the void as well as the accessible margins of the roads.
+            if (roads.Count > 0)
+            {
+                var bounds = new Bounds(roads[0].points[0], Vector3.zero);
+                foreach (var road in roads) foreach (var point in road.points) bounds.Encapsulate(point);
+                bounds.Expand(new Vector3(24, 0, 24));
+                int added = 0;
+                for (int i = 0; i < freeSpiritCount * 8 && added < freeSpiritCount && SpiritCount < maxSpirits; i++)
+                {
+                    var point = new Vector3(Mathf.Lerp(bounds.min.x, bounds.max.x, Mathf.Repeat(i * .618034f + .3f, 1)),
+                        0, Mathf.Lerp(bounds.min.z, bounds.max.z, Mathf.Repeat(i * .414214f + .7f, 1)));
+                    if (InsideRoad(point, 3)) continue;
+                    var tree = GameRoot.Instance != null ? GameRoot.Instance.Tree : null;
+                    if (tree != null && Vector2.Distance(new Vector2(point.x, point.z), new Vector2(tree.position.x, tree.position.z)) < 23) continue;
+                    float nearest = float.PositiveInfinity;
+                    foreach (var road in roads) foreach (var sample in road.points)
+                    {
+                        float d = new Vector2(point.x - sample.x, point.z - sample.z).sqrMagnitude;
+                        if (d < nearest) { nearest = d; point.y = sample.y + Mathf.Sin(i * 2.4f) * 2; }
+                    }
+                    var soul = Instantiate(spiritPrefab, point, Quaternion.identity, souls);
+                    soul.name = "Alma del vacío " + (++added); SpiritCount++;
+                    soul.torch = torch; soul.phase = SpiritCount * 2.4f; soul.allowFloatingOutsideGround = true;
                 }
             }
         }

@@ -63,7 +63,7 @@ namespace SoulBlocks
                 input = Vector2.ClampMagnitude(input, 1);
                 if (input.sqrMagnitude >= .0001f)
                 {
-                    // While mining, strafe relative to the fixed attack direction, independently of camera orbit.
+                    // While mining, strafe relative to the current camera-directed attack.
                     float basisYaw = IsMining ? Yaw : viewCamera != null ? viewCamera.transform.eulerAngles.y : Yaw;
                     Vector3 direction = Quaternion.Euler(0f, basisYaw, 0f) * new Vector3(input.x, 0f, input.y);
                     if (!IsMining) Yaw = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;

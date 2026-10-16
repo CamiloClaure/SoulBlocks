@@ -47,3 +47,5 @@ tamaño; al recogerlos se suman al contador independiente de cristales. Las alma
 en la reserva espiritual que ya consume la tienda del árbol para sus mejoras.
 El gasto de cristales en el árbol y los picos sigue pendiente. La escena anterior
 SoulBlocks conserva sus sistemas antiguos.
+
+Actualización: las almas son amarillas, tienen halo etéreo sin estelas y siguen por detrás al jugador cuando lleva la antorcha. Población ampliada y arena de poderes: [ALMAS-Y-ARENA.md](ALMAS-Y-ARENA.md).

@@ -63,6 +63,7 @@ namespace SoulBlocks
             else if (crystal != null && hitCooldown <= 0)
             {
                 hitCooldown = .85f;
+                owner.TryNourishCrystal(crystal, true);
                 if (crystal.TakeDamage(1)) owner.NotifyMiningHit(crystal.transform.position, true);
             }
             walked += Vector3.Distance(transform.position, lastPosition);

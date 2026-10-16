@@ -63,21 +63,21 @@ namespace SoulBlocks.Tests
         }
 
         [UnityTest]
-        public IEnumerator ThreeSeparateSwingsBreakYellowCrystalAndFlashBothRed()
+        public IEnumerator TenSeparateSwingsBreakYellowCrystalAndFlashBothRed()
         {
-            Assert.AreEqual(3, crystal.Health);
-            for (int i = 0; i < 3; i++)
+            Assert.AreEqual(10, crystal.Health);
+            for (int i = 0; i < 10; i++)
             {
                 Assert.IsTrue(attack.TrySwing(Vector3.forward));
                 Assert.IsFalse(attack.TrySwing(Vector3.forward), "A repeated click must not overlap attacks.");
                 yield return new WaitForSeconds(.25f);
-                Assert.AreEqual(2 - i, crystal.Health, "Each swing applies exactly one damage.");
+                Assert.AreEqual(9 - i, crystal.Health, "Each swing applies exactly one damage.");
                 AssertRed(crystal.GetComponent<Renderer>());
                 AssertRed(actor.GetComponent<SoulPlayer>().visual.GetComponent<Renderer>());
                 yield return new WaitForSeconds(.35f);
                 Assert.IsFalse(attack.hitbox.enabled);
             }
-            Assert.IsTrue(crystal == null, "Third hit must remove the crystal after its flash.");
+            Assert.IsTrue(crystal == null, "Tenth hit must remove the crystal after its flash.");
         }
 
         [UnityTest]
@@ -86,11 +86,11 @@ namespace SoulBlocks.Tests
             crystalObject.transform.position = Vector3.forward * 4;
             Assert.IsTrue(attack.TrySwing(Vector3.forward));
             yield return new WaitForSeconds(.6f);
-            Assert.AreEqual(3, crystal.Health);
+            Assert.AreEqual(10, crystal.Health);
             crystalObject.transform.position = Vector3.back;
             Assert.IsTrue(attack.TrySwing(Vector3.forward));
             yield return new WaitForSeconds(.6f);
-            Assert.AreEqual(3, crystal.Health);
+            Assert.AreEqual(10, crystal.Health);
         }
 
         [UnityTest]
@@ -100,7 +100,7 @@ namespace SoulBlocks.Tests
             extra.center = Vector3.up * .4f;
             Assert.IsTrue(attack.TrySwing(Vector3.forward));
             yield return new WaitForSeconds(.6f);
-            Assert.AreEqual(2, crystal.Health);
+            Assert.AreEqual(9, crystal.Health);
         }
 
         [UnityTest]
@@ -111,7 +111,7 @@ namespace SoulBlocks.Tests
             yield return null;
             Assert.IsFalse(attack.IsSwinging);
             Assert.IsFalse(attack.hitbox.enabled);
-            Assert.AreEqual(3, crystal.Health);
+            Assert.AreEqual(10, crystal.Health);
             Assert.IsFalse(attack.TrySwing(Vector3.forward));
         }
 
@@ -132,9 +132,9 @@ namespace SoulBlocks.Tests
             Assert.Less(Vector4.Distance(crystal.BaseColor, actual), .001f);
         }
 
-        [TestCase(CrystalColor.Yellow, CrystalSize.Small, 3)]
-        [TestCase(CrystalColor.Yellow, CrystalSize.Medium, 6)]
-        [TestCase(CrystalColor.Blue, CrystalSize.Small, 5)]
+        [TestCase(CrystalColor.Yellow, CrystalSize.Small, 10)]
+        [TestCase(CrystalColor.Yellow, CrystalSize.Medium, 20)]
+        [TestCase(CrystalColor.Blue, CrystalSize.Small, 150)]
         [TestCase(CrystalColor.Violet, CrystalSize.Large, 24)]
         public void ColorAndSizeDetermineHealth(CrystalColor color, CrystalSize size, int expected)
         {
@@ -149,7 +149,7 @@ namespace SoulBlocks.Tests
         }
 
         [UnityTest]
-        public IEnumerator HeldMiningStrafesAndKeepsDirectionAcrossSwingsWhileCameraTurns()
+        public IEnumerator HeldMiningFollowsCameraAimDuringSwingAndAllowsStrafing()
         {
             var player = actor.GetComponent<SoulPlayer>();
             var cameraObject = new GameObject("Orbit camera");
@@ -157,21 +157,22 @@ namespace SoulBlocks.Tests
             player.viewCamera = cameraObject.AddComponent<Camera>();
             attack.ProcessMiningInput(true, Vector3.forward);
             cameraObject.transform.rotation = Quaternion.Euler(15, 90, 0);
+            attack.ProcessMiningInput(true, cameraObject.transform.forward);
             Vector3 before = actor.transform.position;
             player.StepMovement(Vector2.right, .2f);
-            Assert.Greater(actor.transform.position.x - before.x, .9f, "Mining must allow lateral movement.");
-            Assert.Less(Mathf.Abs(actor.transform.position.z - before.z), .05f, "Camera rotation must not redirect mining strafe.");
-            Assert.Less(Mathf.Abs(Mathf.DeltaAngle(0, player.Yaw)), .01f);
-            crystalObject.transform.position = actor.transform.position + Vector3.forward * 1.25f;
+            Assert.Greater(before.z - actor.transform.position.z, .9f, "Mining must allow lateral movement relative to the new aim.");
+            Assert.Less(Mathf.Abs(actor.transform.position.x - before.x), .05f);
+            Assert.Less(Mathf.Abs(Mathf.DeltaAngle(90, player.Yaw)), .01f);
+            crystalObject.transform.position = actor.transform.position + Vector3.right * 1.25f;
             Physics.SyncTransforms();
-            float deadline = Time.time + 3;
+            float deadline = Time.time + 8;
             while (crystal != null && Time.time < deadline)
             {
                 attack.ProcessMiningInput(true, Vector3.right);
-                Assert.Greater(Vector3.Dot(attack.MiningDirection, Vector3.forward), .999f);
+                Assert.Greater(Vector3.Dot(attack.MiningDirection, Vector3.right), .999f);
                 yield return null;
             }
-            Assert.IsTrue(crystal == null, "The moving hitbox must break the crystal ahead after three repeated hits.");
+            Assert.IsTrue(crystal == null, "The moving hitbox must break the crystal ahead after ten repeated hits.");
             attack.ProcessMiningInput(false, Vector3.right);
         }
 

@@ -72,6 +72,23 @@ namespace SoulBlocks.Tests
         }
 
         [Test]
+        public void DirectPowersActivateWithoutPriorSelectionAndRespectCooldownsAndMenus()
+        {
+            Keys.Blocked = true;
+            Assert.IsFalse(system.TryUse(SpecialBlock.Red));
+            Assert.AreEqual(SpecialBlock.Yellow, system.Selected);
+            Keys.Blocked = false;
+            for (int i = 0; i < 5; i++)
+            {
+                Assert.IsTrue(system.TryUse((SpecialBlock)i));
+                Assert.AreEqual((SpecialBlock)i, system.Selected);
+                Assert.IsFalse(system.TryUse((SpecialBlock)i));
+            }
+            Assert.AreEqual(1, system.ActiveBombs);
+            Assert.Greater(system.HelperCount, 0);
+        }
+
+        [Test]
         public void LabContainsFiveColorsThreeSizesAndFiveTreeBlocks()
         {
             Assert.AreEqual(15, system.Lab.slots.Length);
@@ -80,7 +97,7 @@ namespace SoulBlocks.Tests
             foreach (var group in system.Lab.slots.GroupBy(s => s.color))
                 Assert.AreEqual(3, group.Select(s => s.size).Distinct().Count());
             Assert.AreEqual(3, Crystal(CrystalColor.Yellow, CrystalSize.Small).Health);
-            Assert.IsFalse(Crystal(CrystalColor.Blue, CrystalSize.Small).Available);
+            Assert.IsTrue(Crystal(CrystalColor.Blue, CrystalSize.Small).Available);
         }
 
         BreakableCrystal Crystal(CrystalColor color, CrystalSize size) => system.Lab.slots.First(s => s.color == color && s.size == size).crystal;
@@ -91,19 +108,22 @@ namespace SoulBlocks.Tests
         }
 
         [UnityTest]
-        public IEnumerator BlueRevealsHiddenCrystalsAndInvertsNearbySurfaces()
+        public IEnumerator BluePulsesNourishWithoutDamage()
         {
             var crystal = Crystal(CrystalColor.Blue, CrystalSize.Small);
             StandNear(crystal.transform.position);
+            system.RandomValue = () => 1;
             system.Select((int)SpecialBlock.Blue);
             Assert.IsTrue(system.TryUseSelected());
             Assert.IsFalse(system.TryUseSelected(), "Cooldown prevents repeated casts.");
             yield return null;
             Assert.IsTrue(crystal.Available);
-            var nearest = system.Lab.surfaces.OrderBy(s => Vector3.Distance(s.transform.position, crystal.transform.position)).First();
-            var block = new MaterialPropertyBlock();
-            nearest.GetComponent<Renderer>().GetPropertyBlock(block);
-            Assert.Greater(block.GetColor("_BaseColor").r, .9f);
+            Assert.IsFalse(crystal.Nourished);
+            int health = crystal.Health;
+            system.RandomValue = () => 0;
+            yield return new WaitForSeconds(1.2f);
+            Assert.IsTrue(crystal.Nourished);
+            Assert.AreEqual(health, crystal.Health);
         }
 
         [UnityTest]
@@ -163,15 +183,16 @@ namespace SoulBlocks.Tests
         }
 
         [Test]
-        public void UnselectedYellowAndBluePassivesStillWork()
+        public void UnselectedBluePassiveStillWorksAndWalkingDoesNotRoll()
         {
             system.PassivesEnabled = true;
             system.RandomValue = () => 0;
             system.Select((int)SpecialBlock.Red);
             var crystal = Crystal(CrystalColor.Blue, CrystalSize.Small);
             system.NotifyStep(crystal.transform.position);
-            Assert.IsTrue(system.Lab.surfaces.Any(s => s.Lit));
-            Assert.IsTrue(crystal.Revealed);
+            Assert.IsFalse(crystal.Nourished);
+            Assert.IsTrue(system.TryNourishCrystal(crystal, true));
+            Assert.IsTrue(crystal.Nourished);
         }
 
         [Test]
@@ -219,7 +240,7 @@ namespace SoulBlocks.Tests
             Assert.AreEqual(15, system.Lab.slots.Count(s => s.crystal != null && !s.crystal.Broken));
             Assert.IsFalse(Keys.Blocked);
             Assert.AreEqual(1f, Time.timeScale);
-            Assert.IsFalse(Crystal(CrystalColor.Blue, CrystalSize.Small).Available);
+            Assert.IsTrue(Crystal(CrystalColor.Blue, CrystalSize.Small).Available);
         }
     }
 }

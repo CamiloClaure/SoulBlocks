@@ -52,3 +52,6 @@ al laboratorio. Los ayudantes celestes ahora también recogen fragmentos de cris
 
 La plataforma de prueba permanece donde fue colocada: si cambias el final del
 camino, mueve también la plataforma y la zona de prueba para mantener la conexión.
+
+## Terreno y árbol central
+WorldBuilding usa ahora un Terrain editable, con el suelo antiguo desactivado, un árbol blanco provisional y un altar que revela cinco símbolos para mejorar bloques y acceder a talentos. Consulta [TERRENO-Y-ALTAR.md](TERRENO-Y-ALTAR.md).
