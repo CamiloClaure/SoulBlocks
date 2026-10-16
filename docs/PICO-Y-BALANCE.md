@@ -1,6 +1,6 @@
 # Pico: niveles, modelos y balance
 
-En WorldBuilding, acércate al altar del árbol blanco y pulsa E. La primera sección permite mejorar el pico con los fragmentos de cristal recolectados. El primer aumento cuesta 10 cristales y cada compra siguiente cuesta 5 más; estos valores son provisionales y editables. Los bloques especiales conservan sus mejoras gratuitas de prueba.
+Acércate al altar del árbol blanco y pulsa E. La primera sección permite mejorar el pico con los fragmentos de cristal recolectados. El primer aumento cuesta 10 cristales y cada compra siguiente cuesta 5 más; estos valores son provisionales y editables. Los bloques especiales conservan sus mejoras gratuitas de prueba.
 
 | Etapa | Niveles | Daño añadido por nivel | Daño inicial → final | Segundos por golpe inicial → final | Vida cristal pequeño |
 |---|---|---|---|---|---|
@@ -14,7 +14,7 @@ El daño se acumula y nunca se reinicia. La velocidad mejora 0,012 segundos por 
 
 ## Variables
 
-Selecciona `Assets/SoulBlocks/Resources/Mining/Balance.asset` en el Inspector. Las listas siguen el orden amarillo, azul, verde, celeste y rojo:
+Selecciona `Assets/SoulBlocks/Resources/Mining/MiningBalance.asset` en el Inspector. Las listas siguen el orden amarillo, azul, verde, celeste y rojo:
 
 - `Damage Per Level`: incremento de daño por nivel de cada etapa.
 - `Crystal Health`: vida base por color; medianos ×2, grandes ×3.
@@ -31,7 +31,15 @@ Abre `Assets/SoulBlocks/Resources/Mining/Pickaxe.prefab`. El componente `Pickaxe
 
 El jugador instala este prefab en el punto de sujeción existente y conserva la animación de picado. Prepara cada modelo con origen y orientación consistentes; usa un prefab envolvente para corregir rotación/escala si el FBX lo requiere.
 
-El nivel forma parte de RunState y del guardado normal. WorldBuilding continúa siendo una escena de prueba que reinicia la partida al volver a Play y no escribe guardados persistentes.
+El nivel forma parte de RunState y del guardado normal.
+
+## Pico contra prisiones
+
+El mismo golpe pica las prisiones. Contra ellas cuenta el color del pico, no su daño: amarillo
+(niveles 1-10) pica T1, azul (11-20) T2, verde (21-30) T3, celeste (31-40) T4 y rojo (41-50) el
+Núcleo. El daño por golpe a una prisión sale de `Balance.PrisonPickDamageByLevel` según ese
+color. Con **Golpe en cadena** (nodo de Wisdom o bendición), el golpe que rompe una prisión
+salta a la más cercana.
 
 ## Lectura inicial del balance
 

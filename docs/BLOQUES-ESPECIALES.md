@@ -1,6 +1,6 @@
-# Bloques especiales: prueba de nutrición
+# Bloques especiales
 
-En WorldBuilding están disponibles los cinco bloques. Las teclas 1, 2, 3, 4 y 5 activan directamente amarillo, azul, verde, celeste y rojo. La rueda permite consultar la descripción; el clic derecho ya no activa poderes. Todas las pasivas funcionan aunque otro bloque esté seleccionado. E en el altar junto al árbol abre las mejoras del prototipo.
+Los cinco bloques están disponibles desde el principio. Las teclas 1, 2, 3, 4 y 5 activan directamente amarillo, azul, verde, celeste y rojo. La rueda permite consultar la descripción; el clic derecho ya no activa poderes. Todas las pasivas funcionan aunque otro bloque esté seleccionado. E en el altar junto al árbol abre las mejoras del prototipo.
 
 Mantener clic izquierdo repite el picado. El cuerpo, el pico y su volumen de contacto siguen la dirección horizontal de la cámara durante el golpe. Puedes seguir caminando y desplazándote de lado.
 
@@ -14,9 +14,9 @@ Mantener clic izquierdo repite el picado. El cuerpo, el pico y su volumen de con
 
 ## Amarillo y árboles
 
-Hay once árboles de prueba colocados en WorldBuilding: dos junto al árbol principal, tres a lo largo del camino, dos en el laboratorio y cuatro en la nueva arena de poderes. Son rectángulos grises que pasan a amarillo cuando están vivos. El activo mantiene nutridos los árboles de su zona; la luz pasiva se mueve con el jugador. Los árboles revividos permanecen encendidos durante la partida; no se apagan al terminar el activo o la luz pasiva.
+Hay once árboles de prueba colocados en la escena: dos junto al árbol principal, tres a lo largo del camino, dos en el laboratorio y cuatro en la nueva arena de poderes. Son rectángulos grises que pasan a amarillo cuando están vivos. El activo mantiene nutridos los árboles de su zona; la luz pasiva se mueve con el jugador. Los árboles revividos permanecen encendidos durante la partida; no se apagan al terminar el activo o la luz pasiva.
 
-Cada árbol vivo atrae espíritus a 7 m y genera uno cada 5 s, con un máximo de tres espíritus propios presentes a la vez. La antorcha tiene prioridad de atracción: permite recogerlos y llevarlos al altar. Cuando esas almas se entregan o desaparecen, el árbol puede volver a generar. El reinicio explícito del laboratorio devuelve los árboles a su estado gris.
+Cada árbol vivo atrae almas a 7 m y genera una cada 5 s, con un máximo de tres almas propias presentes a la vez. La antorcha tiene prioridad de atracción: permite recogerlos y llevarlos al altar. Cuando esas almas se entregan o desaparecen, el árbol puede volver a generar. El reinicio explícito del laboratorio devuelve los árboles a su estado gris.
 
 Prefab: `Assets/SoulBlocks/Prefabs/SpiritGuiding/NourishableTree.prefab`. Duplica instancias y colócalas donde tengan sentido en tu mundo. No se generan árboles automáticamente. En `NourishableTree` se ajustan el intervalo, el máximo y el radio de atracción. Para Blender, sustituye el rectángulo dentro de `Model`; conserva el componente y el collider de la raíz. Un Animator dentro de Model puede tener un parámetro bool `Alive` para las futuras animaciones de vida.
 
