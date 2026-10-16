@@ -15,6 +15,7 @@ namespace SoulBlocks
         static readonly Color EdgeOpen = new Color(.85f, .8f, 1f), EdgeLocked = new Color(.32f, .3f, .4f), Selection = new Color(1f, .85f, .35f);
 
         bool open;
+        public bool IsOpen => open;
         Vector2 pan;
         float zoom = 1f;
         string selected;
@@ -52,6 +53,7 @@ namespace SoulBlocks
             var root = GameRoot.Instance;
             if (root == null || root.Run == null || root.Player == null || root.Tree == null) return false;
             if (root.Run.inExpedition) return false;
+            if (TreeUpgradeAltar.Instance != null) return TreeUpgradeAltar.Instance.IsNear;
             return Vector3.Distance(root.Player.transform.position, root.Tree.position) <= Balance.HubPickupTreeRange;
         }
 
@@ -61,6 +63,7 @@ namespace SoulBlocks
 
             if (!open)
             {
+                if (TreeUpgradeAltar.Instance != null) return;
                 if (NearTree() && Keys.InteractPressed)
                 {
                     if (SpecialBlockSystem.Instance != null && SpecialBlockSystem.Instance.Ready) SpecialBlockSystem.Instance.OpenShop();
@@ -76,16 +79,19 @@ namespace SoulBlocks
             if (closePressed || !NearTree()) Close();
         }
 
-        public void OpenShop()
+        public void OpenShop(string selectedUpgrade = null)
         {
+            TreeUpgradeAltar.Instance?.MarkInputHandled();
             open = true;
             FrameBoard();
+            selected = selectedUpgrade;
             Keys.Blocked = true;
             if (GameRoot.Instance.Player != null) GameRoot.Instance.Player.MovementLocked = true;
         }
 
-        void Close()
+        public void Close()
         {
+            TreeUpgradeAltar.Instance?.MarkInputHandled();
             open = false;
             Keys.Blocked = false;
             if (GameRoot.Instance != null && GameRoot.Instance.Player != null) GameRoot.Instance.Player.MovementLocked = false;
@@ -98,7 +104,7 @@ namespace SoulBlocks
 
             if (!open)
             {
-                if (NearTree() && root.Tree != null) Hud.WorldLabel(root.Tree.position + Vector3.up * 2.5f, "E: Árbol");
+                if (TreeUpgradeAltar.Instance == null && NearTree() && root.Tree != null) Hud.WorldLabel(root.Tree.position + Vector3.up * 2.5f, "E: Árbol");
                 return;
             }
 
@@ -207,7 +213,12 @@ namespace SoulBlocks
             GUILayout.Label(def.description);
             GUILayout.Space(6f);
             if (!string.IsNullOrEmpty(def.requires))
+            {
                 GUILayout.Label("Requiere: " + UpgradeCatalog.Get(def.requires).name + " nv " + def.requiresLevel);
+                if (!ProgressionRules.RequirementMet(run, def) && GUILayout.Button("Ver " + UpgradeCatalog.Get(def.requires).name)) selected = def.requires;
+            }
+            if (def.id == "velocidad")
+                GUILayout.Label("Velocidad actual: " + (root.Player.moveSpeed * root.Player.SpeedMultiplier).ToString("0.00") + " m/s");
             if (level < def.maxLevel)
             {
                 string currencyName = def.currency == Currency.Souls ? "almas" : "Wisdom";

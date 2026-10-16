@@ -6,28 +6,24 @@ No se genera al jugar. Su caja mide 0,55 × 0,90 × 0,55 m: la mitad de la altur
 del controlador del jugador (1,80 m).
 
 Acércate y mantén el clic izquierdo apuntando hacia el cristal para picar en bucle.
-Al soltar, termina el golpe en curso sin iniciar otro. Cada picado dura
+Al soltar, termina el golpe en curso sin iniciar otro. En nivel 1, cada picado dura
 0,55 s; el volumen de contacto se activa entre 0,22 y 0,32 s. Cada cristal recibe
 como máximo un golpe por picado, aunque tenga varios colliders. Al impactar, jugador
-y cristal se ponen rojos brevemente. El amarillo pequeño desaparece al tercer golpe.
+y cristal se ponen rojos brevemente. El amarillo pequeño tiene 10 de vida: con el pico nivel 1 desaparece al décimo golpe. La duración y el daño mejoran con el nivel del pico.
 Las prisiones del mapa no usan este volumen: el mismo clic pica la más cercana por alcance
 (`PickAbility`), a su propio ritmo (`StatId.PickInterval`).
 
-Mientras mantienes el clic, la dirección de picado queda fijada desde el primer golpe.
-Puedes girar la cámara y moverte: A/D desplazan al jugador de lado respecto a esa
-dirección, sin girar el cuerpo ni los siguientes golpes. El volumen de impacto acompaña
-la posición del jugador. Suelta y vuelve a pulsar para elegir una dirección nueva.
+Mientras mantienes el clic, el pico y el jugador siguen la dirección horizontal de la cámara, incluso durante el golpe. A/D permiten desplazarte de lado respecto a esa dirección. El volumen de impacto acompaña tanto la posición como el giro del jugador.
 
 ## Color, tamaño y vida
 
 En el componente `BreakableCrystal`, `Color` define la vida base:
-Yellow = 3, Blue = 5, Green = 6, Celeste = 7, Red = 9, Violet = 8. `Size` multiplica dimensiones y vida:
+Yellow = 10, Blue = 150, Green = 1000, Celeste = 1500, Red = 3000, Violet = 8. Estos valores se editan en `Resources/Mining/Balance.asset`. `Size` multiplica dimensiones y vida:
 Small ×1, Medium ×2, Large ×3. El destello rojo de impacto no cambia la vida máxima.
 Configura estas propiedades antes de Play. Escalar manualmente el Transform no altera la vida;
 usa `Size` para cambiar ambos valores juntos.
 
-La zona de prueba contiene tres tamaños de los cinco colores especiales. Los azules
-empiezan ocultos; usa el bloque azul para revelarlos. Las pasivas y bombas pueden
+La zona de prueba contiene tres tamaños de los cinco colores especiales. Los azules también son visibles. El poder azul ahora puede nutrir los cristales para aumentar su recompensa. Las pasivas y bombas pueden
 añadir daño, por lo que el amarillo pequeño puede romperse antes de tres picados.
 Más detalles en [BLOQUES-ESPECIALES.md](BLOQUES-ESPECIALES.md).
 
@@ -45,3 +41,9 @@ en la mano derecha. La animación de picado se calcula sobre torso y brazo despu
 Animator, sin requerir un clip externo. Selecciona el jugador para ver el alcance en
 los gizmos de escena. Esta primera versión reinicia el cristal al recargar la escena;
 su ruptura todavía no se incluye en el guardado de la partida.
+
+Ver [Pico y balance](PICO-Y-BALANCE.md) para niveles, velocidad, mejoras y modelos reemplazables.
+
+## Barra de vida
+
+Los cristales revelados muestran una barra de su color y vida actual/máxima a un máximo de 18 m del jugador. Se actualiza con cualquier daño, incluido el pico y los poderes. Desaparece al romperse o al abrir un menú. En el componente BreakableCrystal puedes cambiar Show Health Bar y Health Bar Distance.

@@ -5,5 +5,7 @@ namespace SoulBlocks
         public int[] specialBlockLevels = { 1, 1, 1, 1, 1 };
         public int specialBlockClothingLevel;
         public int selectedSpecialBlock;
+        public int collectedCrystals;
+        public int pickaxeLevel = 1;
     }
 }

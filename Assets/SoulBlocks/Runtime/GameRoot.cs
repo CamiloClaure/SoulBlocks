@@ -25,6 +25,7 @@ namespace SoulBlocks
         public Transform Tree;
         public Transform Island;
         public Camera ViewCamera;
+        public bool ManualWorld { get; private set; }
         bool built;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -41,7 +42,8 @@ namespace SoulBlocks
 
         static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            if (scene.name != SceneName || (Instance != null && Instance.gameObject.scene == scene)) return;
+            bool manual = scene.GetRootGameObjects().Any(r => r.GetComponent<ManualWorld>() != null);
+            if ((scene.name != SceneName && !manual) || (Instance != null && Instance.gameObject.scene == scene)) return;
             var go = new GameObject("Game Root");
             SceneManager.MoveGameObjectToScene(go, scene);
             go.AddComponent<GameRoot>(); // Awake sets Instance; Start builds the world
@@ -78,7 +80,7 @@ namespace SoulBlocks
         {
             PendingSeed = seed;
             PendingLoad = load;
-            SceneManager.LoadScene(SceneName);
+            SceneManager.LoadScene(Instance != null && Instance.ManualWorld ? Instance.gameObject.scene.name : SceneName);
         }
 
         void Awake() { Instance = this; }
@@ -90,7 +92,8 @@ namespace SoulBlocks
             built = true;
             Player = FindAnyObjectByType<SoulPlayer>();
             var treeRoot = GameObject.Find("Wisdom Tree");
-            Tree = treeRoot != null ? treeRoot.transform : null;
+            var centralTree = FindAnyObjectByType<CentralSpiritTree>();
+            Tree = centralTree != null ? centralTree.transform : treeRoot != null ? treeRoot.transform : null;
             var islandRoot = GameObject.Find("Main Island");
             Island = islandRoot != null ? islandRoot.transform : null;
             ViewCamera = Player != null && Player.viewCamera != null ? Player.viewCamera : Camera.main;
@@ -99,6 +102,17 @@ namespace SoulBlocks
             PendingLoad = null;
             PendingSeed = null;
             Stats = new StatSheet();
+
+            ManualWorld = gameObject.scene.GetRootGameObjects().Any(r => r.GetComponent<ManualWorld>() != null);
+            if (ManualWorld)
+            {
+                Run = new RunState();
+                Layout = new MapLayout { hubCenter = Tree != null ? Tree.position : Vector3.zero };
+                Run.energy = Balance.EnergyMax;
+                GameEvents.RaiseStatsChanged();
+                GameEvents.RaiseMapBuilt(Layout);
+                return;
+            }
 
             var input = new MapGenInput { seed = Run.seed, hubCenter = Island != null ? Island.position : Vector3.zero };
             if (Island != null)

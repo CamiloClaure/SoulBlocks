@@ -16,7 +16,7 @@ namespace SoulBlocks
             "WASD: moverse",
             "Mouse: girar la cámara",
             "Alt (mantener): mostrar el cursor para usar la interfaz",
-            "Rueda: seleccionar bloque especial; click derecho: usar",
+            "1–5: activar amarillo, azul, verde, celeste y rojo; rueda: ver descripción",
             "+ / -: zoom de la cámara",
             "Click de la rueda: centrar la cámara detrás del jugador",
             "Shift: dash",
@@ -90,13 +90,19 @@ namespace SoulBlocks
         {
             var run = GameRoot.Instance.Run;
             if (GUILayout.Button("Continuar")) Close();
-            if (GUILayout.Button("Guardar")) { SaveSystem.SaveNow(); Hud.Toast("Partida guardada"); }
+            if (!GameRoot.Instance.ManualWorld && GUILayout.Button("Guardar")) { SaveSystem.SaveNow(); Hud.Toast("Partida guardada"); }
             if (GUILayout.Button(showControls ? "Ocultar controles" : "Controles")) showControls = !showControls;
             if (showControls)
                 foreach (var line in Controls) GUILayout.Label(line);
             if (GUILayout.Button("Salir")) Quit();
 
             GUILayout.Space(16);
+            if (GameRoot.Instance.ManualWorld)
+            {
+                GUILayout.Label("Mundo manual: edita y guarda la escena fuera de Play.");
+                if (GUILayout.Button("Reiniciar prueba")) { Close(); GameRoot.Restart(null, null); }
+                return;
+            }
             GUILayout.BeginHorizontal();
             GUILayout.Label("Seed", GUILayout.Width(36));
             seedText = SeedField.Filter(GUILayout.TextField(seedText, GUILayout.Width(120)));

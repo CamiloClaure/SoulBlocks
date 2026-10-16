@@ -1,5 +1,9 @@
 # SoulBlocks
 
+Construcción manual: abre `Assets/Scenes/WorldBuilding.unity` y selecciona
+`Mundo manual > Camino primario`. Mueve sus puntos en Scene para dibujar el recorrido
+en X/Y/Z. Guía: [docs/WORLD-BUILDING.md](docs/WORLD-BUILDING.md).
+
 Incremental de exploración en Unity 6000.6.0f1 (URP, Input System). Salís del árbol central por caminos generados por seed, recogés almas, picás prisiones cristalinas, volvés, mejorás y el mundo se transforma hasta despertar al Núcleo.
 
 Estado: **obra gruesa**. Todas las mecánicas funcionan de punta a punta con placeholders (primitivas, colores, IMGUI). Sin animaciones ni modelos nuevos. Diseño completo y plan de construcción en [`docs/PLAN-OBRA-GRUESA.md`](docs/PLAN-OBRA-GRUESA.md); contratos entre sistemas en [`docs/CONTRATOS.md`](docs/CONTRATOS.md).
@@ -36,8 +40,10 @@ El cursor se bloquea durante el juego y se libera en menús o manteniendo Alt.
 El picado apunta desde el centro de la pantalla. WASD sigue la orientación
 de la cámara. Los obstáculos acercan la cámara para evitar que atraviese sus colliders.
 
-Zona de prueba junto al árbol: 15 cristales de cinco colores y tres tamaños; los azules
-empiezan ocultos. Cinco bloques desbloqueados con pasivas siempre activas, bomba con
+Zona de prueba: 15 cristales visibles de cinco colores y tres tamaños.
+Amarillo revive árboles grises que atraen y generan almas; azul prepara cristales brillantes
+con posibilidad de dar fragmentos extra. El picado sostenido sigue el giro de la cámara.
+Cinco bloques desbloqueados con pasivas siempre activas, bomba con
 cuenta atrás y ayudantes temporales. E en el árbol abre sus mejoras gratuitas y la restauración
 de cristales; desde ahí, "Mejoras originales del árbol" abre el tablero de mejoras.
 Reglas y valores en [docs/BLOQUES-ESPECIALES.md](docs/BLOQUES-ESPECIALES.md).
@@ -74,3 +80,5 @@ dotnet run -c Release -- 500 realistic  # anclajes fuera de grilla
 ## Origen
 
 Proyecto mínimo extraído de CamiloClaure/Lighting-Blocks (isla, Wisdom Tree, jugador y animaciones). La mecánica anterior de bloques quedó archivada en el tag `archive/block-mechanic`. Los assets de origen conservan su autoría y términos de uso.
+
+WorldBuilding: terreno moldeable con herramientas nativas de Terrain, árbol central blanco y altar de símbolos que reúne mejoras de bloques y talentos. Guía: [TERRENO-Y-ALTAR.md](docs/TERRENO-Y-ALTAR.md).

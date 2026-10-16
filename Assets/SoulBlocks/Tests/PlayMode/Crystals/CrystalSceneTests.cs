@@ -30,13 +30,13 @@ namespace SoulBlocks.Tests
             root.ViewCamera.GetComponent<SoulCamera>().SnapToPlayer();
             Capture(crystal.transform.position, "camera-behind-player.png", root.ViewCamera);
             Capture(crystal.transform.position, "crystal-ready.png");
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 10; i++)
             {
                 Assert.IsTrue(attack.TrySwing(Vector3.forward));
                 // Abilities must not interrupt or consume charges during the mining swing.
                 Assert.IsFalse(root.GetComponent<DashAbility>().TryDash(Vector3.forward));
                 yield return new WaitForSeconds(.25f);
-                Assert.AreEqual(2 - i, crystal.Health);
+                Assert.AreEqual(9 - i, crystal.Health);
                 if (i == 0)
                 {
                     var tint = new MaterialPropertyBlock();

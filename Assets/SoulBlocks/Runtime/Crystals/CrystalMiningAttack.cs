@@ -9,15 +9,31 @@ namespace SoulBlocks
         [Tooltip("Volumen de contacto, activo solamente durante el impacto del pico.")]
         public BoxCollider hitbox;
         public GameObject pickaxe;
-        public float Duration => .55f;
+        public float Duration => MiningBalance.Current.Seconds(Level);
+        public int Level => GameRoot.Instance != null && GameRoot.Instance.Player == player && GameRoot.Instance.Run != null ? Mathf.Clamp(GameRoot.Instance.Run.pickaxeLevel, 1, 50) : 1;
+        public int Damage => MiningBalance.Current.Damage(Level);
+        float swingDuration = .55f;
+        PickaxeVisual pickaxeVisual;
+        public bool UpgradePickaxe()
+        {
+            var root = GameRoot.Instance;
+            if (root == null || root.Player != player || root.Run == null || Level >= 50 || IsSwinging) return false;
+            int cost = MiningBalance.Current.Cost(Level);
+            if (root.Run.collectedCrystals < cost) return false;
+            root.Run.collectedCrystals -= cost;
+            root.Run.pickaxeLevel = Level + 1;
+            pickaxeVisual?.ShowLevel(Level);
+            SaveSystem.SaveNow();
+            return true;
+        }
         public bool IsSwinging { get; private set; }
         public bool DirectionLocked => IsSwinging || holdingAttack;
         public Vector3 MiningDirection => facing * Vector3.forward;
         bool holdingAttack;
         bool notifiedHit;
         Vector3 heldDirection;
-        const float ImpactTime = .22f;
-        const float ContactEnd = .32f;
+        float ImpactTime => swingDuration * .4f;
+        float ContactEnd => swingDuration * (.32f / .55f);
         SoulPlayer player;
         float elapsed, flashUntil;
         Quaternion facing;
@@ -30,15 +46,27 @@ namespace SoulBlocks
         void Awake()
         {
             player = GetComponent<SoulPlayer>();
+            var prefab = Resources.Load<GameObject>("Mining/Pickaxe");
+            if (pickaxe != null && prefab != null)
+            {
+                var previous = pickaxe;
+                pickaxe = Instantiate(prefab, previous.transform.parent, false);
+                pickaxe.transform.localPosition = previous.transform.localPosition;
+                pickaxe.transform.localRotation = previous.transform.localRotation;
+                pickaxe.transform.localScale = previous.transform.localScale;
+                previous.SetActive(false); Destroy(previous);
+                pickaxeVisual = pickaxe.GetComponent<PickaxeVisual>();
+            }
             if (hitbox != null) hitbox.enabled = false;
             if (pickaxe != null) pickaxe.SetActive(false);
         }
 
         void Update()
         {
-            if (player.readInput) ProcessMiningInput(Keys.MineHeld, holdingAttack ? heldDirection : AimDirection());
+            if (player.readInput) ProcessMiningInput(Keys.MineHeld, AimDirection());
             if (!IsSwinging || Time.deltaTime <= 0f) return;
             if (Keys.Blocked || player.MovementLocked) { holdingAttack = false; FinishSwing(); return; }
+            hitbox.transform.SetPositionAndRotation(transform.position, facing);
 
             float previous = elapsed;
             elapsed += Time.deltaTime * SpecialBlockSystem.PlayerTempo;
@@ -54,8 +82,10 @@ namespace SoulBlocks
                 foreach (var contact in contacts)
                 {
                     var crystal = contact.GetComponentInParent<BreakableCrystal>();
-                    if (crystal != null && hitThisSwing.Add(crystal) && crystal.TakeHit())
+                    if (crystal != null && crystal.Available && hitThisSwing.Add(crystal))
                     {
+                        SpecialBlockSystem.Instance?.TryNourishCrystal(crystal, true);
+                        if (!crystal.TakeDamage(Damage)) continue;
                         FlashPlayer();
                         if (!notifiedHit)
                         {
@@ -66,7 +96,7 @@ namespace SoulBlocks
                 }
             }
             if (hitbox != null && elapsed >= ContactEnd) hitbox.enabled = false;
-            if (elapsed >= Duration) FinishSwing();
+            if (elapsed >= swingDuration) FinishSwing();
         }
 
         void LateUpdate()
@@ -74,9 +104,9 @@ namespace SoulBlocks
             if (flashUntil > 0f && Time.time >= flashUntil) RestoreTint();
             if (!IsSwinging) return;
             // Aim bone segments in world space: imported Blender/FBX rigs may use different local axes.
-            float windup = Mathf.SmoothStep(0, 1, elapsed / .13f);
-            float strike = Mathf.SmoothStep(0, 1, (elapsed - .13f) / (ImpactTime - .13f));
-            float recovery = Mathf.SmoothStep(0, 1, (elapsed - ContactEnd) / (Duration - ContactEnd));
+            float windup = Mathf.SmoothStep(0, 1, elapsed / (swingDuration * (.13f / .55f)));
+            float strike = Mathf.SmoothStep(0, 1, (elapsed - swingDuration * (.13f / .55f)) / (ImpactTime - swingDuration * (.13f / .55f)));
+            float recovery = Mathf.SmoothStep(0, 1, (elapsed - ContactEnd) / (swingDuration - ContactEnd));
             if (player.visual != null) player.visual.rotation = facing * Quaternion.Euler(Mathf.Lerp(-8 * windup, 14, strike) * (1 - recovery), 0, 0);
             if (upperArm != null && forearm != null && hand != null)
             {
@@ -96,14 +126,12 @@ namespace SoulBlocks
         {
             if (player.viewCamera != null)
             {
-                var ray = player.viewCamera.ScreenPointToRay(Keys.MousePosition);
-                if (new Plane(Vector3.up, transform.position).Raycast(ray, out float distance))
-                    return ray.GetPoint(distance) - transform.position;
+                return Vector3.ProjectOnPlane(player.viewCamera.transform.forward, Vector3.up);
             }
             return Quaternion.Euler(0, player.Yaw, 0) * Vector3.forward;
         }
 
-        // Capture once per held click; camera turns must not redirect subsequent swings.
+        // Refresh aim throughout the held click, including the current swing.
         public void ProcessMiningInput(bool held, Vector3 aimDirection)
         {
             if (!held || Keys.Blocked || player.MovementLocked || !isActiveAndEnabled)
@@ -111,13 +139,13 @@ namespace SoulBlocks
                 holdingAttack = false;
                 return;
             }
-            if (!holdingAttack)
-            {
-                aimDirection.y = 0;
-                heldDirection = aimDirection.sqrMagnitude > .001f ? aimDirection.normalized
-                    : Quaternion.Euler(0, player.Yaw, 0) * Vector3.forward;
-                holdingAttack = true;
-            }
+            aimDirection.y = 0;
+            heldDirection = aimDirection.sqrMagnitude > .001f ? aimDirection.normalized
+                : Quaternion.Euler(0, player.Yaw, 0) * Vector3.forward;
+            holdingAttack = true;
+            facing = Quaternion.LookRotation(heldDirection);
+            player.FaceDirection(heldDirection);
+            if (hitbox != null) hitbox.transform.SetPositionAndRotation(transform.position, facing);
             if (!IsSwinging) TrySwing(heldDirection);
         }
 
@@ -131,6 +159,8 @@ namespace SoulBlocks
             hitbox.transform.rotation = facing;
             // The box extends forward from the player's feet, not from the model's hand scale.
             hitbox.transform.position = transform.position;
+            swingDuration = Duration;
+            pickaxeVisual?.ShowLevel(Level);
             elapsed = 0f;
             notifiedHit = false;
             hitThisSwing.Clear();

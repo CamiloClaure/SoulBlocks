@@ -31,6 +31,7 @@ namespace SoulBlocks
 
         void OnMapBuilt(MapLayout layout)
         {
+            if (GameRoot.Instance.ManualWorld) return;
             if (shownThisProcess) return;
             shownThisProcess = true;
             Open();

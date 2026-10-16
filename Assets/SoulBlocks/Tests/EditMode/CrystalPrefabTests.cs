@@ -8,7 +8,7 @@ namespace SoulBlocks.Tests
     public class CrystalPrefabTests
     {
         [Test]
-        public void PrefabContainsReplaceableModelAndSupportsThreeHitYellowCrystal()
+        public void PrefabContainsReplaceableModelAndSupportsTenHitYellowCrystal()
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/SoulBlocks/Prefabs/Crystals/Crystal.prefab");
             Assert.IsNotNull(prefab);
@@ -19,7 +19,7 @@ namespace SoulBlocks.Tests
                 crystal.color = CrystalColor.Yellow;
                 crystal.size = CrystalSize.Small;
                 crystal.ConfigureAppearance();
-                Assert.AreEqual(3, crystal.MaxHealth);
+                Assert.AreEqual(10, crystal.MaxHealth);
                 Assert.AreEqual("Model", crystal.model.name);
                 Assert.AreEqual(.9f, instance.GetComponent<BoxCollider>().size.y, .001f);
             }
