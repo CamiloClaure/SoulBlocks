@@ -3,6 +3,8 @@ using UnityEngine;
 
 namespace SoulBlocks
 {
+    // A gray tree the yellow block brings back to life: alive, it draws wandering souls and
+    // grows its own, up to maxSpirits at a time.
     public sealed class NourishableTree : MonoBehaviour
     {
         [Tooltip("Reemplaza el contenido de Model por tu FBX y sus animaciones.")]
@@ -24,13 +26,16 @@ namespace SoulBlocks
         void OnDisable() => All.Remove(this);
         void Start()
         {
-            var lightObject = new GameObject("Luz del árbol vivo");
+            var lightObject = new GameObject("Living Tree Light");
             lightObject.transform.SetParent(transform, false);
             lightObject.transform.localPosition = Vector3.up * 1.5f;
             glow = lightObject.AddComponent<Light>();
-            glow.color = Color.yellow; glow.range = attractionRadius; glow.intensity = 3;
+            glow.color = Color.yellow;
+            glow.range = attractionRadius;
+            glow.intensity = 3;
             Refresh();
         }
+
         public void Revive(float seconds)
         {
             // Existing callers provide a light duration; the revived tree now stays alive until reset.
@@ -39,12 +44,17 @@ namespace SoulBlocks
             Alive = true;
             if (waking) Refresh();
         }
+
         public void ResetTree()
         {
             Alive = false;
-            foreach (var spirit in spawned) if (spirit != null) Destroy(spirit.gameObject);
-            spawned.Clear(); Refresh();
+            foreach (var spirit in spawned)
+                if (spirit != null)
+                    Destroy(spirit.gameObject);
+            spawned.Clear();
+            Refresh();
         }
+
         void Update()
         {
             if (Keys.Blocked || Time.deltaTime <= 0) return;
@@ -58,10 +68,13 @@ namespace SoulBlocks
             float angle = spawned.Count * 2.4f + Time.time;
             Vector3 position = transform.position + new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle)) * 1.5f;
             var spirit = Instantiate(spiritPrefab, position, Quaternion.identity);
-            spirit.name = "Alma del árbol nutrido";
-            spirit.torch = torch; spirit.allowFloatingOutsideGround = true; spirit.phase = angle;
+            spirit.name = "Tree Soul";
+            spirit.torch = torch;
+            spirit.allowFloatingOutsideGround = true;
+            spirit.phase = angle;
             spawned.Add(spirit);
         }
+
         void Refresh()
         {
             wasAlive = Alive;
@@ -77,6 +90,7 @@ namespace SoulBlocks
                     if (parameter.name == "Alive" && parameter.type == AnimatorControllerParameterType.Bool)
                         animator.SetBool("Alive", Alive);
         }
+
         public static NourishableTree Nearest(Vector3 position)
         {
             NourishableTree nearest = null;
@@ -85,10 +99,12 @@ namespace SoulBlocks
             {
                 if (tree == null || !tree.Alive) continue;
                 float d = Vector3.Distance(position, tree.transform.position);
-                if (d <= tree.attractionRadius && d < distance) { nearest = tree; distance = d; }
+                if (d <= tree.attractionRadius && d < distance)
+                { nearest = tree; distance = d; }
             }
             return nearest;
         }
+
         void OnDrawGizmosSelected()
         {
             Gizmos.color = Color.yellow;

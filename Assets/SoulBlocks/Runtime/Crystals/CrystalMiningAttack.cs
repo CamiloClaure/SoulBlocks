@@ -1,8 +1,13 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace SoulBlocks
 {
+    // The pickaxe: hold left click to swing toward where the camera looks. Each swing's contact
+    // window hits every crystal in the hitbox once (damage and speed from MiningBalance at the
+    // pickaxe level) and every prison in reach (at the level's color stage). The pickaxe levels
+    // up with crystal fragments at the altar (UpgradePickaxe).
     [DisallowMultipleComponent, RequireComponent(typeof(SoulPlayer))]
     public sealed class CrystalMiningAttack : MonoBehaviour
     {
@@ -26,6 +31,7 @@ namespace SoulBlocks
             SaveSystem.SaveNow();
             return true;
         }
+
         public bool IsSwinging { get; private set; }
         public bool DirectionLocked => IsSwinging || holdingAttack;
         public Vector3 MiningDirection => facing * Vector3.forward;
@@ -40,6 +46,7 @@ namespace SoulBlocks
         Transform upperArm, forearm, hand;
         Quaternion upperRest, forearmRest;
         readonly HashSet<BreakableCrystal> hitThisSwing = new HashSet<BreakableCrystal>();
+        readonly HashSet<IMineable> prisonsThisSwing = new HashSet<IMineable>();
         readonly List<Renderer> tintedRenderers = new List<Renderer>();
         readonly List<MaterialPropertyBlock> originalBlocks = new List<MaterialPropertyBlock>();
 
@@ -54,7 +61,8 @@ namespace SoulBlocks
                 pickaxe.transform.localPosition = previous.transform.localPosition;
                 pickaxe.transform.localRotation = previous.transform.localRotation;
                 pickaxe.transform.localScale = previous.transform.localScale;
-                previous.SetActive(false); Destroy(previous);
+                previous.SetActive(false);
+                Destroy(previous);
                 pickaxeVisual = pickaxe.GetComponent<PickaxeVisual>();
             }
             if (hitbox != null) hitbox.enabled = false;
@@ -65,7 +73,8 @@ namespace SoulBlocks
         {
             if (player.readInput) ProcessMiningInput(Keys.MineHeld, AimDirection());
             if (!IsSwinging || Time.deltaTime <= 0f) return;
-            if (Keys.Blocked || player.MovementLocked) { holdingAttack = false; FinishSwing(); return; }
+            if (Keys.Blocked || player.MovementLocked)
+            { holdingAttack = false; FinishSwing(); return; }
             hitbox.transform.SetPositionAndRotation(transform.position, facing);
 
             float previous = elapsed;
@@ -86,17 +95,59 @@ namespace SoulBlocks
                     {
                         SpecialBlockSystem.Instance?.TryNourishCrystal(crystal, true);
                         if (!crystal.TakeDamage(Damage)) continue;
-                        FlashPlayer();
-                        if (!notifiedHit)
-                        {
-                            notifiedHit = true;
-                            SpecialBlockSystem.Instance?.NotifyMiningHit(crystal.transform.position, false);
-                        }
+                        Landed(crystal.transform.position);
                     }
                 }
+                HitPrisons(half);
             }
             if (hitbox != null && elapsed >= ContactEnd) hitbox.enabled = false;
             if (elapsed >= swingDuration) FinishSwing();
+        }
+
+        // Prisons have no collider (the player walks through them), so they are tested by
+        // position: a prison whose reach sphere overlaps the hitbox takes one blow at the
+        // pickaxe's color stage. With Golpe en cadena (Wisdom node or blessing) the blow that
+        // breaks one jumps on to the nearest other prison within Balance.ChainRange.
+        void HitPrisons(Vector3 half)
+        {
+            int tier = PrisonRules.PickaxeTier(Level);
+            foreach (var prison in MineableRegistry.All.ToArray())
+            {
+                if (prisonsThisSwing.Contains(prison)) continue;
+                Vector3 local = Quaternion.Inverse(hitbox.transform.rotation) * (prison.Position + Vector3.up * .5f - hitbox.transform.TransformPoint(hitbox.center));
+                if (Mathf.Abs(local.x) > half.x + prison.Radius || Mathf.Abs(local.y) > half.y + prison.Radius || Mathf.Abs(local.z) > half.z + prison.Radius) continue;
+                prisonsThisSwing.Add(prison);
+                if (prison.ApplyPickHit(tier) <= 0) continue;
+                Landed(prison.Position);
+                if (ChainUnlocked && prison.Forecast(tier).Kind == ForecastKind.Broken) Chain(prison.Position, tier);
+            }
+        }
+
+        static bool ChainUnlocked
+        {
+            get
+            {
+                var run = GameRoot.Instance != null ? GameRoot.Instance.Run : null;
+                return run != null && (run.HasUnlock(UnlockIds.Cadena) || run.activeBlessings.Contains("pico_cadena"));
+            }
+        }
+
+        static void Chain(Vector3 from, int tier)
+        {
+            var positions = new List<Vector3>(MineableRegistry.All.Count);
+            foreach (var other in MineableRegistry.All) positions.Add(other.Position);
+            int next = ChainSelection.Next(from, Balance.ChainRange, positions, new List<int>());
+            if (next >= 0) MineableRegistry.All[next].ApplyPickHit(tier);
+        }
+
+        // A blow that dealt damage: the player flashes, and the first one per swing feeds the
+        // special block passives.
+        void Landed(Vector3 position)
+        {
+            FlashPlayer();
+            if (notifiedHit) return;
+            notifiedHit = true;
+            SpecialBlockSystem.Instance?.NotifyMiningHit(position, false);
         }
 
         void LateUpdate()
@@ -164,6 +215,7 @@ namespace SoulBlocks
             elapsed = 0f;
             notifiedHit = false;
             hitThisSwing.Clear();
+            prisonsThisSwing.Clear();
             player.RightArm(out upperArm, out forearm, out hand);
             if (upperArm != null) upperRest = upperArm.localRotation;
             if (forearm != null) forearmRest = forearm.localRotation;

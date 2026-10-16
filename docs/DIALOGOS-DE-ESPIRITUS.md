@@ -1,6 +1,6 @@
 # Espíritus de colores y diálogo provisional
 
-En WorldBuilding, junto al árbol, encontrarás **Prueba de dialogos — cinco espiritus**.
+Junto al árbol encontrarás **Dialogue Spirits**, cinco espíritus de colores.
 Son esferas luminosas amarilla, azul, verde, celeste y roja. Estos NPC de prueba se
 quedan en su lugar; la antorcha no los recolecta.
 
@@ -14,17 +14,17 @@ El texto largo se puede desplazar dentro de la caja.
 
 1. Fuera de Play, selecciona un espíritu y duplícalo con Ctrl+D.
 2. Mueve el duplicado.
-3. En el componente **Spirit Dialogue**, cambia **Nombre**.
-4. En **Dialogo — edita cada frase en esta instancia**, despliega **Dialogo**.
-5. Modifica **Texto** de cada elemento. Aumenta el tamaño de la lista para añadir frases.
+3. En el componente **Spirit Dialogue**, cambia **Speaker Name**.
+4. En **Diálogo: edita cada frase en esta instancia**, despliega **Lines**.
+5. Modifica **Text** de cada elemento. Aumenta el tamaño de la lista para añadir frases.
 6. Guarda la escena y entra en Play para hablar con él.
 
 Los cambios quedan en la instancia que seleccionaste. No pulses Apply al prefab si
 quieres que el diálogo sea exclusivo del duplicado. Editar el prefab cambia el valor
 predeterminado para sus instancias sin modificaciones propias.
 
-Prefabs: `Assets/SoulBlocks/Prefabs/DialogueSpirits/`:
-EspirituAmarillo, EspirituAzul, EspirituVerde, EspirituCeleste y EspirituRojo.
+Prefabs: `Assets/SoulBlocks/Prefabs/Dialogue/`:
+YellowSpirit, BlueSpirit, GreenSpirit, CyanSpirit y RedSpirit.
 Cada uno contiene **Model** para reemplazar su esfera por un modelo futuro.
 
 El prototipo usa conversaciones lineales; todavía no tiene elecciones, misiones,

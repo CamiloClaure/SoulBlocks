@@ -4,7 +4,8 @@ namespace SoulBlocks
     // Kept separate so EditMode tests can round-trip a save without touching disk.
     public static class SaveStore
     {
-        public const int CurrentVersion = 1;
+        // 2: hand-built world (no map seed, no cargo or ground souls).
+        public const int CurrentVersion = 2;
 
         public static string Serialize(RunState run) => UnityEngine.JsonUtility.ToJson(run);
 

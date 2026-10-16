@@ -1,6 +1,9 @@
 using UnityEngine;
+
 namespace SoulBlocks
 {
+    // Pickaxe and crystal balance, editable in the Inspector (Resources/Mining/MiningBalance):
+    // damage and swing time per level, crystal health per color, and upgrade costs.
     [CreateAssetMenu(menuName = "SoulBlocks/Balance de minería")]
     public sealed class MiningBalance : ScriptableObject
     {
@@ -14,19 +17,20 @@ namespace SoulBlocks
         [Min(0)] public int firstUpgradeCost = 10;
         [Min(0)] public int additionalCostPerLevel = 5;
         static MiningBalance cached;
-        public static MiningBalance Current => cached != null ? cached : cached = Resources.Load<MiningBalance>("Mining/Balance") ?? CreateInstance<MiningBalance>();
-        public static int Stage(int level) => (Mathf.Clamp(level, 1, 50) - 1) / 10;
+        public static MiningBalance Current => cached != null ? cached : cached = Resources.Load<MiningBalance>("Mining/MiningBalance") ?? CreateInstance<MiningBalance>();
+        public static int Stage(int level) => PrisonRules.PickaxeTier(level);
         public int Damage(int level)
         {
             int result = 0;
             for (int i = 1; i <= Mathf.Clamp(level, 1, 50); i++) result += Mathf.Max(1, damagePerLevel[Stage(i)]);
             return result;
         }
+
         public float Seconds(int level) => Mathf.Max(minimumSeconds, startingSeconds[Stage(level)] - ((Mathf.Clamp(level, 1, 50) - 1) % 10) * secondsFasterPerLevel);
         public int Cost(int level) => Mathf.Max(0, firstUpgradeCost) + (Mathf.Clamp(level, 1, 50) - 1) * Mathf.Max(0, additionalCostPerLevel);
         public int Health(CrystalColor color)
         {
-            int index = color == CrystalColor.Blue ? 1 : color == CrystalColor.Green ? 2 : color == CrystalColor.Celeste ? 3 : color == CrystalColor.Red ? 4 : 0;
+            int index = color == CrystalColor.Blue ? 1 : color == CrystalColor.Green ? 2 : color == CrystalColor.Cyan ? 3 : color == CrystalColor.Red ? 4 : 0;
             return Mathf.Max(1, color == CrystalColor.Violet ? violetHealth : crystalHealth[index]);
         }
     }

@@ -2,9 +2,9 @@ using UnityEngine;
 
 namespace SoulBlocks
 {
-    // Plain per-instance marker, not a GameRoot system: MapBuilder adds one of these to each
-    // shelter placeholder it builds. Raises ShelterEntered/Exited only on the transition so
-    // og/expedicion can gate the energy drain without polling distance itself.
+    // Plain per-instance marker, not a GameRoot system: each ShelterSite adds one to its disc.
+    // Raises ShelterEntered/Exited only on the transition so ExpeditionController can gate the
+    // energy drain without polling distance itself.
     public sealed class ShelterZone : MonoBehaviour
     {
         public int ShelterId;

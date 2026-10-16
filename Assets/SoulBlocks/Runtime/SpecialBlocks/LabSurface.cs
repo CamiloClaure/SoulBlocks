@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace SoulBlocks
 {
+    // A lab floor tile: dark paths light up under the yellow block; blue inverts the colors.
     public sealed class LabSurface : MonoBehaviour
     {
         public Color baseColor = new Color(.025f, .025f, .035f);

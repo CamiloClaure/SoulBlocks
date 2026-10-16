@@ -16,19 +16,19 @@ namespace SoulBlocks.Tests
         public void AddAndMulCombineAcrossSources()
         {
             var sheet = new StatSheet();
-            sheet.SetModifier("upgrade", StatId.CargoCapacity, 50f);
-            sheet.SetModifier("blessing", StatId.CargoCapacity, 0f, 2f);
+            sheet.SetModifier("upgrade", StatId.SpiritCapacity, 50f);
+            sheet.SetModifier("blessing", StatId.SpiritCapacity, 0f, 2f);
             // (base + add) * mul = (100 + 50) * 2 = 300
-            Assert.AreEqual((Balance.CargoCapacity + 50f) * 2f, sheet.Get(StatId.CargoCapacity), .0001f);
+            Assert.AreEqual((Balance.SpiritCapacity + 50f) * 2f, sheet.Get(StatId.SpiritCapacity), .0001f);
         }
 
         [Test]
         public void SetModifierReplacesSameSource()
         {
             var sheet = new StatSheet();
-            sheet.SetModifier("upgrade", StatId.PickupRadius, 1f);
-            sheet.SetModifier("upgrade", StatId.PickupRadius, 3f);
-            Assert.AreEqual(Balance.PickupRadius + 3f, sheet.Get(StatId.PickupRadius), .0001f);
+            sheet.SetModifier("upgrade", StatId.TorchRadius, 1f);
+            sheet.SetModifier("upgrade", StatId.TorchRadius, 3f);
+            Assert.AreEqual(Balance.TorchRadius + 3f, sheet.Get(StatId.TorchRadius), .0001f);
         }
 
         [Test]

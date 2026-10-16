@@ -9,15 +9,15 @@ namespace SoulBlocks
     [Serializable]
     public sealed partial class RunState
     {
-        public int version = 1;
+        public int version = SaveStore.CurrentVersion;
+        // Hidden RNG seed, random per new game: keeps a save's rolls (blessings, plans, altars)
+        // reproducible. The world itself is hand-built, no seed shapes it.
         public int seed;
-        public int effectiveSeed;
         public int expeditionIndex;
         public float playTimeSeconds;
         public bool inExpedition;
         public bool victory;
         public int reserveSouls;
-        public int cargoSouls;
         public int wisdom;
         public float energy;
         public int treeStage;
@@ -26,7 +26,6 @@ namespace SoulBlocks
         public List<PrisonRecord> prisons = new List<PrisonRecord>();
         public int[] brokenByTier = new int[5];
         public List<int> discoveredTiles = new List<int>();
-        public List<GroundSoul> groundSouls = new List<GroundSoul>();
         public ExpeditionPlan plan = new ExpeditionPlan();
         public List<string> activeBlessings = new List<string>();
         public int totalSoulsCollected;
@@ -86,12 +85,6 @@ namespace SoulBlocks
         public bool broken;
     }
 
-    [Serializable]
-    public sealed class GroundSoul
-    {
-        public Vector3 position;
-        public int value;
-    }
 
     [Serializable]
     public sealed class ExpeditionPlan

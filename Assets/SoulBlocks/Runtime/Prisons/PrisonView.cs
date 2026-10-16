@@ -4,7 +4,7 @@ using UnityEngine;
 namespace SoulBlocks
 {
     // Placeholder crystal prison + IMineable wrapper around PrisonRules. No collider: the player
-    // walks through (ponytail: the pick targets purely by MineableRegistry + Radius, never
+    // walks through (the pickaxe swing finds prisons by MineableRegistry + Radius, never
     // Physics, so a collider here would only ever get in the way of movement). Every blow that
     // lands chips shards off (Burst) and makes the crystal flinch.
     public sealed class PrisonView : MonoBehaviour, IMineable
@@ -18,8 +18,18 @@ namespace SoulBlocks
         Vector3 bodyScale;
         Color color;
 
-        // Drawn by PrisonSystem as a Hud.WorldLabel (opaque box) while the player is close.
-        public string Label { get; private set; }
+        // Drawn by PrisonSystem as a Hud.WorldLabel (opaque box) while the player is close, with
+        // the pickaxe color it still needs when the current one cannot chip it.
+        public string Label
+        {
+            get
+            {
+                int required = PrisonRules.RequiredLevel(layout.tier);
+                return PrisonRules.PickaxeTier(run.pickaxeLevel) < required ? label + "\nrequiere pico " + PrisonRules.PickaxeTierName(required) : label;
+            }
+        }
+
+        string label;
 
         public int PrisonId => layout.id;
         public Vector3 Position => transform.position;
@@ -67,7 +77,7 @@ namespace SoulBlocks
             int required = PrisonRules.RequiredLevel(layout.tier);
             if (pickLevel < required)
             {
-                Hud.Toast("requiere pico nv " + required);
+                Hud.Toast("requiere pico " + PrisonRules.PickaxeTierName(required));
                 return 0;
             }
 
@@ -143,18 +153,23 @@ namespace SoulBlocks
         void UpdateLabel(PrisonRecord record)
         {
             int remaining = PrisonRules.TotalHp(layout.tier) - record.damage;
-            Label = TierSymbol(layout.tier) + "\nHP " + remaining + " fase " + record.phasesDone + "/" + PrisonRules.Phases(layout.tier);
+            label = TierSymbol(layout.tier) + "\nHP " + remaining + " fase " + record.phasesDone + "/" + PrisonRules.Phases(layout.tier);
         }
 
         static string TierSymbol(PrisonTier tier)
         {
             switch (tier)
             {
-                case PrisonTier.T1: return "I";
-                case PrisonTier.T2: return "II";
-                case PrisonTier.T3: return "III";
-                case PrisonTier.T4: return "IV";
-                default: return "N";
+                case PrisonTier.T1:
+                    return "I";
+                case PrisonTier.T2:
+                    return "II";
+                case PrisonTier.T3:
+                    return "III";
+                case PrisonTier.T4:
+                    return "IV";
+                default:
+                    return "N";
             }
         }
 
@@ -162,11 +177,16 @@ namespace SoulBlocks
         {
             switch (tier)
             {
-                case PrisonTier.T1: return new Shape { type = PrimitiveType.Cube, color = Color.yellow, scale = new Vector3(1.2f, 1.2f, 1.2f) };
-                case PrisonTier.T2: return new Shape { type = PrimitiveType.Cylinder, color = new Color(.2f, .8f, .2f), scale = new Vector3(.8f, .6f, .8f) };
-                case PrisonTier.T3: return new Shape { type = PrimitiveType.Capsule, color = new Color(.2f, .4f, 1f), scale = new Vector3(.8f, .6f, .8f) };
-                case PrisonTier.T4: return new Shape { type = PrimitiveType.Sphere, color = Color.red, scale = new Vector3(1.2f, 1.2f, 1.2f) };
-                default: return new Shape { type = PrimitiveType.Sphere, color = Color.white, scale = new Vector3(2.4f, 2.4f, 2.4f) }; // Nucleo
+                case PrisonTier.T1:
+                    return new Shape { type = PrimitiveType.Cube, color = Color.yellow, scale = new Vector3(1.2f, 1.2f, 1.2f) };
+                case PrisonTier.T2:
+                    return new Shape { type = PrimitiveType.Cylinder, color = new Color(.2f, .8f, .2f), scale = new Vector3(.8f, .6f, .8f) };
+                case PrisonTier.T3:
+                    return new Shape { type = PrimitiveType.Capsule, color = new Color(.2f, .4f, 1f), scale = new Vector3(.8f, .6f, .8f) };
+                case PrisonTier.T4:
+                    return new Shape { type = PrimitiveType.Sphere, color = Color.red, scale = new Vector3(1.2f, 1.2f, 1.2f) };
+                default:
+                    return new Shape { type = PrimitiveType.Sphere, color = Color.white, scale = new Vector3(2.4f, 2.4f, 2.4f) }; // Nucleo
             }
         }
     }

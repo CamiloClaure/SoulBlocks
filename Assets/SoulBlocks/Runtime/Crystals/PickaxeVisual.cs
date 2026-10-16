@@ -1,6 +1,8 @@
 using UnityEngine;
+
 namespace SoulBlocks
 {
+    // Swaps the pickaxe model to its color stage (one prefab per stage) as the level goes up.
     public sealed class PickaxeVisual : MonoBehaviour
     {
         [Tooltip("Amarillo, azul, verde, celeste y rojo. Sustituye cada prefab por tu modelo FBX.")]
@@ -12,7 +14,8 @@ namespace SoulBlocks
         {
             int next = MiningBalance.Stage(level);
             if (stage == next) return;
-            if (current != null) { current.SetActive(false); Destroy(current); }
+            if (current != null)
+            { current.SetActive(false); Destroy(current); }
             stage = next;
             if (stagePrefabs != null && next < stagePrefabs.Length && stagePrefabs[next] != null)
                 current = Instantiate(stagePrefabs[next], modelSocket != null ? modelSocket : transform, false);

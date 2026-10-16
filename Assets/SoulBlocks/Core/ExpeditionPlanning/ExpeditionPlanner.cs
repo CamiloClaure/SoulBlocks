@@ -3,8 +3,8 @@ using UnityEngine;
 
 namespace SoulBlocks
 {
-    // Pure planning for the next expedition's 3 objectives, anomaly and soul density (section
-    // 1.8 of the plan). Everything is deterministic from (Run.effectiveSeed, expeditionIndex):
+    // Pure planning for the next expedition's 3 objectives and anomaly (section 1.8 of the
+    // plan). Everything is deterministic from (Run.seed, expeditionIndex):
     // same inputs draw the same SeededRng sequence in the same order, so the same plan comes out
     // every time. Runtime/ExpeditionPlanning/ExpeditionPlanningSystem wires this into
     // GameEvents, the static hooks and the HUD.
@@ -15,12 +15,12 @@ namespace SoulBlocks
             var plan = new ExpeditionPlan { chosenObjective = -1 };
             if (layout == null || layout.branches.Count == 0) return plan; // ponytail: no map yet
 
-            int seed = run.effectiveSeed;
+            int seed = run.seed;
             var rng = SeededRng.Stream(seed, "azar.expedicion." + expeditionIndex);
             int activeBranch = ActiveBranch(layout, seed, expeditionIndex);
             plan.hintBranch = activeBranch;
 
-            var objectives = new List<ObjectiveRecord> { RollRecolectar(layout, run, seed, expeditionIndex, stats, activeBranch) };
+            var objectives = new List<ObjectiveRecord> { RollRecolectar(stats, activeBranch) };
 
             var fracturar = RollFracturar(layout, run, stats, rng);
             if (fracturar != null) objectives.Add(fracturar);
@@ -35,7 +35,7 @@ namespace SoulBlocks
             {
                 int branch = PickUnusedBranch(layout, usedBranches, rng);
                 usedBranches.Add(branch);
-                objectives.Add(RollRecolectar(layout, run, seed, expeditionIndex, stats, branch));
+                objectives.Add(RollRecolectar(stats, branch));
             }
 
             plan.offered.AddRange(objectives);
@@ -43,65 +43,20 @@ namespace SoulBlocks
             return plan;
         }
 
-        // Souls spawned for this SoulSpawnLayout, for the given expedition: ExpeditionController
-        // .SpawnCountFor's density hook. Deterministic from (seed, expeditionIndex) alone, not
-        // from Run.plan, so it gives the exact same number whether it is asked before or after
-        // Plan() above rolls the plan for that same index (no ordering dependency between the
-        // two systems that call it: SoulSpawner on MapBuilt/ExpeditionEnded, us on the HUD hint).
-        // ponytail: recomputes ActiveBranch/GuaranteeScale (O(spawn count)) on every call instead
-        // of caching per expedition; fine at obra-gruesa's dozens-of-spawns scale.
-        public static int SpawnCount(MapLayout layout, RunState run, int seed, int expeditionIndex, SoulSpawnLayout spawn)
-        {
-            int activeBranch = ActiveBranch(layout, seed, expeditionIndex);
-            float scale = GuaranteeScale(layout, run, seed, expeditionIndex);
-            float multiplier = BranchMultiplier(seed, expeditionIndex, spawn.branchId, activeBranch) * scale;
-            return Mathf.Max(0, Mathf.RoundToInt(spawn.baseCount * multiplier));
-        }
-
+        // The branch the anomaly and the HUD hint point at this expedition.
         public static int ActiveBranch(MapLayout layout, int seed, int expeditionIndex)
         {
             if (layout == null || layout.branches.Count == 0) return -1;
             return SeededRng.Stream(seed, "azar.density.branch." + expeditionIndex).Next(0, layout.branches.Count);
         }
 
-        static float BranchMultiplier(int seed, int expeditionIndex, int branchId, int activeBranch)
-        {
-            if (branchId == activeBranch) return Balance.DensityActiveMultiplier;
-            var rng = SeededRng.Stream(seed, "azar.density.other." + expeditionIndex + "." + branchId);
-            return rng.Range(Balance.DensityOtherMin, Balance.DensityOtherMax);
-        }
-
-        // Scales every branch's multiplier up (never down) so the expedition's total souls
-        // never fall below Balance.DensityMinimumTotal, counting only spawns unlocked right now.
-        static float GuaranteeScale(MapLayout layout, RunState run, int seed, int expeditionIndex)
-        {
-            int activeBranch = ActiveBranch(layout, seed, expeditionIndex);
-            float total = 0f;
-            foreach (var spawn in layout.soulSpawns)
-            {
-                if (!string.IsNullOrEmpty(spawn.requiresUnlock) && !run.HasUnlock(spawn.requiresUnlock)) continue;
-                total += spawn.baseCount * BranchMultiplier(seed, expeditionIndex, spawn.branchId, activeBranch);
-            }
-            if (total <= 0f) return 1f;
-            return total < Balance.DensityMinimumTotal ? Balance.DensityMinimumTotal / total : 1f;
-        }
-
         static float ReachBudget(StatSheet stats) => stats.Get(StatId.EnergyMax) * stats.Get(StatId.MoveSpeed) * .5f;
 
-        static ObjectiveRecord RollRecolectar(MapLayout layout, RunState run, int seed, int expeditionIndex, StatSheet stats, int branchId)
+        // Deliver souls: a share of what the torch can lead at once, so one good trip does it.
+        static ObjectiveRecord RollRecolectar(StatSheet stats, int branchId)
         {
-            int available = 0;
-            foreach (var spawn in layout.soulSpawns)
-            {
-                if (spawn.branchId != branchId) continue;
-                if (!string.IsNullOrEmpty(spawn.requiresUnlock) && !run.HasUnlock(spawn.requiresUnlock)) continue;
-                available += SpawnCount(layout, run, seed, expeditionIndex, spawn);
-            }
-            int capacity = Mathf.Max(1, stats.GetInt(StatId.CargoCapacity));
-            int goal = available > 0
-                ? Mathf.Clamp(Mathf.RoundToInt(available * Balance.ObjectiveRecolectarFraction), (int)Balance.ObjectiveRecolectarMin, capacity)
-                : Mathf.Min((int)Balance.ObjectiveRecolectarMin, capacity);
-
+            int capacity = Mathf.Max(1, stats.GetInt(StatId.SpiritCapacity));
+            int goal = Mathf.Clamp(Mathf.RoundToInt(capacity * Balance.ObjectiveRecolectarFraction), (int)Balance.ObjectiveRecolectarMin, capacity);
             return new ObjectiveRecord
             {
                 kind = "recolectar",
@@ -117,7 +72,7 @@ namespace SoulBlocks
         // round trip qualifies: "always achievable with current power" (section 1.8).
         static ObjectiveRecord RollFracturar(MapLayout layout, RunState run, StatSheet stats, SeededRng rng)
         {
-            int pickLevel = stats.GetInt(StatId.PickLevel);
+            int pickLevel = PrisonRules.PickaxeTier(run.pickaxeLevel);
             float budget = ReachBudget(stats);
             var candidates = new List<PrisonLayout>();
             foreach (var prison in layout.prisons)
@@ -125,7 +80,7 @@ namespace SoulBlocks
                 if (run.Prison(prison.id).broken) continue;
                 if (!string.IsNullOrEmpty(prison.requiresUnlock) && !run.HasUnlock(prison.requiresUnlock)) continue;
                 if (PrisonRules.RequiredLevel(prison.tier) > pickLevel) continue;
-                if (MapGen.PathDistanceAt(layout, prison.branchId, prison.position) > budget) continue;
+                if (layout.PathDistanceAt(prison.branchId, prison.position) > budget) continue;
                 candidates.Add(prison);
             }
             if (candidates.Count == 0) return null;
@@ -155,7 +110,7 @@ namespace SoulBlocks
             foreach (var shelter in layout.shelters)
             {
                 if (run.visitedShelterIds.Contains(shelter.id)) continue;
-                if (MapGen.PathDistanceAt(layout, shelter.branchId, shelter.position) > budget) continue;
+                if (layout.PathDistanceAt(shelter.branchId, shelter.position) > budget) continue;
                 candidates.Add(new ObjectiveRecord { kind = "descubrir", branchId = shelter.branchId, targetId = shelter.id, goal = 1 });
             }
 
@@ -204,7 +159,7 @@ namespace SoulBlocks
                 var anomaly = TryBuildAnomaly(kind, layout, run, activeBranch, rng);
                 if (anomaly != null) return anomaly;
             }
-            return null; // ponytail: only reachable if the layout has no soul spawns, prisons or tiles at all
+            return null; // ponytail: only reachable if the layout has no prisons or tiles at all
         }
 
         static AnomalyRecord TryBuildAnomaly(string kind, MapLayout layout, RunState run, int activeBranch, SeededRng rng)
@@ -212,14 +167,18 @@ namespace SoulBlocks
             switch (kind)
             {
                 case "almas":
+                case "corriente":
                 {
-                    var onActive = new List<SoulSpawnLayout>();
-                    var any = new List<SoulSpawnLayout>();
-                    foreach (var spawn in layout.soulSpawns)
+                    // A burst of souls (almas) or a dash current (corriente) on a tile, the
+                    // active branch first.
+                    var onActive = new List<TileLayout>();
+                    var any = new List<TileLayout>();
+                    foreach (var tile in layout.tiles)
                     {
-                        if (!string.IsNullOrEmpty(spawn.requiresUnlock) && !run.HasUnlock(spawn.requiresUnlock)) continue;
-                        any.Add(spawn);
-                        if (spawn.branchId == activeBranch) onActive.Add(spawn);
+                        if (tile.branchId < 0) continue;
+                        if (!string.IsNullOrEmpty(tile.requiresUnlock) && !run.HasUnlock(tile.requiresUnlock)) continue;
+                        any.Add(tile);
+                        if (tile.branchId == activeBranch) onActive.Add(tile);
                     }
                     var pool = onActive.Count > 0 ? onActive : any;
                     if (pool.Count == 0) return null;
@@ -234,21 +193,6 @@ namespace SoulBlocks
                             candidates.Add(prison);
                     if (candidates.Count == 0) return null;
                     var pick = rng.Pick(candidates);
-                    return new AnomalyRecord { kind = kind, branchId = pick.branchId, position = pick.position };
-                }
-                case "corriente":
-                {
-                    var onActive = new List<TileLayout>();
-                    var any = new List<TileLayout>();
-                    foreach (var tile in layout.tiles)
-                    {
-                        if (!string.IsNullOrEmpty(tile.requiresUnlock) && !run.HasUnlock(tile.requiresUnlock)) continue;
-                        any.Add(tile);
-                        if (tile.branchId == activeBranch) onActive.Add(tile);
-                    }
-                    var pool = onActive.Count > 0 ? onActive : any;
-                    if (pool.Count == 0) return null;
-                    var pick = rng.Pick(pool);
                     return new AnomalyRecord { kind = kind, branchId = pick.branchId, position = pick.position };
                 }
                 default:

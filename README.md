@@ -1,18 +1,17 @@
 # SoulBlocks
 
-Construcción manual: abre `Assets/Scenes/WorldBuilding.unity` y selecciona
-`Mundo manual > Camino primario`. Mueve sus puntos en Scene para dibujar el recorrido
-en X/Y/Z. Guía: [docs/WORLD-BUILDING.md](docs/WORLD-BUILDING.md).
+Incremental de exploración en Unity 6000.6.0f1 (URP, Input System). Desde la isla del árbol
+central salís por caminos dibujados a mano, guiás almas con la antorcha, picás cristales y
+prisiones, volvés, mejorás y el mundo se transforma hasta despertar al Núcleo.
 
-Incremental de exploración en Unity 6000.6.0f1 (URP, Input System). Salís del árbol central por caminos generados por seed, recogés almas, picás prisiones cristalinas, volvés, mejorás y el mundo se transforma hasta despertar al Núcleo.
-
-Estado: **obra gruesa**. Todas las mecánicas funcionan de punta a punta con placeholders (primitivas, colores, IMGUI). Sin animaciones ni modelos nuevos. Diseño completo y plan de construcción en [`docs/PLAN-OBRA-GRUESA.md`](docs/PLAN-OBRA-GRUESA.md); contratos entre sistemas en [`docs/CONTRATOS.md`](docs/CONTRATOS.md).
+Estado: **obra gruesa**. Las mecánicas funcionan de punta a punta con placeholders
+(primitivas, colores, IMGUI) y algunos modelos (el mago, la antorcha, el pico).
 
 ## Jugar
 
 1. Abrí la carpeta en Unity Hub con **Unity 6000.6.0f1**.
-2. Abrí `Assets/Scenes/SoulBlocks.unity` y dale Play.
-3. Menú inicial: continuar, nueva partida (seed aleatoria o ingresada) o jugar con el mundo actual.
+2. Abrí `Assets/Scenes/SoulBlocks.unity` (la única escena) y dale Play.
+3. Menú inicial: continuar la partida guardada o empezar una nueva.
 
 | Acción | Control |
 |---|---|
@@ -20,42 +19,68 @@ Estado: **obra gruesa**. Todas las mecánicas funcionan de punta a punta con pla
 | Girar cámara | Mouse |
 | Mostrar el cursor (botones del HUD) | Alt (mantener; también se libera en menús) |
 | Zoom de cámara | Teclas + / − |
-| Seleccionar bloque especial | Rueda |
-| Usar activo del bloque | Click derecho |
 | Centrar cámara detrás del jugador | Click de la rueda |
 | Dash | Shift |
-| Imán de almas | Q |
-| Picar cristal | Mantener click izquierdo: el cristal de prisión más cercano, o hacia el centro de la pantalla |
-| Interactuar (tienda del árbol, altares, entrega en refugios) | E |
+| Picar (cristales y prisiones) | Mantener click izquierdo, hacia el centro de la pantalla |
+| Activar bloque especial | 1 a 5 (amarillo, azul, verde, celeste, rojo); rueda: ver descripción |
+| Antorcha | F: tomar, colocar o devolver al altar · T: encender o apagar |
+| Hablar con un espíritu | R |
+| Interactuar (altar del árbol, altares de riesgo, entrega en refugios) | E |
 | Mapa | Tab (mantener) |
-| Pausa (guardar, copiar seed, nueva partida) | Esc |
+| Pausa (guardar, controles, nueva partida) | Esc |
 | Pantalla completa | F1 |
 | Cambiar modelo del personaje (mago / clásico) | F2 |
 
 La partida se guarda sola al terminar cada expedición, al comprar y al salir.
 
-La cámara empieza detrás del jugador y gira directamente con el mouse. Conserva la dirección
-que elegiste; no se recentra sola. El clic de la rueda la vuelve a colocar detrás.
-El cursor se bloquea durante el juego y se libera en menús o manteniendo Alt.
-El picado apunta desde el centro de la pantalla. WASD sigue la orientación
-de la cámara. Los obstáculos acercan la cámara para evitar que atraviese sus colliders.
+## El ciclo
 
-Zona de prueba: 15 cristales visibles de cinco colores y tres tamaños.
-Amarillo revive árboles grises que atraen y generan almas; azul prepara cristales brillantes
-con posibilidad de dar fragmentos extra. El picado sostenido sigue el giro de la cámara.
-Cinco bloques desbloqueados con pasivas siempre activas, bomba con
-cuenta atrás y ayudantes temporales. E en el árbol abre sus mejoras gratuitas y la restauración
-de cristales; desde ahí, "Mejoras originales del árbol" abre el tablero de mejoras.
-Reglas y valores en [docs/BLOQUES-ESPECIALES.md](docs/BLOQUES-ESPECIALES.md).
-Prefab reemplazable por un modelo de Blender en [docs/CRISTALES.md](docs/CRISTALES.md).
+- **Isla**: el árbol blanco, el altar de mejoras (E) y el altar de la antorcha. Mientras estás
+  sobre la isla no gastás energía.
+- **Expediciones**: al pisar un camino fuera de la isla empieza una expedición y la energía
+  baja. Los refugios (incluidos el laboratorio y la arena) la pausan. Si se agota, volvés al árbol.
+- **Ramas**: el camino principal lleva al laboratorio de bloques (rama de prisiones), el camino
+  de poderes a la arena (rama de almas) y el camino de exploración sale hacia el oeste. Raíz II
+  abre el puente entre ramas, Raíz III el tramo profundo después del laboratorio y Despertar el Núcleo.
+- **Almas**: deambulan junto a los caminos. La antorcha encendida las llama; te siguen hasta
+  el altar (o un refugio con Entrega) y ahí suman a la reserva. Carga, Alcance de la antorcha y
+  Abundancia mejoran cuántas te siguen, desde qué distancia y cuántas aparecen.
+- **Pico**: el mismo golpe pica cristales (sueltan fragmentos) y prisiones. Su color
+  (amarillo → rojo) es el nivel que piden las prisiones: T1 amarillo, T2 azul, T3 verde, T4
+  celeste, Núcleo rojo. Se mejora con fragmentos en el altar del árbol.
+- **Prisiones**: al romperse liberan almas y Wisdom; las de final de rama ofrecen una bendición
+  y, con Raíz I, abren un portal de vuelta a la isla.
+
+Guías de diseño y de edición en `docs/`:
+
+- [Construir caminos y la expedición](docs/WORLD-BUILDING.md)
+- [Terreno, árbol central y altar](docs/TERRENO-Y-ALTAR.md)
+- [Antorcha y almas](docs/ANTORCHA-Y-ALMAS.md), [almas y arena](docs/ALMAS-Y-ARENA.md)
+- [Bloques especiales](docs/BLOQUES-ESPECIALES.md), [cristales](docs/CRISTALES.md),
+  [fragmentos](docs/FRAGMENTOS-DE-CRISTAL.md), [pico y balance](docs/PICO-Y-BALANCE.md)
+- [Diálogos de espíritus](docs/DIALOGOS-DE-ESPIRITUS.md), [dirección de la progresión](docs/DISENO-DE-PROGRESION.md)
+- Históricos: [plan de la obra gruesa](docs/PLAN-OBRA-GRUESA.md) y [contratos](docs/CONTRATOS.md),
+  de la etapa con mapa generado por seed.
 
 ## Estructura
 
-- `Assets/SoulBlocks/Core/`: lógica pura sin MonoBehaviour (mapa por seed, energía, carga, prisiones, árboles de mejoras, azar, guardado, simulación). Tunables en `Balance.*.cs`.
-- `Assets/SoulBlocks/Runtime/`: sistemas en escena. Cada uno se registra solo en `GameRoot` (no hay que tocar la escena).
-- `Assets/SoulBlocks/Tests/`: EditMode y PlayMode (incluye un smoke test que juega una partida completa).
-- `tools/CoreHarness/`: compila `Core/` fuera de Unity y valida mapas en segundos.
-- `Validation/balance.txt`: ritmo de una partida simulada sobre 200 seeds (lo escribe un test EditMode).
+- `Assets/Scenes/SoulBlocks.unity`: el mundo entero, construido a mano.
+- `Assets/SoulBlocks/Core/`: lógica pura sin MonoBehaviour (energía, prisiones, mejoras, azar,
+  guardado, el `MapLayout`). Tunables en `Balance.*.cs`.
+- `Assets/SoulBlocks/Runtime/`: sistemas en escena, uno por carpeta de dominio (`Map`,
+  `Expedition`, `Prisons`, `Crystals`, `SpiritGuiding`, `SpecialBlocks`, `UI`...). Los sistemas
+  globales se registran solos en `GameRoot`; `Map/SceneLayout` arma el mapa desde los caminos
+  (`AuthoredPath`) y los marcadores (`PrisonSite`, `ShelterSite`, `PortalSite`,
+  `RiskAltarSite`, `UnlockGate`) de la escena.
+- `Assets/SoulBlocks/Editor/`: herramientas de edición (puntos de camino, terreno, importador del mago).
+- `Assets/SoulBlocks/{Materials,Prefabs,Meshes,Shaders,Terrain}/`: assets, en subcarpetas por dominio.
+  `Resources/` solo guarda lo que el código carga por nombre.
+- `Assets/SoulBlocks/Tests/`: EditMode y PlayMode, en las mismas carpetas de dominio
+  (incluye un smoke test que juega una partida completa).
+
+Convenciones: nombres de archivos, carpetas, código y objetos de escena en inglés y sin
+espacios en archivos; textos del juego y documentación en español. Formato de C# en
+`.editorconfig` (aplicable con `dotnet format whitespace --folder Assets/SoulBlocks`).
 
 ## Tests
 
@@ -67,18 +92,10 @@ UNITY="C:\Program Files\Unity\Hub\Editor\6000.6.0f1\Editor\Unity.exe"
 "$UNITY" -batchmode -projectPath . -runTests -testPlatform PlayMode -testResults Logs/playmode.xml
 ```
 
-Loop rápido para lógica de `Core` (requiere .NET SDK; ~2 s para 200 seeds):
-
-```bash
-cd tools/CoreHarness
-dotnet run -c Release -- 500            # anclajes sintéticos
-dotnet run -c Release -- 500 realistic  # anclajes fuera de grilla
-```
-
-`JsonUtility` y otras llamadas internas del motor compilan en el harness pero fallan al ejecutarse fuera de Unity.
+Las capturas que toman algunos tests quedan en `Logs/Captures/` (fuera del repo).
 
 ## Origen
 
-Proyecto mínimo extraído de CamiloClaure/Lighting-Blocks (isla, Wisdom Tree, jugador y animaciones). La mecánica anterior de bloques quedó archivada en el tag `archive/block-mechanic`. Los assets de origen conservan su autoría y términos de uso.
-
-WorldBuilding: terreno moldeable con herramientas nativas de Terrain, árbol central blanco y altar de símbolos que reúne mejoras de bloques y talentos. Guía: [TERRENO-Y-ALTAR.md](docs/TERRENO-Y-ALTAR.md).
+Proyecto mínimo extraído de CamiloClaure/Lighting-Blocks (isla, jugador y animaciones). La
+mecánica anterior de bloques quedó archivada en el tag `archive/block-mechanic`. Los assets de
+origen conservan su autoría y términos de uso.

@@ -1,5 +1,8 @@
 # SoulBlocks: plan de obra gruesa de mecánicas
 
+> Histórico: plan de la obra gruesa con mapa generado por seed. El juego actual usa un mundo
+> hecho a mano, almas guiadas con la antorcha y un solo pico; ver el README.
+
 ## Context
 
 `D:\Games\SoulBlocks` (Unity 6000.6.0f1, URP, Input System) hoy tiene: isla principal, Wisdom Tree, jugador con idle/walk, cámara orbital y una mecánica de bloques (agarrar bloque, colocarlo en tramo oscuro). Un chat de diseño previo criticó el concepto (caminar, recoger almas, romper cristales, dos árboles de mejoras, final definido) y propuso correcciones para cada debilidad, más ideas propias del usuario (energía espiritual, tiers de cristal, carga limitada, pasivas, dash/imán/rayhit, mapa por seed) y aleatoriedad controlada.

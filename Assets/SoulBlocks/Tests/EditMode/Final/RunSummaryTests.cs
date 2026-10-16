@@ -62,14 +62,14 @@ namespace SoulBlocks.Tests
         }
 
         [Test]
-        public void LinesIncludeSeedTimeAndPrisonCounts()
+        public void LinesIncludeTimeAndPrisonCounts()
         {
-            var run = new RunState { effectiveSeed = 42, playTimeSeconds = 65f, expeditionIndex = 3, totalSoulsCollected = 77 };
+            var run = new RunState { seed = 42, playTimeSeconds = 65f, expeditionIndex = 3, totalSoulsCollected = 77 };
             run.brokenByTier[4] = 1;
 
             var lines = RunSummary.Lines(run);
 
-            Assert.That(lines, Has.Some.Contains("Semilla: 42"));
+            Assert.That(lines, Has.None.Contains("42"), "The seed is hidden now.");
             Assert.That(lines, Has.Some.Contains("0:01:05"));
             Assert.That(lines, Has.Some.Contains("Expediciones: 3"));
             Assert.That(lines, Has.Some.Contains("Núcleo x1"));

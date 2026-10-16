@@ -4,29 +4,48 @@ using UnityEngine;
 
 namespace SoulBlocks
 {
+    // What a branch is mostly for: souls, prisons, or exploring (shelters, altars, platforms).
     public enum BranchSpecialty { Souls, Prisons, Exploration }
+    // Prison tiers, T1 to T4 plus the final Nucleo; the pickaxe color stage gates each one.
     public enum PrisonTier { T1, T2, T3, T4, Nucleo }
 
+    // Resonant prisons share damage within their group; ExposedCore doubles every hit after the first.
     [Flags]
     public enum PrisonProp { None = 0, Resonant = 1, ExposedCore = 2 }
 
+    // How a prison group is laid out.
     public enum PrisonPattern { Single, Line, Arc, Compact, Connected }
 
+    // The expedition map every system reads: branches cut into tiles, prisons, shelters,
+    // connections, risk altars and portals. Built from the hand-made scene by SceneLayout
+    // (Runtime), or by hand in MapLayoutFixtures for tests.
     [Serializable]
     public sealed class MapLayout
     {
-        public int seed;
-        public int effectiveSeed;
         public Vector3 hubCenter;
         public List<BranchLayout> branches = new List<BranchLayout>();
         public List<TileLayout> tiles = new List<TileLayout>();
-        public List<SoulSpawnLayout> soulSpawns = new List<SoulSpawnLayout>();
         public List<PrisonLayout> prisons = new List<PrisonLayout>();
         public List<ShelterLayout> shelters = new List<ShelterLayout>();
-        public List<GapLayout> gaps = new List<GapLayout>();
         public List<ConnectionLayout> connections = new List<ConnectionLayout>();
         public List<AltarLayout> altars = new List<AltarLayout>();
         public List<PortalLayout> portals = new List<PortalLayout>();
+
+        // Walking distance of the branch tile nearest to `position` (XZ): prisons and shelters
+        // sit anywhere across the ribbon, not on tile centers.
+        public float PathDistanceAt(int branchId, Vector3 position)
+        {
+            float best = float.MaxValue, distance = 0f;
+            foreach (var tile in tiles)
+            {
+                if (tile.branchId != branchId) continue;
+                float dx = tile.position.x - position.x, dz = tile.position.z - position.z;
+                float d = dx * dx + dz * dz;
+                if (d < best)
+                { best = d; distance = tile.pathDistance; }
+            }
+            return distance;
+        }
     }
 
     [Serializable]
@@ -48,23 +67,11 @@ namespace SoulBlocks
         public int branchId = -1; // -1 for connections
         public float pathDistance; // walking distance from hub
         public string requiresUnlock = ""; // "" = always present
-        public bool shortcut; // dash-only side platform (a disc), not part of the required path
-        // This tile's stretch of the curved ribbon (PathShape), left/right top-surface edges.
-        // Empty for shortcut platforms.
+        // This tile's stretch of the path ribbon, left/right top-surface edges.
         public List<Vector3> edgeLeft = new List<Vector3>();
         public List<Vector3> edgeRight = new List<Vector3>();
     }
 
-    [Serializable]
-    public sealed class SoulSpawnLayout
-    {
-        public int id;
-        public Vector3 position;
-        public int tileIndex = -1; // the tile whose ribbon the souls scatter over
-        public int branchId;
-        public int baseCount;
-        public string requiresUnlock = "";
-    }
 
     [Serializable]
     public sealed class PrisonLayout
@@ -89,14 +96,6 @@ namespace SoulBlocks
         public int branchId;
     }
 
-    [Serializable]
-    public sealed class GapLayout
-    {
-        public int id;
-        public Vector3 from;
-        public Vector3 to;
-        public int branchId;
-    }
 
     [Serializable]
     public sealed class ConnectionLayout
@@ -124,18 +123,5 @@ namespace SoulBlocks
         public int branchId;
     }
 
-    [Serializable]
-    public sealed class MapGenInput
-    {
-        public int seed;
-        public List<MapAnchor> anchors = new List<MapAnchor>();
-        public Vector3 hubCenter;
-    }
 
-    [Serializable]
-    public sealed class MapAnchor
-    {
-        public Vector3 position; // island edge point, top surface
-        public Vector3 direction; // unit, outward
-    }
 }

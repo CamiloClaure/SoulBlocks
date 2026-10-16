@@ -3,7 +3,7 @@ using UnityEngine;
 namespace SoulBlocks
 {
     // Keep the original serialized values intact.
-    public enum CrystalColor { Yellow = 0, Blue = 1, Violet = 2, Green = 3, Celeste = 4, Red = 5 }
+    public enum CrystalColor { Yellow = 0, Blue = 1, Violet = 2, Green = 3, Cyan = 4, Red = 5 }
     public enum CrystalSize { Small = 1, Medium = 2, Large = 3 }
 
     [DisallowMultipleComponent, RequireComponent(typeof(BoxCollider))]
@@ -48,7 +48,7 @@ namespace SoulBlocks
             bonusChance = Mathf.Clamp01(chance);
             if (Nourished) return;
             Nourished = true;
-            rewardAura = new GameObject("Aura de recompensa azul");
+            rewardAura = new GameObject("Blue Reward Aura");
             rewardAura.transform.SetParent(transform, false);
             var line = rewardAura.AddComponent<LineRenderer>();
             auraMaterial = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
@@ -64,8 +64,11 @@ namespace SoulBlocks
                 line.SetPosition(i, new Vector3(Mathf.Cos(angle) * radius, .45f * (int)size, Mathf.Sin(angle) * radius));
             }
             var glow = rewardAura.AddComponent<Light>();
-            glow.color = new Color(.2f, .6f, 1); glow.range = radius * 5; glow.intensity = 2;
+            glow.color = new Color(.2f, .6f, 1);
+            glow.range = radius * 5;
+            glow.intensity = 2;
         }
+
         void OnDestroy() { if (auraMaterial != null) Destroy(auraMaterial); }
 
         public static int HealthFor(CrystalColor color, CrystalSize size)
@@ -76,7 +79,7 @@ namespace SoulBlocks
         public Color BaseColor => color == CrystalColor.Blue ? BlockRules.ColorOf(SpecialBlock.Blue)
             : color == CrystalColor.Violet ? new Color(.7f, .25f, 1f)
             : color == CrystalColor.Green ? BlockRules.ColorOf(SpecialBlock.Green)
-            : color == CrystalColor.Celeste ? BlockRules.ColorOf(SpecialBlock.Celeste)
+            : color == CrystalColor.Cyan ? BlockRules.ColorOf(SpecialBlock.Cyan)
             : color == CrystalColor.Red ? BlockRules.ColorOf(SpecialBlock.Red) : new Color(1f, .8f, .05f);
 
         void Awake()
@@ -93,7 +96,8 @@ namespace SoulBlocks
         {
             var root = GameRoot.Instance;
             if (Keys.Blocked || root == null || root.Player == null || root.ViewCamera == null || body == null ||
-                !ShowsHealthAt(root.Player.transform.position)) return;
+                !ShowsHealthAt(root.Player.transform.position))
+                return;
             var bounds = body.bounds;
             var anchor = new Vector3(bounds.center.x, bounds.max.y + .3f, bounds.center.z);
             var point = root.ViewCamera.WorldToScreenPoint(anchor);
@@ -113,7 +117,8 @@ namespace SoulBlocks
         {
             if (rewardAura != null) Destroy(rewardAura);
             if (auraMaterial != null) Destroy(auraMaterial);
-            Nourished = false; bonusPercent = bonusChance = 0;
+            Nourished = false;
+            bonusPercent = bonusChance = 0;
             FragmentReward = 3 * Mathf.Max(1, (int)size);
             ConfigureAppearance();
             Health = MaxHealth;

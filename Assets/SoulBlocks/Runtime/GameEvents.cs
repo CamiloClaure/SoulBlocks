@@ -4,7 +4,7 @@ using UnityEngine;
 namespace SoulBlocks
 {
     // Every cross-system signal. Systems subscribe in their own OnEnable/OnDisable; nobody
-    // maintains a central list of listeners. Frozen: add an event only through the orchestrator.
+    // maintains a central list of listeners.
     public static partial class GameEvents
     {
         public static event Action<MapLayout> MapBuilt;
@@ -16,7 +16,6 @@ namespace SoulBlocks
         public static event Action<float, float> EnergyChanged;
         public static event Action<float> EnergyWarning;
         public static event Action<int> SoulsCollected;
-        public static event Action<int, int> CargoChanged;
         public static event Action<int> SoulsDeposited;
         public static event Action<Vector3, int> SoulsReleased; // loose souls to spawn on the ground (prisons, altars)
         public static event Action<int> WisdomChanged;
@@ -31,7 +30,6 @@ namespace SoulBlocks
         public static event Action<int> ShelterExited;
         public static event Action<int> TileDiscovered;
         public static event Action DashUsed;
-        public static event Action MagnetUsed;
         public static event Action<int> ObjectiveCompleted;
         public static event Action<string> BlessingChosen;
         public static event Action GameWon;
@@ -45,7 +43,6 @@ namespace SoulBlocks
         public static void RaiseEnergyChanged(float current, float max) => EnergyChanged?.Invoke(current, max);
         public static void RaiseEnergyWarning(float fraction) => EnergyWarning?.Invoke(fraction);
         public static void RaiseSoulsCollected(int amount) => SoulsCollected?.Invoke(amount);
-        public static void RaiseCargoChanged(int cargo, int capacity) => CargoChanged?.Invoke(cargo, capacity);
         public static void RaiseSoulsDeposited(int amount) => SoulsDeposited?.Invoke(amount);
         public static void RaiseSoulsReleased(Vector3 position, int count) => SoulsReleased?.Invoke(position, count);
         public static void RaiseWisdomChanged(int total) => WisdomChanged?.Invoke(total);
@@ -60,7 +57,6 @@ namespace SoulBlocks
         public static void RaiseShelterExited(int id) => ShelterExited?.Invoke(id);
         public static void RaiseTileDiscovered(int index) => TileDiscovered?.Invoke(index);
         public static void RaiseDashUsed() => DashUsed?.Invoke();
-        public static void RaiseMagnetUsed() => MagnetUsed?.Invoke();
         public static void RaiseObjectiveCompleted(int index) => ObjectiveCompleted?.Invoke(index);
         public static void RaiseBlessingChosen(string id) => BlessingChosen?.Invoke(id);
         public static void RaiseGameWon() => GameWon?.Invoke();
@@ -79,7 +75,6 @@ namespace SoulBlocks
             EnergyChanged = null;
             EnergyWarning = null;
             SoulsCollected = null;
-            CargoChanged = null;
             SoulsDeposited = null;
             SoulsReleased = null;
             WisdomChanged = null;
@@ -94,7 +89,6 @@ namespace SoulBlocks
             ShelterExited = null;
             TileDiscovered = null;
             DashUsed = null;
-            MagnetUsed = null;
             ObjectiveCompleted = null;
             BlessingChosen = null;
             GameWon = null;

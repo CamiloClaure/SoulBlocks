@@ -14,7 +14,7 @@ namespace SoulBlocks.Tests
             Assert.IsNotNull(run.upgrades);
             Assert.IsNotNull(run.prisons);
             Assert.IsNotNull(run.discoveredTiles);
-            Assert.IsNotNull(run.groundSouls);
+            Assert.IsNotNull(run.specialBlockLevels);
             Assert.IsNotNull(run.plan);
             Assert.IsNotNull(run.plan.offered);
             Assert.IsNotNull(run.activeBlessings);
@@ -64,7 +64,7 @@ namespace SoulBlocks.Tests
             run.SetUpgradeLevel("cargo", 4);
             run.Prison(2).damage = 5;
             run.Prison(2).broken = true;
-            run.groundSouls.Add(new GroundSoul { position = new Vector3(1, 2, 3), value = 7 });
+            run.pickaxeLevel = 7;
             run.discoveredTiles.Add(9);
             run.plan.offered.Add(new ObjectiveRecord { kind = "collect", targetId = 1, goal = 10, progress = 3 });
             run.plan.chosenObjective = 0;
@@ -79,9 +79,7 @@ namespace SoulBlocks.Tests
             Assert.AreEqual(4, loaded.UpgradeLevel("cargo"));
             Assert.AreEqual(5, loaded.Prison(2).damage);
             Assert.IsTrue(loaded.Prison(2).broken);
-            Assert.AreEqual(1, loaded.groundSouls.Count);
-            Assert.AreEqual(7, loaded.groundSouls[0].value);
-            Assert.AreEqual(new Vector3(1, 2, 3), loaded.groundSouls[0].position);
+            Assert.AreEqual(7, loaded.pickaxeLevel);
             CollectionAssert.Contains(loaded.discoveredTiles, 9);
             Assert.AreEqual(1, loaded.plan.offered.Count);
             Assert.AreEqual(0, loaded.plan.chosenObjective);

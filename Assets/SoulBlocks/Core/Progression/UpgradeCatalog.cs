@@ -7,7 +7,8 @@ namespace SoulBlocks
     // Matches plan 1.7: Arbol de Almas (Souls currency, geometric cost, per-level stat effects)
     // and Arbol de Wisdom (Wisdom currency, flat one-off nodes, nucleo gated by broken tiers),
     // laid out as one Albion-style destiny board around the tree: Wisdom up, Recolección left,
-    // Movilidad right, Minería down. A node opens once its `requires` parent reaches requiresLevel.
+    // Movilidad right. The pickaxe is not here: it levels up with crystal fragments at the
+    // altar (CrystalMiningAttack). A node opens once its `requires` parent reaches requiresLevel.
     public static class UpgradeCatalog
     {
         public static readonly List<UpgradeDef> All = new List<UpgradeDef>
@@ -15,9 +16,9 @@ namespace SoulBlocks
             new UpgradeDef
             {
                 id = "carga", tree = UpgradeTree.Souls, currency = Currency.Souls,
-                name = "Carga", description = "Mas almas por salida.",
+                name = "Carga", description = "Más almas siguen a la antorcha a la vez.",
                 maxLevel = (int)Balance.CargaMaxLevel, baseCost = (int)Balance.CargaCost, growth = Balance.CargaGrowth,
-                perLevelEffects = { new UpgradeEffect(StatId.CargoCapacity, Balance.CargaEffect) },
+                perLevelEffects = { new UpgradeEffect(StatId.SpiritCapacity, Balance.CargaEffect) },
                 boardPos = new Vector2(-1.5f, 0f)
             },
             new UpgradeDef
@@ -40,16 +41,16 @@ namespace SoulBlocks
             new UpgradeDef
             {
                 id = "radio", tree = UpgradeTree.Souls, currency = Currency.Souls,
-                name = "Radio de recogida", description = "Recogés almas desde más lejos.",
+                name = "Alcance de la antorcha", description = "La antorcha en la mano atrae almas desde más lejos.",
                 maxLevel = (int)Balance.RadioMaxLevel, baseCost = (int)Balance.RadioCost, growth = Balance.RadioGrowth,
-                perLevelEffects = { new UpgradeEffect(StatId.PickupRadius, Balance.RadioEffect) },
+                perLevelEffects = { new UpgradeEffect(StatId.TorchRadius, Balance.RadioEffect) },
                 requires = "carga", requiresLevel = 1,
                 boardPos = new Vector2(-3f, .6f)
             },
             new UpgradeDef
             {
                 id = "abundancia", tree = UpgradeTree.Souls, currency = Currency.Souls,
-                name = "Abundancia", description = "Aparecen más almas en las cuevas.",
+                name = "Abundancia", description = "Más almas errantes en los caminos.",
                 maxLevel = (int)Balance.AbundanciaMaxLevel, baseCost = (int)Balance.AbundanciaCost, growth = Balance.AbundanciaGrowth,
                 perLevelEffects = { new UpgradeEffect(StatId.SoulDensity, Balance.AbundanciaEffect) },
                 requires = "carga", requiresLevel = 1,
@@ -66,41 +67,6 @@ namespace SoulBlocks
                 milestoneText = "2da carga de dash",
                 requires = "energia", requiresLevel = 1,
                 boardPos = new Vector2(3f, -.6f)
-            },
-            new UpgradeDef
-            {
-                id = "iman_radio", tree = UpgradeTree.Souls, currency = Currency.Souls,
-                name = "Radio de imán", description = "El imán atrae desde más lejos.",
-                maxLevel = (int)Balance.ImanRadioMaxLevel, baseCost = (int)Balance.ImanRadioCost, growth = Balance.ImanRadioGrowth,
-                perLevelEffects = { new UpgradeEffect(StatId.MagnetRadius, Balance.ImanRadioEffect) },
-                requires = "radio", requiresLevel = 2,
-                boardPos = new Vector2(-4.5f, .6f)
-            },
-            new UpgradeDef
-            {
-                id = "iman_duracion", tree = UpgradeTree.Souls, currency = Currency.Souls,
-                name = "Duración de imán", description = "El imán dura más tiempo.",
-                maxLevel = (int)Balance.ImanDuracionMaxLevel, baseCost = (int)Balance.ImanDuracionCost, growth = Balance.ImanDuracionGrowth,
-                perLevelEffects = { new UpgradeEffect(StatId.MagnetDuration, Balance.ImanDuracionEffect) },
-                requires = "iman_radio", requiresLevel = 2,
-                boardPos = new Vector2(-6f, .6f)
-            },
-            new UpgradeDef
-            {
-                id = "pico_nivel", tree = UpgradeTree.Souls, currency = Currency.Souls,
-                name = "Nivel de pico", description = "Pica cristales de tier más alto y pega más fuerte.",
-                maxLevel = (int)Balance.PicoNivelMaxLevel, baseCost = (int)Balance.PicoNivelCost, growth = Balance.PicoNivelGrowth,
-                perLevelEffects = { new UpgradeEffect(StatId.PickLevel, Balance.PicoNivelEffect) },
-                boardPos = new Vector2(0f, -1.5f)
-            },
-            new UpgradeDef
-            {
-                id = "pico_velocidad", tree = UpgradeTree.Souls, currency = Currency.Souls,
-                name = "Velocidad de pico", description = "Menos tiempo entre golpes.",
-                maxLevel = (int)Balance.PicoVelocidadMaxLevel, baseCost = (int)Balance.PicoVelocidadCost, growth = Balance.PicoVelocidadGrowth,
-                perLevelEffects = { new UpgradeEffect(StatId.PickInterval, Balance.PicoVelocidadEffect) },
-                requires = "pico_nivel", requiresLevel = 1,
-                boardPos = new Vector2(0f, -3f)
             },
 
             new UpgradeDef

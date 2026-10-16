@@ -17,7 +17,6 @@ namespace SoulBlocks
             && !(SpecialBlockSystem.Instance != null && SpecialBlockSystem.Instance.HandledInteractionThisFrame);
 
         public static bool DashPressed => Allowed && Keyboard.current != null && Keyboard.current.leftShiftKey.wasPressedThisFrame;
-        public static bool MagnetPressed => Allowed && Keyboard.current != null && Keyboard.current.qKey.wasPressedThisFrame;
         public static bool InteractPressed => Allowed && Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame;
         public static bool MapHeld => Allowed && Keyboard.current != null && Keyboard.current.tabKey.isPressed;
         public static bool PausePressed => Allowed && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;

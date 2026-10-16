@@ -81,7 +81,7 @@ namespace SoulBlocks
 
         void RollExtraReward(PrisonLayout layout, Vector3 position)
         {
-            var roll = RewardTable.Roll(run.effectiveSeed, layout.id);
+            var roll = RewardTable.Roll(run.seed, layout.id);
             switch (roll.kind)
             {
                 case RewardKind.Souls:
@@ -115,7 +115,7 @@ namespace SoulBlocks
             if (run.HasUnlock(UnlockIds.Cadena)) excluded.Add("pico_cadena");
 
             int count = stats.GetInt(StatId.BlessingOptions);
-            var offer = BlessingTable.Offer(run.effectiveSeed, prisonId, count, excluded);
+            var offer = BlessingTable.Offer(run.seed, prisonId, count, excluded);
             if (offer.Count == 0)
             {
                 Hud.Toast("Sin bendiciones nuevas disponibles");
@@ -157,18 +157,15 @@ namespace SoulBlocks
                 case "dash_extra":
                     stats.SetModifier("blessing.dash_extra", StatId.DashCharges, Balance.BlessingDashChargesAdd, 1f);
                     break;
-                case "iman_amplio":
-                    stats.SetModifier("blessing.iman_amplio", StatId.MagnetRadius, 0f, Balance.BlessingMagnetRadiusMul);
-                    break;
                 case "energia":
                     stats.SetModifier("blessing.energia", StatId.EnergyMax, Balance.BlessingEnergyMaxAdd, 1f);
                     run.energy = Mathf.Min(stats.Get(StatId.EnergyMax), run.energy + Balance.BlessingEnergyMaxAdd);
                     break;
                 case "carga":
-                    stats.SetModifier("blessing.carga", StatId.CargoCapacity, Balance.BlessingCargoCapacityAdd, 1f);
+                    stats.SetModifier("blessing.carga", StatId.SpiritCapacity, Balance.BlessingSpiritCapacityAdd, 1f);
                     break;
-                // "pico_cadena" has no stat of its own: PickAbility already reads
-                // Run.activeBlessings.Contains("pico_cadena") directly (see CONTRATOS.md).
+                    // "pico_cadena" has no stat of its own: CrystalMiningAttack reads
+                    // Run.activeBlessings.Contains("pico_cadena") directly.
             }
         }
 
@@ -176,12 +173,16 @@ namespace SoulBlocks
         {
             switch (id)
             {
-                case "dash_extra": return "carga de dash extra";
-                case "iman_amplio": return "imán amplio";
-                case "pico_cadena": return "Golpe en cadena";
-                case "energia": return "energía máxima";
-                case "carga": return "carga extra";
-                default: return id;
+                case "dash_extra":
+                    return "carga de dash extra";
+                case "pico_cadena":
+                    return "Golpe en cadena";
+                case "energia":
+                    return "energía máxima";
+                case "carga":
+                    return "más almas siguiendo la antorcha";
+                default:
+                    return id;
             }
         }
 

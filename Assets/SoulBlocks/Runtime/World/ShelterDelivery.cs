@@ -1,10 +1,12 @@
+using System.Linq;
 using UnityEngine;
 
 namespace SoulBlocks
 {
-    // Wisdom's "Entrega en refugios" (section 1.7): once unlocked, a shelter lets the player
-    // deposit cargo on the spot instead of walking back to the tree. ShelterZone (og/mapa) owns
-    // the enter/exit events, ExpeditionController.DepositCargo() owns the actual move to Run.reserveSouls.
+    // Wisdom's "Entrega en refugios" (section 1.7): once unlocked, E inside a shelter delivers
+    // the souls following the torch on the spot instead of walking them back to the altar.
+    // ShelterZone owns the enter/exit events; each soul ascends and pays into Run.reserveSouls
+    // through the torch, same as at the altar.
     public sealed class ShelterDelivery : MonoBehaviour
     {
         const float LabelRange = 30f;
@@ -34,15 +36,17 @@ namespace SoulBlocks
         void OnShelterEntered(int id) => currentShelterId = id;
         void OnShelterExited(int id) { if (currentShelterId == id) currentShelterId = -1; }
 
-        bool CanDeliver(RunState run) => currentShelterId >= 0 && run != null && run.HasUnlock(UnlockIds.Entrega) && run.cargoSouls > 0;
+        bool CanDeliver(RunState run) => currentShelterId >= 0 && run != null && run.HasUnlock(UnlockIds.Entrega) && WanderingSpirit.FollowingCount > 0;
 
         void Update()
         {
             var root = GameRoot.Instance;
             if (root == null || !CanDeliver(root.Run) || !Keys.InteractPressed) return;
 
-            int amount = root.Run.cargoSouls;
-            ExpeditionController.Instance?.DepositCargo();
+            int amount = 0;
+            foreach (var spirit in WanderingSpirit.All.ToArray())
+                if (spirit.Following && !spirit.Ascending)
+                { spirit.Deliver(); amount++; }
             Hud.Toast("Entregaste " + amount + " almas");
         }
 
@@ -56,7 +60,7 @@ namespace SoulBlocks
                 foreach (var shelter in layout.shelters)
                     if ((shelter.position - player).sqrMagnitude <= LabelRange * LabelRange)
                         Hud.WorldLabel(shelter.position + Vector3.up * 1.2f, "Refugio");
-            if (CanDeliver(root.Run)) Hud.WorldLabel(player + Vector3.up * 2.2f, "E: Entregar carga");
+            if (CanDeliver(root.Run)) Hud.WorldLabel(player + Vector3.up * 2.2f, "E: Entregar almas");
         }
     }
 }

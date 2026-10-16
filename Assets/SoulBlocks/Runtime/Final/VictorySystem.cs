@@ -3,7 +3,7 @@ using UnityEngine;
 namespace SoulBlocks
 {
     // Opens the victory screen when the Nucleo breaks. FinalRules.EndsRun is the only gate on
-    // PrisonBroken (og/prisiones owns that event for every tier); Run.victory then guards
+    // PrisonBroken (raised by PrisonView for every tier); Run.victory then guards
     // against a loaded save past victory replaying any of this (plan: "no replay the ending").
     public sealed class VictorySystem : MonoBehaviour
     {
@@ -78,7 +78,8 @@ namespace SoulBlocks
         void DrawWindow(int windowId)
         {
             var root = GameRoot.Instance;
-            if (root == null || root.Run == null) { GUILayout.Label("..."); return; }
+            if (root == null || root.Run == null)
+            { GUILayout.Label("..."); return; }
 
             foreach (var line in RunSummary.Lines(root.Run))
                 GUILayout.Label(line);
@@ -86,7 +87,7 @@ namespace SoulBlocks
             GUILayout.Space(10);
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Seguir jugando")) Continue();
-            if (GUILayout.Button("Nueva partida")) GameRoot.Restart(null, null);
+            if (GUILayout.Button("Nueva partida")) GameRoot.Restart(null);
             GUILayout.EndHorizontal();
         }
     }

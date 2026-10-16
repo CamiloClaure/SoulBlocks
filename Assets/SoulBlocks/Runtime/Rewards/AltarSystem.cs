@@ -63,7 +63,7 @@ namespace SoulBlocks
 
             foreach (var altar in layout.altars)
             {
-                altars[altar.id] = new AltarEntry { layout = altar, roll = AltarRules.Roll(run.effectiveSeed, altar.id) };
+                altars[altar.id] = new AltarEntry { layout = altar, roll = AltarRules.Roll(run.seed, altar.id) };
                 Build(altar);
             }
         }
@@ -77,14 +77,16 @@ namespace SoulBlocks
         void Update()
         {
             var gameRoot = GameRoot.Instance;
-            if (gameRoot == null || gameRoot.Player == null || run == null) { nearAltarId = -1; return; }
+            if (gameRoot == null || gameRoot.Player == null || run == null)
+            { nearAltarId = -1; return; }
 
             nearAltarId = -1;
             Vector3 p = gameRoot.Player.transform.position;
             foreach (var entry in altars.Values)
             {
                 if (run.spentAltars.Contains(entry.layout.id)) continue;
-                if (Vector3.Distance(p, entry.layout.position) <= Balance.AltarInteractRange) { nearAltarId = entry.layout.id; break; }
+                if (Vector3.Distance(p, entry.layout.position) <= Balance.AltarInteractRange)
+                { nearAltarId = entry.layout.id; break; }
             }
 
             if (nearAltarId >= 0 && Keys.InteractPressed) UseAltar(nearAltarId);

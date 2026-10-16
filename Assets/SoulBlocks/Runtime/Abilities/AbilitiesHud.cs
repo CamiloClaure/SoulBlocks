@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace SoulBlocks
 {
-    // One left-column line for dash, magnet and pick, order 300.
+    // One left-column line for the dash and the pickaxe, order 300.
     public sealed class AbilitiesHud : MonoBehaviour
     {
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -15,22 +15,15 @@ namespace SoulBlocks
         void Draw()
         {
             var root = GameRoot.Instance;
-            if (root == null) return;
-            var parts = new List<string>(3);
+            if (root == null || root.Run == null) return;
+            var parts = new List<string>(2);
 
             var dash = root.GetComponent<DashAbility>();
             if (dash != null) parts.Add("Dash " + dash.Charges + "/" + dash.MaxCharges);
+            int level = Mathf.Clamp(root.Run.pickaxeLevel, 1, 50);
+            parts.Add("Pico nv " + level + " (" + PrisonRules.PickaxeTierName(PrisonRules.PickaxeTier(level)) + ")");
 
-            var magnet = root.GetComponent<MagnetAbility>();
-            if (magnet != null)
-                parts.Add("Imán " + (magnet.Active ? "activo"
-                    : magnet.CooldownRemaining > 0f ? magnet.CooldownRemaining.ToString("F0") + "s"
-                    : "listo"));
-
-            var pick = root.GetComponent<PickAbility>();
-            if (pick != null) parts.Add("Pico nv " + root.Stats.GetInt(StatId.PickLevel) + (pick.CooldownRemaining > 0f ? "" : " listo"));
-
-            if (parts.Count > 0) Hud.Line(string.Join("  ·  ", parts));
+            Hud.Line(string.Join("  ·  ", parts));
             Hud.Line("Picar: mantener click izquierdo");
         }
     }

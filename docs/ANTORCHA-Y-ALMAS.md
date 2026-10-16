@@ -1,51 +1,56 @@
-# Antorcha y almas errantes (prueba)
+# Antorcha y almas errantes
 
-Abre WorldBuilding. Junto al árbol está el cilindro **Altar** y una antorcha flotante.
+Las almas solo se juntan con la antorcha: no se recogen por contacto. Junto al árbol está el
+altar de la antorcha (**Torch Altar Area**) con la antorcha flotando sobre él.
 
-- **F** cerca de la antorcha: tomarla. Se enciende y acompaña la mano izquierda, dejando libre la derecha para picar.
+- **F** cerca de la antorcha: tomarla. Se enciende y acompaña la mano izquierda, dejando libre
+  la derecha para picar.
 - **F** mientras la llevas: colocarla flotando delante del jugador, sobre suelo firme.
-- **F** cerca de una antorcha colocada: recogerla nuevamente.
-- **F** llevando la antorcha cerca del altar: devolverla a su lugar flotante.
+- **F** cerca de una antorcha colocada: recogerla de nuevo.
+- **F** llevando la antorcha cerca del altar: devolverla a su lugar.
 - **T**: encender/apagar mientras la llevas o estás cerca de ella.
-- **E** conserva la tienda del árbol; la antorcha usa F para evitar conflictos.
+- **E** queda para el altar del árbol; la antorcha usa F para evitar conflictos.
 
-Las almas son esferas luminosas moradas con una estela corta. Merodean fuera del
-camino a una velocidad máxima de 4 m/s; su movimiento libre evita entrar en él.
-Coloca la antorcha encendida con F: el radio empieza en 4 m y aumenta 2 m cada 3 s
-hasta 12 m (12 s en total). El anillo y el HUD muestran el alcance y la próxima
-expansión. Al llegar al máximo aparece «LLAMADO COMPLETO» y un aviso para recogerla.
-Puedes picar mientras esperas. Recogerla antes también es posible; volver a colocarla
-inicia un llamado nuevo desde 4 m. Apagarla o abrir un menú pausa el crecimiento.
+## Llamar y guiar
 
-En la mano su alcance para atraer almas nuevas es de 4 m. Las almas atraídas
-siguen la luz a 9 m/s, incluso mientras caminas. Una vez atraídas, mantienen el
-seguimiento hasta 18 metros para no perderlas fácilmente al moverte. Si superas
-esa distancia o apagas la luz, vuelven a merodear. No se recogen por contacto ni con
-el imán: las conduces al altar.
+Las almas merodean fuera de los caminos a un máximo de 4 m/s y su movimiento libre evita
+entrar en ellos. Con la antorcha en la mano, las almas a su alcance (**Alcance de la antorcha**,
+4 m al empezar) la siguen a 9 m/s, por detrás del jugador, aunque camines o piques. Una vez que
+te siguen, mantienen el seguimiento hasta 18 m; si te alejas más o apagas la luz, vuelven a
+merodear.
 
-Con la antorcha devuelta y encendida en el altar, las almas cercanas ascienden y
-se desvanecen. Cada una suma una sola alma a la reserva espiritual existente.
-El contador de antorcha indica cuántas guiaste en esta prueba. No hay mejoras de luz,
-reposición nocturna ni persistencia entre sesiones en la escena de construcción.
+Como mucho te siguen **Carga** almas a la vez (12 al empezar). Las demás esperan hasta que haya
+lugar.
+
+Colocada y encendida, la antorcha hace un llamado: el radio empieza en 4 m y crece 2 m cada 3 s
+hasta 12 m. El anillo y el HUD muestran el alcance y la próxima expansión. Al llegar al máximo
+aparece «LLAMADO COMPLETO» y un aviso para recogerla. Apagarla o abrir un menú pausa el
+crecimiento; recogerla y volver a colocarla empieza un llamado nuevo.
+
+## Entregar
+
+Con la antorcha devuelta al altar, las almas cercanas ascienden y se desvanecen; cada una suma
+un alma a la reserva. Con **Entrega en refugios** (Wisdom), E dentro de un refugio entrega en el
+acto las almas que te siguen. Si la expedición termina por energía, las que te seguían se quedan
+donde estaban.
+
+## De dónde salen
+
+- Junto a todos los caminos activos, en dos franjas a cada lado, y algunas en el vacío
+  (`Path Population`). Al empezar cada expedición se reponen las que faltan; **Abundancia**
+  acerca los puestos (más almas).
+- Las prisiones liberan almas al completar cada fase; aparecen donde se rompieron.
+- Los árboles nutribles vivos generan las suyas (ver [BLOQUES-ESPECIALES.md](BLOQUES-ESPECIALES.md)).
+- La anomalía de almas de la expedición suelta un grupo en un tramo de la rama activa.
 
 ## Prefab y modelo de Blender
 
 `Assets/SoulBlocks/Prefabs/SpiritGuiding/GuidingTorch.prefab`
 
-Reemplaza el contenido de **Model - reemplazar por FBX** por tu FBX. El origen es el
-punto de agarre y el eje Y apunta hacia arriba. El mango provisional mide unos
-0,48 m. Conserva el objeto raíz y el componente GuidingTorch, la luz y el indicador
- de alcance. Ajusta Hand Offset si necesitas corregir el agarre.
+Reemplaza el contenido de **Model - replace with FBX** por tu FBX. El origen es el punto de
+agarre y el eje Y apunta hacia arriba. El mango provisional mide unos 0,48 m. Conserva el objeto
+raíz, el componente `GuidingTorch`, la luz y el indicador de alcance. Ajusta Hand Offset si
+necesitas corregir el agarre.
 
-Las almas y el altar están bajo **Altar y almas errantes** en Hierarchy. El suelo
-lateral es una malla fija creada para este trazado; no se adapta automáticamente
-si después mueves el camino. Puedes mover las almas individualmente fuera de Play.
-
-En WorldBuilding se desactivaron las antiguas esferas recolectables y las almas
-sueltas liberadas por cristales. Cada cristal roto suelta 3 fragmentos por nivel de
-tamaño; al recogerlos se suman al contador independiente de cristales. Las almas entregadas se acumulan
-en la reserva espiritual que ya consume la tienda del árbol para sus mejoras.
-El gasto de cristales en el árbol y los picos sigue pendiente. La escena anterior
-SoulBlocks conserva sus sistemas antiguos.
-
-Actualización: las almas son amarillas, tienen halo etéreo sin estelas y siguen por detrás al jugador cuando lleva la antorcha. Población ampliada y arena de poderes: [ALMAS-Y-ARENA.md](ALMAS-Y-ARENA.md).
+Las almas son `Assets/SoulBlocks/Prefabs/SpiritGuiding/WanderingSpirit.prefab`: amarillas, con
+núcleo luminoso y halo translúcido pulsante. Ver [ALMAS-Y-ARENA.md](ALMAS-Y-ARENA.md).

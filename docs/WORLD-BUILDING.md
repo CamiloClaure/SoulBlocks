@@ -1,57 +1,63 @@
-# Construir el camino primario
+# Construir el mundo y la expedición
 
-1. Abre `Assets/Scenes/WorldBuilding.unity` (o Tools > SoulBlocks > Open World Building).
-2. En Hierarchy selecciona **Mundo manual > Camino primario**. Pulsa F con el cursor sobre Scene para encuadrarlo.
-3. Fuera de Play, pulsa una esfera amarilla P0, P1… y arrastra sus flechas. X/Z cambian el recorrido; Y cambia la altura. La curva pasa por esos puntos.
-4. En Inspector ajusta **Width** (ancho), **Thickness** (grosor) y, si necesitas más suavidad, **Samples Per Segment**.
-5. Usa **Añadir punto al final**, **Insertar después del seleccionado** o **Eliminar punto seleccionado**. Ctrl+Z deshace los cambios.
-6. Mueve también **Destino provisional** cuando cambies el final del camino; la plataforma es un objeto independiente.
-7. Guarda la escena con Ctrl+S, entra en Play y recorre el camino. Sal de Play antes de continuar editando.
+Todo el mundo vive en `Assets/Scenes/SoulBlocks.unity`, hecho a mano: no hay seeds ni
+generación. Al entrar en Play, `SceneLayout` lee los caminos y los marcadores de la escena y
+arma con ellos el mapa que usan la expedición, el mapa (Tab), las prisiones, los refugios, los
+portales y los objetivos.
 
-El recorrido inicial sale cerca del árbol, cruza el borde de la isla, hace una S y sube suavemente a una plataforma. Es una guía editable: puedes cambiar cada punto para dar significado a tu mundo.
+## Caminos
 
-Los puntos se guardan en la escena. El suelo y el MeshCollider se reconstruyen a partir de esos puntos al abrirla y al jugar; no usan seed ni eligen rutas aleatorias. La escena original SoulBlocks conserva su funcionamiento anterior.
+1. En Hierarchy selecciona un camino bajo **World** (por ejemplo **Primary Path**), o usa
+   **Tools > SoulBlocks > Editar puntos del camino**. Pulsa F sobre Scene para encuadrarlo.
+2. Fuera de Play, arrastra las esferas P0, P1… X/Z cambian el recorrido; Y cambia la altura.
+   La curva pasa por esos puntos.
+3. En Inspector ajusta **Width**, **Thickness** y **Samples Per Segment**. Usa **Añadir punto al
+   final**, **Insertar después del seleccionado** o **Eliminar punto seleccionado** (Ctrl+Z deshace).
+4. Guarda la escena con Ctrl+S y prueba en Play.
 
-En esta prueba no se generan mapas, cristales o recompensas procedurales, no comienza la expedición al salir de la isla y no se sobrescribe el guardado de partida. La construcción se guarda como escena, no desde el menú de pausa.
+Cada camino tiene un **Role**:
 
-## Límites de esta primera herramienta
+- **Decor**: solo suelo caminable.
+- **Branch**: una rama de expedición, con su **Specialty** (Souls, Prisons o Exploration). Un
+  camino Branch anidado dentro de otro lo extiende (así funciona **Deep Path**, que sigue a
+  **Primary Path** después del laboratorio).
+- **Connection**: un puente entre las dos ramas más cercanas a sus extremos.
 
-- Mantén escala (1,1,1) en Camino primario y ajusta el ancho desde Inspector.
-- Evita puntos coincidentes, curvas que se crucen y pendientes verticales. La herramienta no corrige automáticamente pendientes o cruces; debes probarlos con el jugador.
-- El suelo usa la capa Ground (8), compatible con el movimiento y la cámara existentes.
-- Las bifurcaciones, iluminación por tramos y representación de caminos manuales en el minimapa quedan para una siguiente etapa.
-- Para crear otra ruta puedes duplicar Camino primario y editar sus puntos. Usa una plataforma para unir rutas.
+Las ramas se cortan en tramos de 30 m (`Balance.TileSize`) para el descubrimiento y el mapa.
+Mantén escala (1,1,1) en los caminos; evita puntos coincidentes, cruces y pendientes verticales.
+El suelo usa la capa Ground (8).
 
-## Camino con cristales amarillos
+## Marcadores
 
-El camino se amplió conservando el trazado previo y añadiendo curvas hasta una plataforma final.
-Longitud aproximada: 222 m. Hay 24 cristales amarillos colocados en la escena, bajo
-`Mundo manual > Cristales amarillos del camino`: 18 pequeños y 6 medianos.
-Puedes mover cada cristal individualmente. No se recolocan automáticamente al editar
-los puntos del camino y todavía no existe reposición nocturna.
+Se colocan como hijos del camino al que pertenecen (o cerca de él: si no cuelgan de un camino
+Branch, toman la rama del tramo más cercano):
 
-## Población de todos los caminos y prueba de bloques
+- **PrisonSite**: una prisión. Tier, propiedades (Resonant, ExposedCore), grupo de resonancia,
+  patrón y **Branch End** (la del final de la rama: ofrece una bendición y abre su portal).
+- **ShelterSite**: un refugio con su **Radius**. Pausa la energía y, con Entrega, recibe las
+  almas que siguen a la antorcha. El laboratorio y la arena tienen uno cada uno.
+- **PortalSite**: el portal de la rama, activo con Raíz I y su prisión final rota.
+- **RiskAltarSite**: un altar de riesgo.
+- **UnlockGate**: oculta a sus hijos hasta tener el desbloqueo indicado (por ejemplo
+  `wisdom.raiz3`). Todo lo que cuelga de un gate queda bloqueado también en el mapa: **Deep Path
+  Gate** (Raíz III), **Nucleo Gate** (Despertar) y **Connection Gate** (Raíz II).
 
-Al entrar en Play, **Poblacion de caminos dibujados** lee todos los componentes
-AuthoredPath activos. No modifica el trazado ni usa seed. Distribuye almas por
-ambos lados aproximadamente cada 10 m y añade grupos de tres cristales amarillos
-cada 14 m, evitando superponerlos con los cristales colocados a mano. Hay un límite
-editable de 120 almas y 120 cristales añadidos. Estos objetos aparecen al jugar;
-para aplicar cambios a tus caminos sal de Play, edita, guarda y vuelve a jugar.
+Los ids de prisiones y tramos siguen el orden de la jerarquía; el guardado los usa, así que
+reordenar marcadores cambia qué prisión está rota en una partida guardada.
 
-Las almas flotan fuera de los caminos, incluso donde aún no has modelado terreno.
-La antorcha puede atraerlas desde allí. El suelo lateral anterior sigue siendo una
-malla fija: la población no construye nuevo terreno alrededor de las rutas.
+## Recorrido actual
 
-Al final del Camino primario está **Prueba de cinco bloques**, sobre una plataforma
-amplia con 15 cristales de cinco colores y tres tamaños. Rueda selecciona el bloque,
-clic derecho usa el activo y E dentro de esa zona abre mejoras y restauración.
-Los cinco están desbloqueados y sus pasivas activas en esta prueba. Las mejoras
-siguen siendo gratuitas; el desbloqueo progresivo por nivel del árbol no se aplica
-al laboratorio. Los ayudantes celestes ahora también recogen fragmentos de cristal.
+- **Primary Path** (Prisons): sube en S hasta el laboratorio de bloques. Dos T1, un grupo
+  resonante de tres T2, un altar de riesgo, una T3 expuesta y la T3 final antes del laboratorio.
+  Sigue por **Deep Path** (Raíz III) con dos T4 y el **Núcleo** (Despertar) en su plataforma.
+- **Power Test Path** (Souls): hasta la arena de poderes. Dos T1 y la T2 final.
+- **Exploration Path** (Exploration): hacia el oeste de la isla. Refugio a mitad de camino,
+  una plataforma alcanzable solo con dash con un altar de riesgo, y la T2 final.
+- **Connection Path** (Raíz II): une el camino principal con el de poderes.
 
-La plataforma de prueba permanece donde fue colocada: si cambias el final del
-camino, mueve también la plataforma y la zona de prueba para mantener la conexión.
+La población de almas y grupos de cristales sobre los caminos se genera al jugar
+(`Path Population`); ver [ALMAS-Y-ARENA.md](ALMAS-Y-ARENA.md).
 
 ## Terreno y árbol central
-WorldBuilding usa ahora un Terrain editable, con el suelo antiguo desactivado, un árbol blanco provisional y un altar que revela cinco símbolos para mejorar bloques y acceder a talentos. Consulta [TERRENO-Y-ALTAR.md](TERRENO-Y-ALTAR.md).
+
+La isla es un Terrain editable bajo **Main Island**; ver [TERRENO-Y-ALTAR.md](TERRENO-Y-ALTAR.md).

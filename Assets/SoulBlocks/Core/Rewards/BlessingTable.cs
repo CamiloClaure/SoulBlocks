@@ -8,15 +8,15 @@ namespace SoulBlocks
     // useful with the player's current abilities (plan: "solo opciones utiles").
     public static class BlessingTable
     {
-        public static readonly string[] AllIds = { "dash_extra", "iman_amplio", "pico_cadena", "energia", "carga" };
+        public static readonly string[] AllIds = { "dash_extra", "pico_cadena", "energia", "carga" };
 
-        public static List<string> Offer(int effectiveSeed, int prisonId, int count, ICollection<string> excluded)
+        public static List<string> Offer(int seed, int prisonId, int count, ICollection<string> excluded)
         {
             var pool = new List<string>();
             foreach (var id in AllIds)
                 if (excluded == null || !excluded.Contains(id)) pool.Add(id);
 
-            SeededRng.Stream(effectiveSeed, "blessing.offer." + prisonId).Shuffle(pool);
+            SeededRng.Stream(seed, "blessing.offer." + prisonId).Shuffle(pool);
 
             int take = count < pool.Count ? count : pool.Count;
             if (take < 0) take = 0;

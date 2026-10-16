@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 2087410238685240468}
   - component: {fileID: 1579563880968729364}
   m_Layer: 0
-  m_Name: Alcance de la luz
+  m_Name: Light Range
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -269,6 +269,9 @@ MonoBehaviour:
   litMaterial: {fileID: 2100000, guid: 5781df1a146cd4242a9a3b1dd99d706b, type: 2}
   unlitMaterial: {fileID: 2100000, guid: 5104fe637b07a0240b3cb3518c9f6910, type: 2}
   attractionRadius: 12
+  initialRadius: 4
+  radiusStep: 2
+  pulseInterval: 3
   handOffset: {x: 0, y: 0.03, z: 0.08}
 --- !u!1 &6592488685292626814
 GameObject:
@@ -282,7 +285,7 @@ GameObject:
   - component: {fileID: 6661421049271187973}
   - component: {fileID: 6893607626335762501}
   m_Layer: 0
-  m_Name: Mango provisional
+  m_Name: Placeholder Handle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -370,7 +373,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4900030712366554951}
   m_Layer: 0
-  m_Name: Model - reemplazar por FBX
+  m_Name: Model - replace with FBX
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -405,7 +408,7 @@ GameObject:
   - component: {fileID: 9034130520687783422}
   - component: {fileID: 4528266331114300914}
   m_Layer: 0
-  m_Name: Luz amarilla
+  m_Name: Yellow Light
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -1,5 +1,8 @@
 # Contratos de SoulBlocks (Fase 1: Cimientos)
 
+> Histórico: describe la etapa con mapa generado por seed (MapGen, recogida de almas, Rayhit).
+> El juego actual usa un mundo hecho a mano; ver el README.
+
 Congelados desde `og/cimientos`. Cambiarlos despues de este merge es trabajo del orquestador,
 no de una cuadrilla de fase 2/3. Si falta algo: pedirlo en el reporte final, no improvisar un
 contrato nuevo en tu rama.

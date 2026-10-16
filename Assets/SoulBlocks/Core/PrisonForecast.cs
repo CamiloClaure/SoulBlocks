@@ -1,5 +1,6 @@
 namespace SoulBlocks
 {
+    // What the next blow will do to a prison (PrisonRules.Forecast).
     public enum ForecastKind
     {
         Breaks,
@@ -19,11 +20,16 @@ namespace SoulBlocks
         {
             switch (Kind)
             {
-                case ForecastKind.Breaks: return "último golpe";
-                case ForecastKind.Hits: return hits + " golpes";
-                case ForecastKind.RequiresLevel: return "requiere pico nv " + requiredLevel;
-                case ForecastKind.Broken: return "rota";
-                default: return "";
+                case ForecastKind.Breaks:
+                    return "último golpe";
+                case ForecastKind.Hits:
+                    return hits + " golpes";
+                case ForecastKind.RequiresLevel:
+                    return "requiere pico nv " + requiredLevel;
+                case ForecastKind.Broken:
+                    return "rota";
+                default:
+                    return "";
             }
         }
     }

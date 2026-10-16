@@ -5,19 +5,34 @@ using UnityEngine.InputSystem;
 
 namespace SoulBlocks
 {
+    // The five special blocks: actives on keys 1-5 with their cooldowns, passives rolled on
+    // steps and pickaxe hits, their areas, bombs and helpers, and the lab they are tested in.
     public sealed partial class SpecialBlockSystem : MonoBehaviour
     {
-        sealed class Area { public SpecialBlock kind; public Vector3 position; public float radius, until, nextPulse; public GameObject visual; }
-        sealed class Bomb { public Vector3 position; public float until; public int level; public GameObject visual; }
+        sealed class Area
+        {
+            public SpecialBlock kind;
+            public Vector3 position;
+            public float radius, until, nextPulse;
+            public GameObject visual;
+        }
+
+        sealed class Bomb
+        {
+            public Vector3 position;
+            public float until;
+            public int level;
+            public GameObject visual;
+        }
+
         public static SpecialBlockSystem Instance { get; private set; }
         public SpecialBlockLab Lab { get; private set; }
         public bool Ready => Lab != null && GameRoot.Instance != null && GameRoot.Instance.Run != null;
         public bool PassivesEnabled = true;
-        public int DeliveredSouls { get; set; }
         public int GreenHits { get; private set; }
-        public int CelesteHits { get; private set; }
+        public int CyanHits { get; private set; }
         public int GreenRolls { get; private set; }
-        public int CelesteRolls { get; private set; }
+        public int CyanRolls { get; private set; }
         public int Explosions { get; private set; }
         public int ActiveBombs => bombs.Count;
         public int HelperCount { get { helpers.RemoveAll(h => h == null); return helpers.Count; } }
@@ -44,6 +59,7 @@ namespace SoulBlocks
             GameEvents.MapBuilt += OnMapBuilt;
             Hud.Register(780, Draw);
         }
+
         void OnDisable()
         {
             GameEvents.MapBuilt -= OnMapBuilt;
@@ -56,6 +72,7 @@ namespace SoulBlocks
             }
             if (Instance == this) Instance = null;
         }
+
         void OnMapBuilt(MapLayout layout)
         {
             Lab = FindAnyObjectByType<SpecialBlockLab>();
@@ -67,6 +84,7 @@ namespace SoulBlocks
             rng = SeededRng.Stream(Run.seed, "special.blocks");
             if (GameRoot.Instance.Player != null) lastPlayer = GameRoot.Instance.Player.transform.position;
         }
+
         public int Level(SpecialBlock block) => Ready ? Run.specialBlockLevels[(int)block] : 1;
         bool Roll() => (RandomValue != null ? RandomValue() : rng.NextFloat()) < BlockRules.Chance(Run.specialBlockClothingLevel);
         public float RewardRoll() => RandomValue != null ? RandomValue() : UnityEngine.Random.value;
@@ -76,6 +94,7 @@ namespace SoulBlocks
             crystal.Nourish(.5f + .25f * (Level(SpecialBlock.Blue) - 1), .5f);
             return true;
         }
+
         float yellowUntil;
         Light yellowGlow;
         void ActivateTrees(Vector3 position, float radius)
@@ -84,12 +103,14 @@ namespace SoulBlocks
                 if (tree != null && Vector3.Distance(tree.transform.position, position) <= radius)
                     tree.Revive(20 + 5 * (Level(SpecialBlock.Yellow) - 1));
         }
+
         void BluePulse(Vector3 position, float radius)
         {
             foreach (var crystal in BreakableCrystal.All)
                 if (crystal != null && Vector3.Distance(crystal.transform.position, position) <= radius)
                     TryNourishCrystal(crystal, false);
         }
+
         public void Select(int index) { if (Ready) Run.selectedSpecialBlock = ((index % 5) + 5) % 5; }
 
         void Update()
@@ -102,7 +123,8 @@ namespace SoulBlocks
                 if (Keyboard.current != null && (Keyboard.current.escapeKey.wasPressedThisFrame || Keyboard.current.eKey.wasPressedThisFrame)) CloseShop();
                 return;
             }
-            if (Keys.Blocked) { lastPlayer = root.Player.transform.position; return; }
+            if (Keys.Blocked)
+            { lastPlayer = root.Player.transform.position; return; }
             if (root.Player.readInput && Application.isFocused && !Keys.FreeCursorHeld && Mouse.current != null)
             {
                 float wheel = Mouse.current.scroll.ReadValue().y;
@@ -116,7 +138,8 @@ namespace SoulBlocks
             float distance = Vector3.Distance(root.Player.transform.position, lastPlayer);
             lastPlayer = root.Player.transform.position;
             if (distance < 2f) steps += distance; // Teleports do not generate passive rolls.
-            while (steps >= BlockRules.StepDistance) { steps -= BlockRules.StepDistance; NotifyStep(lastPlayer); }
+            while (steps >= BlockRules.StepDistance)
+            { steps -= BlockRules.StepDistance; NotifyStep(lastPlayer); }
             UpdateEffects();
             tempo = SpeedAt(root.Player.transform.position);
             if (Mathf.Abs(lastTempo - tempo) > .001f)
@@ -159,13 +182,16 @@ namespace SoulBlocks
                 case SpecialBlock.Green:
                     AddArea(Selected, point, BlockRules.Radius(Selected, level), BlockRules.Duration(Selected, level));
                     break;
-                case SpecialBlock.Celeste:
-                    if (HelperCount >= BlockRules.MaxHelpers) { Hud.Toast("Límite de 4 ayudantes activos"); return false; }
+                case SpecialBlock.Cyan:
+                    if (HelperCount >= BlockRules.MaxHelpers)
+                    { Hud.Toast("Límite de 4 ayudantes activos"); return false; }
                     for (int i = 0; i < BlockRules.HelperCount(level); i++) SpawnHelper(point + Vector3.right * i * .4f);
                     break;
-                case SpecialBlock.Red: PlaceBomb(point, level); break;
+                case SpecialBlock.Red:
+                    PlaceBomb(point, level);
+                    break;
             }
-            cooldowns[(int)Selected] = Selected == SpecialBlock.Celeste ? 10 : 5;
+            cooldowns[(int)Selected] = Selected == SpecialBlock.Cyan ? 10 : 5;
             Hud.Toast("Activo: " + BlockRules.Name(Selected));
             return true;
         }
@@ -181,15 +207,20 @@ namespace SoulBlocks
                     yellowUntil = Time.time + 5;
                     if (yellowGlow == null)
                     {
-                        var glow = new GameObject("Luz amarilla de nutrición");
+                        var glow = new GameObject("Yellow Nourishing Light");
                         glow.transform.SetParent(GameRoot.Instance.Player.transform, false);
                         glow.transform.localPosition = Vector3.up;
                         yellowGlow = glow.AddComponent<Light>();
-                        yellowGlow.color = Color.yellow; yellowGlow.range = 6; yellowGlow.intensity = 4;
+                        yellowGlow.color = Color.yellow;
+                        yellowGlow.range = 6;
+                        yellowGlow.intensity = 4;
                         var ring = glow.AddComponent<LineRenderer>();
-                        ring.sharedMaterial = EffectMaterial; ring.useWorldSpace = false;
-                        ring.startWidth = ring.endWidth = .05f; ring.positionCount = 49;
-                        var tint = new MaterialPropertyBlock(); tint.SetColor("_BaseColor", Color.yellow);
+                        ring.sharedMaterial = EffectMaterial;
+                        ring.useWorldSpace = false;
+                        ring.startWidth = ring.endWidth = .05f;
+                        ring.positionCount = 49;
+                        var tint = new MaterialPropertyBlock();
+                        tint.SetColor("_BaseColor", Color.yellow);
                         ring.SetPropertyBlock(tint);
                         for (int i = 0; i <= 48; i++)
                         {
@@ -206,15 +237,18 @@ namespace SoulBlocks
             GreenHits++;
             if (GreenHits >= BlockRules.HitInterval(Level(SpecialBlock.Green)))
             {
-                GreenHits = 0; GreenRolls++;
-                if (Roll()) { buffUntil = Time.time + BlockRules.BuffSeconds(Level(SpecialBlock.Green)); Hud.Toast("Pasiva verde: velocidad aumentada"); }
+                GreenHits = 0;
+                GreenRolls++;
+                if (Roll())
+                { buffUntil = Time.time + BlockRules.BuffSeconds(Level(SpecialBlock.Green)); Hud.Toast("Pasiva verde: velocidad aumentada"); }
             }
             // Helpers benefit from green and red, but cannot recursively summon more helpers.
             if (helper) return;
-            CelesteHits++;
-            if (CelesteHits >= BlockRules.HitInterval(Level(SpecialBlock.Celeste)))
+            CyanHits++;
+            if (CyanHits >= BlockRules.HitInterval(Level(SpecialBlock.Cyan)))
             {
-                CelesteHits = 0; CelesteRolls++;
+                CyanHits = 0;
+                CyanRolls++;
                 if (Roll() && SpawnHelper(position)) Hud.Toast("Pasiva celeste: ayudante temporal");
             }
         }
@@ -223,6 +257,7 @@ namespace SoulBlocks
         {
             // Walking no longer rolls yellow or blue; their passives come from mining.
         }
+
         void Illuminate(Vector3 position, float radius, float seconds)
         {
             ActivateTrees(position, radius);
@@ -232,11 +267,13 @@ namespace SoulBlocks
                 surface.Illuminate(seconds);
             }
         }
+
         public void Reveal(Vector3 position, float radius)
         {
             foreach (var crystal in BreakableCrystal.All)
                 if (crystal != null && Vector3.Distance(position, crystal.transform.position) <= radius) crystal.Reveal();
         }
+
         public float SpeedAt(Vector3 position)
         {
             if (!Ready) return 1;
@@ -246,6 +283,7 @@ namespace SoulBlocks
                     return BlockRules.Speed(Level(SpecialBlock.Green));
             return 1;
         }
+
         void UpdateEffects()
         {
             if (yellowGlow != null) yellowGlow.gameObject.SetActive(Time.time < yellowUntil);
@@ -253,7 +291,8 @@ namespace SoulBlocks
             for (int i = areas.Count - 1; i >= 0; i--)
             {
                 var area = areas[i];
-                if (Time.time >= area.until) { Destroy(area.visual); areas.RemoveAt(i); continue; }
+                if (Time.time >= area.until)
+                { Destroy(area.visual); areas.RemoveAt(i); continue; }
                 if (area.kind == SpecialBlock.Blue)
                 {
                     // The expanding ring is visual only; pulses never inflict damage.
@@ -264,19 +303,29 @@ namespace SoulBlocks
                         float angle = j * Mathf.PI * 2 / 64;
                         line.SetPosition(j, area.position + new Vector3(Mathf.Cos(angle) * radius, .1f, Mathf.Sin(angle) * radius));
                     }
-                    if (Time.time >= area.nextPulse) { BluePulse(area.position, area.radius); area.nextPulse = Time.time + 1; }
+                    if (Time.time >= area.nextPulse)
+                    { BluePulse(area.position, area.radius); area.nextPulse = Time.time + 1; }
                 }
                 if (area.kind == SpecialBlock.Yellow) ActivateTrees(area.position, area.radius);
             }
-            foreach (var surface in Lab.surfaces) if (surface != null) surface.Refresh(false);
+            foreach (var surface in Lab.surfaces)
+                if (surface != null)
+                    surface.Refresh(false);
             for (int i = bombs.Count - 1; i >= 0; i--)
             {
                 var bomb = bombs[i];
                 float remaining = bomb.until - Time.time;
-                if (remaining <= 0) { Explode(bomb.position, bomb.level, false); Destroy(bomb.visual); bombs.RemoveAt(i); continue; }
+                if (remaining <= 0)
+                {
+                    Explode(bomb.position, bomb.level, false);
+                    Destroy(bomb.visual);
+                    bombs.RemoveAt(i);
+                    continue;
+                }
                 Placeholder.SetColor(bomb.visual, Mathf.FloorToInt(Time.time * 10) % 2 == 0 ? Color.red : Color.white, 1);
             }
         }
+
         void AddArea(SpecialBlock kind, Vector3 point, float radius, float seconds)
         {
             var go = new GameObject(kind + " Area");
@@ -298,19 +347,24 @@ namespace SoulBlocks
             if (kind == SpecialBlock.Yellow)
             {
                 var light = go.AddComponent<Light>();
-                light.type = LightType.Point; light.color = Color.yellow; light.intensity = 3; light.range = radius * 2;
+                light.type = LightType.Point;
+                light.color = Color.yellow;
+                light.intensity = 3;
+                light.range = radius * 2;
                 go.transform.position += Vector3.up * 2;
             }
             areas.Add(new Area { kind = kind, position = point, radius = radius, until = Time.time + seconds, nextPulse = Time.time + 1, visual = go });
         }
+
         Material effectMaterial;
         Material EffectMaterial => effectMaterial != null ? effectMaterial : effectMaterial = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
         void OnDestroy() { if (effectMaterial != null) Destroy(effectMaterial); }
         void PlaceBomb(Vector3 position, int level)
         {
-            var go = Placeholder.Make(PrimitiveType.Cube, Color.red, "Bomba roja", transform, position + Vector3.up * .3f, Vector3.one * .6f, false, 1);
+            var go = Placeholder.Make(PrimitiveType.Cube, Color.red, "Red Bomb", transform, position + Vector3.up * .3f, Vector3.one * .6f, false, 1);
             bombs.Add(new Bomb { position = position, until = Time.time + BlockRules.BombFuse, level = level, visual = go });
         }
+
         public void Explode(Vector3 position, int level, bool helper)
         {
             Explosions++;
@@ -320,33 +374,42 @@ namespace SoulBlocks
                     crystal.TakeDamage(BlockRules.RedDamage(level, helper));
             AddArea(SpecialBlock.Red, position, radius, .25f);
         }
+
         public bool SpawnHelper(Vector3 position)
         {
             if (!Ready || HelperCount >= BlockRules.MaxHelpers) return false;
-            int level = Level(SpecialBlock.Celeste);
-            var root = new GameObject("Ayudante celeste");
+            int level = Level(SpecialBlock.Cyan);
+            var root = new GameObject("Cyan Helper");
             root.transform.SetParent(transform);
             root.transform.position = position;
-            Placeholder.Make(PrimitiveType.Capsule, BlockRules.ColorOf(SpecialBlock.Celeste), "Body", root.transform, position + Vector3.up * .55f, new Vector3(.35f, .35f, .35f), false, .3f);
+            Placeholder.Make(PrimitiveType.Capsule, BlockRules.ColorOf(SpecialBlock.Cyan), "Body", root.transform, position + Vector3.up * .55f, new Vector3(.35f, .35f, .35f), false, .3f);
             Placeholder.Make(PrimitiveType.Sphere, Color.white, "Head", root.transform, position + Vector3.up * 1.02f, Vector3.one * .3f, false, .2f);
             var helper = root.AddComponent<BlockHelper>();
-            helper.owner = this; helper.expiresAt = Time.time + BlockRules.Duration(SpecialBlock.Celeste, level);
+            helper.owner = this;
+            helper.expiresAt = Time.time + BlockRules.Duration(SpecialBlock.Cyan, level);
             helpers.Add(helper);
             return true;
         }
+
         public void ResetLab()
         {
             if (!Ready) return;
             foreach (var area in areas) Destroy(area.visual);
             foreach (var bomb in bombs) Destroy(bomb.visual);
-            foreach (var helper in helpers) if (helper != null) Destroy(helper.gameObject);
-            areas.Clear(); bombs.Clear(); helpers.Clear();
+            foreach (var helper in helpers)
+                if (helper != null)
+                    Destroy(helper.gameObject);
+            areas.Clear();
+            bombs.Clear();
+            helpers.Clear();
             Array.Clear(cooldowns, 0, cooldowns.Length);
-            GreenHits = CelesteHits = 0;
+            GreenHits = CyanHits = 0;
             buffUntil = 0;
             yellowUntil = 0;
             if (yellowGlow != null) yellowGlow.gameObject.SetActive(false);
-            foreach (var tree in NourishableTree.All) if (tree != null) tree.ResetTree();
+            foreach (var tree in NourishableTree.All)
+                if (tree != null)
+                    tree.ResetTree();
             Lab.RestoreCrystals();
         }
     }

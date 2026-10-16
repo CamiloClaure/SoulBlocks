@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace SoulBlocks
 {
+    // A fixed crystal spot in the lab or the arena: Restore() respawns its crystal fresh.
     public sealed class CrystalLabSlot : MonoBehaviour
     {
         public GameObject prefab;
@@ -12,9 +13,10 @@ namespace SoulBlocks
 
         public void Restore()
         {
-            if (crystal != null) { crystal.gameObject.SetActive(false); Destroy(crystal.gameObject); }
+            if (crystal != null)
+            { crystal.gameObject.SetActive(false); Destroy(crystal.gameObject); }
             var go = Instantiate(prefab, transform);
-            go.name = color == CrystalColor.Yellow && size == CrystalSize.Small ? "Crystal Yellow - Tree" : color + " " + size;
+            go.name = "Crystal " + color + " " + size;
             go.transform.localPosition = Vector3.zero;
             crystal = go.GetComponent<BreakableCrystal>();
             crystal.color = color;
