@@ -122,7 +122,8 @@ namespace SoulBlocks
             {
                 if (tile.branchId < 0) continue;
                 float distance = Flat(tile.position - position).sqrMagnitude;
-                if (distance < bestDistance) { bestDistance = distance; best = tile.branchId; }
+                if (distance < bestDistance)
+                { bestDistance = distance; best = tile.branchId; }
             }
             return best;
         }

@@ -5,7 +5,7 @@ namespace SoulBlocks
 {
     // Despertar staging: a toast, a beam above the Nucleo visible from afar, and a persistent
     // "Rompé el Núcleo: X m" HUD line while an expedition is active. The Nucleo itself (shape,
-    // HP, unlock-gated activation) belongs to og/prisiones' PrisonSystem/PrisonView; this only
+    // HP, unlock-gated activation) belongs to PrisonSystem/PrisonView; this only
     // reacts to the unlock. Also owns Run.playTimeSeconds: ticks unscaled time whenever no modal
     // has Keys.Blocked set.
     public sealed class FinalExpeditionSystem : MonoBehaviour

@@ -14,6 +14,7 @@ namespace SoulBlocks
             var spirit = GetComponentInParent<WanderingSpirit>();
             phase = spirit != null ? spirit.phase : transform.position.sqrMagnitude;
         }
+
         void Update()
         {
             if (halo != null && !Keys.Blocked)

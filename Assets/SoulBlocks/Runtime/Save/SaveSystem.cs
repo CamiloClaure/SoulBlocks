@@ -72,7 +72,8 @@ namespace SoulBlocks
             if (!File.Exists(path)) return null;
 
             string json;
-            try { json = File.ReadAllText(path); }
+            try
+            { json = File.ReadAllText(path); }
             catch (Exception e) { Debug.LogWarning("SaveSystem: read failed: " + e.Message); return null; }
 
             var run = SaveStore.Deserialize(json);
@@ -98,7 +99,8 @@ namespace SoulBlocks
         {
             string path = SavePath;
             string json;
-            try { json = File.Exists(path) ? File.ReadAllText(path) : null; }
+            try
+            { json = File.Exists(path) ? File.ReadAllText(path) : null; }
             catch { return false; }
             return SaveStore.Deserialize(json) != null;
         }

@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace SoulBlocks
 {
+    // Golpe en cadena target picking: the nearest untouched target within range.
     public static class ChainSelection
     {
         // Index into targets of the nearest one to `from` within range whose index is not in

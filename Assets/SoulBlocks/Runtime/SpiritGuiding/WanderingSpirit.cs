@@ -31,6 +31,7 @@ namespace SoulBlocks
                 FollowingCount += value ? 1 : -1;
             }
         }
+
         public bool Ascending { get; private set; }
         public bool FollowingBehind => Following && torch != null && torch.State == TorchState.Carried;
         Vector3 home;
@@ -74,7 +75,8 @@ namespace SoulBlocks
                 ascension += Time.deltaTime;
                 transform.position += Vector3.up * Time.deltaTime * 2;
                 if (visual != null) visual.localScale = Vector3.one * Mathf.Max(0, 1 - ascension / 1.4f);
-                if (ascension >= 1.4f && !delivered) { delivered = true; torch.ReceiveSoul(); Destroy(gameObject); }
+                if (ascension >= 1.4f && !delivered)
+                { delivered = true; torch.ReceiveSoul(); Destroy(gameObject); }
                 return;
             }
             bool attracted = torch.Calls(transform.position, Following);
@@ -113,7 +115,8 @@ namespace SoulBlocks
                 if (visual != null) visual.localPosition = Vector3.up * .55f;
                 return;
             }
-            Vector3 delta = target - transform.position; delta.y = 0;
+            Vector3 delta = target - transform.position;
+            delta.y = 0;
             Vector3 next = transform.position + Vector3.ClampMagnitude(delta, (Following ? followSpeed : wanderSpeed) * Time.deltaTime);
             if (!Following && tree == null && InsideRoad(next)) next = transform.position;
             // Spirits travel over authored ground, so attraction cannot send them through the void.

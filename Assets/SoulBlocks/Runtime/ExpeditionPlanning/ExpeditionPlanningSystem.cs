@@ -203,7 +203,8 @@ namespace SoulBlocks
             {
                 float dx = tile.position.x - position.x, dz = tile.position.z - position.z;
                 float d2 = dx * dx + dz * dz;
-                if (d2 < best) { best = d2; branch = tile.branchId; }
+                if (d2 < best)
+                { best = d2; branch = tile.branchId; }
             }
             return branch;
         }
@@ -214,7 +215,8 @@ namespace SoulBlocks
             if (root == null || root.Run == null || root.Layout == null || root.Run.plan == null) return;
             var run = root.Run;
 
-            if (run.inExpedition) { DrawExpeditionLine(run); return; }
+            if (run.inExpedition)
+            { DrawExpeditionLine(run); return; }
 
             var hubZone = root.GetComponent<HubZone>();
             if (hubZone == null || !hubZone.InHub) return;
@@ -248,9 +250,12 @@ namespace SoulBlocks
         {
             switch (specialty)
             {
-                case BranchSpecialty.Souls: return "Almas";
-                case BranchSpecialty.Prisons: return "Prisiones";
-                default: return "Exploración";
+                case BranchSpecialty.Souls:
+                    return "Almas";
+                case BranchSpecialty.Prisons:
+                    return "Prisiones";
+                default:
+                    return "Exploración";
             }
         }
 
@@ -265,12 +270,16 @@ namespace SoulBlocks
         {
             switch (objective.kind)
             {
-                case "recolectar": return "Recolectar " + objective.goal + " almas en la rama " + BranchName(layout, objective.branchId);
-                case "fracturar": return "Fracturar una prisión en la rama " + BranchName(layout, objective.branchId);
-                case "descubrir": return objective.targetId >= 0
+                case "recolectar":
+                    return "Recolectar " + objective.goal + " almas en la rama " + BranchName(layout, objective.branchId);
+                case "fracturar":
+                    return "Fracturar una prisión en la rama " + BranchName(layout, objective.branchId);
+                case "descubrir":
+                    return objective.targetId >= 0
                     ? "Descubrir un refugio en la rama " + BranchName(layout, objective.branchId)
                     : "Descubrir una conexión cerca de la rama " + BranchName(layout, objective.branchId);
-                default: return objective.kind;
+                default:
+                    return objective.kind;
             }
         }
 
@@ -278,10 +287,14 @@ namespace SoulBlocks
         {
             switch (objective.kind)
             {
-                case "recolectar": return "recolectar almas";
-                case "fracturar": return "fracturar prisión";
-                case "descubrir": return "descubrir";
-                default: return objective.kind;
+                case "recolectar":
+                    return "recolectar almas";
+                case "fracturar":
+                    return "fracturar prisión";
+                case "descubrir":
+                    return "descubrir";
+                default:
+                    return objective.kind;
             }
         }
 
@@ -289,10 +302,14 @@ namespace SoulBlocks
         {
             switch (anomaly.kind)
             {
-                case "almas": return "concentración de almas";
-                case "prision_debilitada": return "prisión debilitada (x2 daño)";
-                case "corriente": return "corriente (dash x2 cerca)";
-                default: return anomaly.kind;
+                case "almas":
+                    return "concentración de almas";
+                case "prision_debilitada":
+                    return "prisión debilitada (x2 daño)";
+                case "corriente":
+                    return "corriente (dash x2 cerca)";
+                default:
+                    return anomaly.kind;
             }
         }
 
@@ -300,10 +317,14 @@ namespace SoulBlocks
         {
             switch (kind)
             {
-                case "almas": return new Color(.6f, .2f, .9f);
-                case "prision_debilitada": return new Color(1f, .5f, .1f);
-                case "corriente": return new Color(.2f, .9f, 1f);
-                default: return Color.white;
+                case "almas":
+                    return new Color(.6f, .2f, .9f);
+                case "prision_debilitada":
+                    return new Color(1f, .5f, .1f);
+                case "corriente":
+                    return new Color(.2f, .9f, 1f);
+                default:
+                    return Color.white;
             }
         }
     }

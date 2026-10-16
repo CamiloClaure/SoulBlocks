@@ -29,16 +29,26 @@ namespace SoulBlocks
         {
             switch (stat)
             {
-                case StatId.MoveSpeed: return Balance.MoveSpeed;
-                case StatId.SpiritCapacity: return Balance.SpiritCapacity;
-                case StatId.EnergyMax: return Balance.EnergyMax;
-                case StatId.TorchRadius: return Balance.TorchRadius;
-                case StatId.DashCharges: return Balance.DashCharges;
-                case StatId.DashDistance: return Balance.DashDistance;
-                case StatId.DashRechargeSeconds: return Balance.DashRechargeSeconds;
-                case StatId.BlessingOptions: return Balance.BlessingOptions;
-                case StatId.SoulDensity: return Balance.SoulDensity;
-                default: return 0f;
+                case StatId.MoveSpeed:
+                    return Balance.MoveSpeed;
+                case StatId.SpiritCapacity:
+                    return Balance.SpiritCapacity;
+                case StatId.EnergyMax:
+                    return Balance.EnergyMax;
+                case StatId.TorchRadius:
+                    return Balance.TorchRadius;
+                case StatId.DashCharges:
+                    return Balance.DashCharges;
+                case StatId.DashDistance:
+                    return Balance.DashDistance;
+                case StatId.DashRechargeSeconds:
+                    return Balance.DashRechargeSeconds;
+                case StatId.BlessingOptions:
+                    return Balance.BlessingOptions;
+                case StatId.SoulDensity:
+                    return Balance.SoulDensity;
+                default:
+                    return 0f;
             }
         }
 

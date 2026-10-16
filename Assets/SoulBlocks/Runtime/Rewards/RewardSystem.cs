@@ -164,8 +164,8 @@ namespace SoulBlocks
                 case "carga":
                     stats.SetModifier("blessing.carga", StatId.SpiritCapacity, Balance.BlessingSpiritCapacityAdd, 1f);
                     break;
-                // "pico_cadena" has no stat of its own: CrystalMiningAttack reads
-                // Run.activeBlessings.Contains("pico_cadena") directly.
+                    // "pico_cadena" has no stat of its own: CrystalMiningAttack reads
+                    // Run.activeBlessings.Contains("pico_cadena") directly.
             }
         }
 
@@ -173,11 +173,16 @@ namespace SoulBlocks
         {
             switch (id)
             {
-                case "dash_extra": return "carga de dash extra";
-                case "pico_cadena": return "Golpe en cadena";
-                case "energia": return "energía máxima";
-                case "carga": return "más almas siguiendo la antorcha";
-                default: return id;
+                case "dash_extra":
+                    return "carga de dash extra";
+                case "pico_cadena":
+                    return "Golpe en cadena";
+                case "energia":
+                    return "energía máxima";
+                case "carga":
+                    return "más almas siguiendo la antorcha";
+                default:
+                    return id;
             }
         }
 

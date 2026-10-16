@@ -140,7 +140,8 @@ namespace SoulBlocks
             {
                 float angle = i * Mathf.PI * 2f / 8f;
                 Vector3 candidate = center + new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle)) * Balance.HubReturnOffset;
-                if (SoulPlayer.IsSupportedAt(candidate)) { root.Player.Teleport(candidate); return; }
+                if (SoulPlayer.IsSupportedAt(candidate))
+                { root.Player.Teleport(candidate); return; }
             }
             root.Player.Teleport(center); // ponytail: no supported point found nearby, drop them on the tree anyway
         }

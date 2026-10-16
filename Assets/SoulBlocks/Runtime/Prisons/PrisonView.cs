@@ -28,6 +28,7 @@ namespace SoulBlocks
                 return PrisonRules.PickaxeTier(run.pickaxeLevel) < required ? label + "\nrequiere pico " + PrisonRules.PickaxeTierName(required) : label;
             }
         }
+
         string label;
 
         public int PrisonId => layout.id;
@@ -159,11 +160,16 @@ namespace SoulBlocks
         {
             switch (tier)
             {
-                case PrisonTier.T1: return "I";
-                case PrisonTier.T2: return "II";
-                case PrisonTier.T3: return "III";
-                case PrisonTier.T4: return "IV";
-                default: return "N";
+                case PrisonTier.T1:
+                    return "I";
+                case PrisonTier.T2:
+                    return "II";
+                case PrisonTier.T3:
+                    return "III";
+                case PrisonTier.T4:
+                    return "IV";
+                default:
+                    return "N";
             }
         }
 
@@ -171,11 +177,16 @@ namespace SoulBlocks
         {
             switch (tier)
             {
-                case PrisonTier.T1: return new Shape { type = PrimitiveType.Cube, color = Color.yellow, scale = new Vector3(1.2f, 1.2f, 1.2f) };
-                case PrisonTier.T2: return new Shape { type = PrimitiveType.Cylinder, color = new Color(.2f, .8f, .2f), scale = new Vector3(.8f, .6f, .8f) };
-                case PrisonTier.T3: return new Shape { type = PrimitiveType.Capsule, color = new Color(.2f, .4f, 1f), scale = new Vector3(.8f, .6f, .8f) };
-                case PrisonTier.T4: return new Shape { type = PrimitiveType.Sphere, color = Color.red, scale = new Vector3(1.2f, 1.2f, 1.2f) };
-                default: return new Shape { type = PrimitiveType.Sphere, color = Color.white, scale = new Vector3(2.4f, 2.4f, 2.4f) }; // Nucleo
+                case PrisonTier.T1:
+                    return new Shape { type = PrimitiveType.Cube, color = Color.yellow, scale = new Vector3(1.2f, 1.2f, 1.2f) };
+                case PrisonTier.T2:
+                    return new Shape { type = PrimitiveType.Cylinder, color = new Color(.2f, .8f, .2f), scale = new Vector3(.8f, .6f, .8f) };
+                case PrisonTier.T3:
+                    return new Shape { type = PrimitiveType.Capsule, color = new Color(.2f, .4f, 1f), scale = new Vector3(.8f, .6f, .8f) };
+                case PrisonTier.T4:
+                    return new Shape { type = PrimitiveType.Sphere, color = Color.red, scale = new Vector3(1.2f, 1.2f, 1.2f) };
+                default:
+                    return new Shape { type = PrimitiveType.Sphere, color = Color.white, scale = new Vector3(2.4f, 2.4f, 2.4f) }; // Nucleo
             }
         }
     }

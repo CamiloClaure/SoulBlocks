@@ -3,6 +3,7 @@ using UnityEngine.InputSystem;
 
 namespace SoulBlocks
 {
+    // Where the torch is: docked on its altar, in the player's hand, or placed on the ground.
     public enum TorchState { Altar, Carried, Placed }
 
     // The torch that guides souls: F takes it from its altar, places it (a call that grows its
@@ -47,6 +48,7 @@ namespace SoulBlocks
             if (keyboard.fKey.wasPressedThisFrame) Interact(Player);
             if (keyboard.tKey.wasPressedThisFrame && (State == TorchState.Carried || Vector3.Distance(Player.transform.position, transform.position) <= 2.8f)) SetLit(!Lit);
         }
+
         public void TickCall(float seconds)
         {
             if (State != TorchState.Placed || !Lit || ReadyToRetrieve || seconds <= 0) return;
@@ -62,6 +64,7 @@ namespace SoulBlocks
                 }
             }
         }
+
         public bool Calls(Vector3 position, bool alreadyFollowing) => Lit && Vector3.Distance(position, LightPosition)
             <= (alreadyFollowing ? attractionRadius * 1.5f : CurrentRadius);
         public bool Interact(SoulPlayer player)
@@ -70,27 +73,41 @@ namespace SoulBlocks
             if (State != TorchState.Carried)
             {
                 if (Vector3.Distance(player.transform.position, transform.position) > 2.8f) return false;
-                State = TorchState.Carried; ReadyToRetrieve = false; SetLit(true); return true;
+                State = TorchState.Carried;
+                ReadyToRetrieve = false;
+                SetLit(true);
+                return true;
             }
             if (Vector3.Distance(player.transform.position, altarSocket.position) <= 3f)
             {
-                State = TorchState.Altar; transform.SetParent(null, true); transform.position = altarSocket.position; transform.localScale = Vector3.one; return true;
+                State = TorchState.Altar;
+                transform.SetParent(null, true);
+                transform.position = altarSocket.position;
+                transform.localScale = Vector3.one;
+                return true;
             }
             Vector3 forward = Quaternion.Euler(0, player.Yaw, 0) * Vector3.forward;
             Vector3 point = player.transform.position + forward * 1.5f;
             if (!Physics.Raycast(point + Vector3.up * 2, Vector3.down, out var ground, 5, (1 << 8) | (1 << 9), QueryTriggerInteraction.Ignore))
             { Hud.Toast("Coloca la antorcha sobre suelo firme"); return false; }
-            State = TorchState.Placed; placedPosition = ground.point + Vector3.up * 1.1f;
-            placedRadius = Mathf.Min(initialRadius, attractionRadius); pulseTimer = 0; ReadyToRetrieve = false;
-            transform.SetParent(null, true); transform.localScale = Vector3.one; transform.position = placedPosition;
+            State = TorchState.Placed;
+            placedPosition = ground.point + Vector3.up * 1.1f;
+            placedRadius = Mathf.Min(initialRadius, attractionRadius);
+            pulseTimer = 0;
+            ReadyToRetrieve = false;
+            transform.SetParent(null, true);
+            transform.localScale = Vector3.one;
+            transform.position = placedPosition;
             return true;
         }
+
         public void SetLit(bool value)
         {
             Lit = value;
             if (flameLight != null) flameLight.enabled = value;
             if (flame != null) flame.sharedMaterial = value ? litMaterial : unlitMaterial;
         }
+
         void LateUpdate()
         {
             if (State == TorchState.Carried && Player != null)
@@ -123,16 +140,19 @@ namespace SoulBlocks
                 }
             }
         }
+
         public void ReceiveSoul()
         {
             GuidedSouls++;
             var root = GameRoot.Instance;
             if (root != null && root.Run != null)
             {
-                root.Run.reserveSouls++; root.Run.totalSoulsCollected++;
+                root.Run.reserveSouls++;
+                root.Run.totalSoulsCollected++;
                 GameEvents.RaiseSoulsCollected(1);
             }
         }
+
         void Draw()
         {
             if (Keys.Blocked || Player == null) return;

@@ -45,7 +45,8 @@ namespace SoulBlocks
 
             int amount = 0;
             foreach (var spirit in WanderingSpirit.All.ToArray())
-                if (spirit.Following && !spirit.Ascending) { spirit.Deliver(); amount++; }
+                if (spirit.Following && !spirit.Ascending)
+                { spirit.Deliver(); amount++; }
             Hud.Toast("Entregaste " + amount + " almas");
         }
 

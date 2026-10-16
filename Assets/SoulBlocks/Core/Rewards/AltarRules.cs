@@ -1,5 +1,6 @@
 namespace SoulBlocks
 {
+    // One risk altar's rolled cost and reward (AltarRules.Roll).
     public struct AltarRoll
     {
         public int cost;

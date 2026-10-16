@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace SoulBlocks
 {
+    // The two halves of the board: soul-paid upgrades and Wisdom-paid nodes.
     public enum UpgradeTree { Souls, Wisdom }
     public enum Currency { Souls, Wisdom }
 
@@ -12,7 +13,12 @@ namespace SoulBlocks
         public StatId stat;
         public float add;
         public float mul;
-        public UpgradeEffect(StatId stat, float add, float mul = 1f) { this.stat = stat; this.add = add; this.mul = mul; }
+        public UpgradeEffect(StatId stat, float add, float mul = 1f)
+        {
+            this.stat = stat;
+            this.add = add;
+            this.mul = mul;
+        }
     }
 
     // Static definition of one node in either tree. Data only, no behaviour: ProgressionRules

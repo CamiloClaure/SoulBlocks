@@ -88,7 +88,8 @@ namespace SoulBlocks
         void DrawWindow(int windowId)
         {
             if (GUILayout.Button("Continuar")) Close();
-            if (GUILayout.Button("Guardar")) { SaveSystem.SaveNow(); Hud.Toast("Partida guardada"); }
+            if (GUILayout.Button("Guardar"))
+            { SaveSystem.SaveNow(); Hud.Toast("Partida guardada"); }
             if (GUILayout.Button(showControls ? "Ocultar controles" : "Controles")) showControls = !showControls;
             if (showControls)
                 foreach (var line in Controls) GUILayout.Label(line);

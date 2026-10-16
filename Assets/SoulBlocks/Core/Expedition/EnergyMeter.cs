@@ -38,8 +38,10 @@ namespace SoulBlocks
             Current = Mathf.Max(0f, Current - deltaTime);
             float fraction = Max > 0f ? Current / Max : 0f;
             float? warning = null;
-            if (!warned10 && fraction <= Balance.EnergyWarningLow) { warned10 = true; warning = Balance.EnergyWarningLow; }
-            else if (!warned25 && fraction <= Balance.EnergyWarningHigh) { warned25 = true; warning = Balance.EnergyWarningHigh; }
+            if (!warned10 && fraction <= Balance.EnergyWarningLow)
+            { warned10 = true; warning = Balance.EnergyWarningLow; }
+            else if (!warned25 && fraction <= Balance.EnergyWarningHigh)
+            { warned25 = true; warning = Balance.EnergyWarningHigh; }
             if (Current <= 0f) Depleted = true;
             return warning;
         }

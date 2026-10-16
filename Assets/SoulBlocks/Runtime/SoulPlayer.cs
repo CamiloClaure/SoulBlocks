@@ -4,6 +4,8 @@ using UnityEngine.InputSystem;
 
 namespace SoulBlocks
 {
+    // The player: camera-relative WASD on the walkable ground (Ground/island layers), gravity,
+    // facing, idle/walk animation, and the Spirit Path wizard model (F2 swaps to the classic one).
     [RequireComponent(typeof(CharacterController))]
     public sealed class SoulPlayer : MonoBehaviour
     {
@@ -42,6 +44,7 @@ namespace SoulBlocks
             BuildWizardHat(); // needs the classic rig's animator active, before the wizard hides it
             BuildSpiritPathWizard();
         }
+
         void Update()
         {
             if (Keys.ModelSwapPressed && wizardModel != null) ShowWizard(!wizardModel.activeSelf);
@@ -52,6 +55,7 @@ namespace SoulBlocks
                     (k.wKey.isPressed || k.upArrowKey.isPressed ? 1 : 0) - (k.sKey.isPressed || k.downArrowKey.isPressed ? 1 : 0));
             StepMovement(input, Time.deltaTime);
         }
+
         public void StepMovement(Vector2 input, float deltaTime)
         {
             HasMovementInput = !MovementLocked && input.sqrMagnitude >= .0001f;
@@ -83,6 +87,7 @@ namespace SoulBlocks
                 animationState = next;
             }
         }
+
         public void FaceDirection(Vector3 direction)
         {
             direction.y = 0;
@@ -90,6 +95,7 @@ namespace SoulBlocks
             Yaw = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
             if (visual != null) visual.rotation = Quaternion.Euler(0, Yaw, 0);
         }
+
         // Sweeps delta in short supported steps to keep walking on the only island, sliding
         // along an edge when the full step would walk off it. Returns false if any step
         // needed that fallback (so the caller knows the full delta did not land).
@@ -100,7 +106,8 @@ namespace SoulBlocks
             Vector3 step = delta / steps;
             for (int i = 0; i < steps; i++)
             {
-                if (Supported(transform.position + step)) { controller.Move(step); continue; }
+                if (Supported(transform.position + step))
+                { controller.Move(step); continue; }
                 full = false;
                 Vector3 x = new Vector3(step.x, 0, 0), z = new Vector3(0, 0, step.z);
                 if (Supported(transform.position + x)) controller.Move(x);
@@ -108,6 +115,7 @@ namespace SoulBlocks
             }
             return full;
         }
+
         public void MoveUnchecked(Vector3 delta) => controller.Move(delta);
         public void Teleport(Vector3 position)
         {
@@ -116,6 +124,7 @@ namespace SoulBlocks
             controller.enabled = true;
             Physics.SyncTransforms();
         }
+
         public static bool IsSupportedAt(Vector3 point) => Supported(point);
         static bool Supported(Vector3 point) => Physics.Raycast(point + Vector3.up, Vector3.down, 3f, (1 << 8) | (1 << 9), QueryTriggerInteraction.Ignore);
         void BuildSpiritPathWizard()
@@ -171,7 +180,8 @@ namespace SoulBlocks
 
         public void RightArm(out Transform upper, out Transform fore, out Transform hand)
         {
-            if (wizardModel != null && wizardModel.activeSelf) { upper = wizardUpperArm; fore = wizardForearm; hand = wizardHand; return; }
+            if (wizardModel != null && wizardModel.activeSelf)
+            { upper = wizardUpperArm; fore = wizardForearm; hand = wizardHand; return; }
             upper = fore = hand = null;
             if (animator == null || !animator.isHuman) return;
             upper = animator.GetBoneTransform(HumanBodyBones.RightUpperArm);
@@ -188,55 +198,71 @@ namespace SoulBlocks
 
         void BuildWizardHat()
         {
-            if(animator==null)return;
-            var head=animator.GetBoneTransform(HumanBodyBones.Head);
-            if(head==null)return;
-            Material material=null;
-            for(int i=0;i<head.childCount;i++)
+            if (animator == null) return;
+            var head = animator.GetBoneTransform(HumanBodyBones.Head);
+            if (head == null) return;
+            Material material = null;
+            for (int i = 0; i < head.childCount; i++)
             {
-                var child=head.GetChild(i);
-                if(!child.name.StartsWith("Traveler leather hat"))continue;
-                var renderer=child.GetComponent<Renderer>();
-                if(renderer!=null)material=renderer.sharedMaterial;
+                var child = head.GetChild(i);
+                if (!child.name.StartsWith("Traveler leather hat")) continue;
+                var renderer = child.GetComponent<Renderer>();
+                if (renderer != null) material = renderer.sharedMaterial;
                 child.gameObject.SetActive(false);
             }
-            if(material==null)foreach(var m in Resources.FindObjectsOfTypeAll<Material>())if(m.name=="M_CHR_Leather"){material=m;break;}
-            var hat=new GameObject("Traveler wizard hat",typeof(MeshFilter),typeof(MeshRenderer));
-            hat.transform.SetParent(head,false);
+            if (material == null)
+                foreach (var m in Resources.FindObjectsOfTypeAll<Material>())
+                    if (m.name == "M_CHR_Leather")
+                    { material = m; break; }
+            var hat = new GameObject("Traveler wizard hat", typeof(MeshFilter), typeof(MeshRenderer));
+            hat.transform.SetParent(head, false);
             // The rig's bones do not run at world scale, so a mesh authored in metres inherits the
             // bone's scale and grows to cover the island. Normalise against it and put the offset
             // in the same world units, so the hat is .84 m across whatever the rig does.
-            var scale=head.lossyScale;var inverse=new Vector3(scale.x==0?1:1/scale.x,scale.y==0?1:1/scale.y,scale.z==0?1:1/scale.z);
-            hat.transform.localScale=inverse;
-            hat.transform.localPosition=Vector3.up*.12f*inverse.y;hat.transform.localRotation=Quaternion.identity;
-            hat.GetComponent<MeshFilter>().sharedMesh=WizardHatMesh();
-            hat.GetComponent<Renderer>().sharedMaterial=material;
+            var scale = head.lossyScale;
+            var inverse = new Vector3(scale.x == 0 ? 1 : 1 / scale.x, scale.y == 0 ? 1 : 1 / scale.y, scale.z == 0 ? 1 : 1 / scale.z);
+            hat.transform.localScale = inverse;
+            hat.transform.localPosition = Vector3.up * .12f * inverse.y;
+            hat.transform.localRotation = Quaternion.identity;
+            hat.GetComponent<MeshFilter>().sharedMesh = WizardHatMesh();
+            hat.GetComponent<Renderer>().sharedMaterial = material;
         }
 
         static Mesh WizardHatMesh()
         {
-            int sides=16;float coneRadius=.30f,coneHeight=.62f,bendRad=25f*Mathf.Deg2Rad,brimRadius=.42f,half=.015f;
-            var vertices=new List<Vector3>();var triangles=new List<int>();
-            int baseStart=vertices.Count;
-            for(int i=0;i<sides;i++){float a=i*Mathf.PI*2/sides;vertices.Add(new Vector3(Mathf.Cos(a)*coneRadius,0,Mathf.Sin(a)*coneRadius));}
-            int apex=vertices.Count;vertices.Add(new Vector3(0,coneHeight*Mathf.Cos(bendRad),-coneHeight*Mathf.Sin(bendRad)));
-            for(int i=0;i<sides;i++){int a=baseStart+i,b=baseStart+(i+1)%sides;triangles.AddRange(new[]{apex,a,b,apex,b,a});}
-            int topCenter=vertices.Count;vertices.Add(new Vector3(0,half,0));
-            int topStart=vertices.Count;
-            for(int i=0;i<sides;i++){float a=i*Mathf.PI*2/sides;vertices.Add(new Vector3(Mathf.Cos(a)*brimRadius,half,Mathf.Sin(a)*brimRadius));}
-            int bottomCenter=vertices.Count;vertices.Add(new Vector3(0,-half,0));
-            int bottomStart=vertices.Count;
-            for(int i=0;i<sides;i++){float a=i*Mathf.PI*2/sides;vertices.Add(new Vector3(Mathf.Cos(a)*brimRadius,-half,Mathf.Sin(a)*brimRadius));}
-            for(int i=0;i<sides;i++)
+            int sides = 16;
+            float coneRadius = .30f, coneHeight = .62f, bendRad = 25f * Mathf.Deg2Rad, brimRadius = .42f, half = .015f;
+            var vertices = new List<Vector3>();
+            var triangles = new List<int>();
+            int baseStart = vertices.Count;
+            for (int i = 0; i < sides; i++)
+            { float a = i * Mathf.PI * 2 / sides; vertices.Add(new Vector3(Mathf.Cos(a) * coneRadius, 0, Mathf.Sin(a) * coneRadius)); }
+            int apex = vertices.Count;
+            vertices.Add(new Vector3(0, coneHeight * Mathf.Cos(bendRad), -coneHeight * Mathf.Sin(bendRad)));
+            for (int i = 0; i < sides; i++)
+            { int a = baseStart + i, b = baseStart + (i + 1) % sides; triangles.AddRange(new[] { apex, a, b, apex, b, a }); }
+            int topCenter = vertices.Count;
+            vertices.Add(new Vector3(0, half, 0));
+            int topStart = vertices.Count;
+            for (int i = 0; i < sides; i++)
+            { float a = i * Mathf.PI * 2 / sides; vertices.Add(new Vector3(Mathf.Cos(a) * brimRadius, half, Mathf.Sin(a) * brimRadius)); }
+            int bottomCenter = vertices.Count;
+            vertices.Add(new Vector3(0, -half, 0));
+            int bottomStart = vertices.Count;
+            for (int i = 0; i < sides; i++)
+            { float a = i * Mathf.PI * 2 / sides; vertices.Add(new Vector3(Mathf.Cos(a) * brimRadius, -half, Mathf.Sin(a) * brimRadius)); }
+            for (int i = 0; i < sides; i++)
             {
-                int t0=topStart+i,t1=topStart+(i+1)%sides,b0=bottomStart+i,b1=bottomStart+(i+1)%sides;
-                triangles.AddRange(new[]{topCenter,t1,t0,topCenter,t0,t1});
-                triangles.AddRange(new[]{bottomCenter,b0,b1,bottomCenter,b1,b0});
-                triangles.AddRange(new[]{t0,t1,b0,t1,b1,b0,b0,b1,t0,b1,t1,t0});
+                int t0 = topStart + i, t1 = topStart + (i + 1) % sides, b0 = bottomStart + i, b1 = bottomStart + (i + 1) % sides;
+                triangles.AddRange(new[] { topCenter, t1, t0, topCenter, t0, t1 });
+                triangles.AddRange(new[] { bottomCenter, b0, b1, bottomCenter, b1, b0 });
+                triangles.AddRange(new[] { t0, t1, b0, t1, b1, b0, b0, b1, t0, b1, t1, t0 });
             }
-            var mesh=new Mesh{name="Traveler wizard hat"};
-            mesh.SetVertices(vertices);mesh.SetTriangles(triangles,0);
-            mesh.RecalculateNormals();mesh.RecalculateBounds();
+            var mesh = new Mesh { name = "Traveler wizard hat" };
+            mesh.SetVertices(vertices);
+            mesh.SetTriangles(triangles, 0);
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
             return mesh;
         }
 

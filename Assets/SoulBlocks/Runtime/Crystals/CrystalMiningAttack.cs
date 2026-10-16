@@ -31,6 +31,7 @@ namespace SoulBlocks
             SaveSystem.SaveNow();
             return true;
         }
+
         public bool IsSwinging { get; private set; }
         public bool DirectionLocked => IsSwinging || holdingAttack;
         public Vector3 MiningDirection => facing * Vector3.forward;
@@ -60,7 +61,8 @@ namespace SoulBlocks
                 pickaxe.transform.localPosition = previous.transform.localPosition;
                 pickaxe.transform.localRotation = previous.transform.localRotation;
                 pickaxe.transform.localScale = previous.transform.localScale;
-                previous.SetActive(false); Destroy(previous);
+                previous.SetActive(false);
+                Destroy(previous);
                 pickaxeVisual = pickaxe.GetComponent<PickaxeVisual>();
             }
             if (hitbox != null) hitbox.enabled = false;
@@ -71,7 +73,8 @@ namespace SoulBlocks
         {
             if (player.readInput) ProcessMiningInput(Keys.MineHeld, AimDirection());
             if (!IsSwinging || Time.deltaTime <= 0f) return;
-            if (Keys.Blocked || player.MovementLocked) { holdingAttack = false; FinishSwing(); return; }
+            if (Keys.Blocked || player.MovementLocked)
+            { holdingAttack = false; FinishSwing(); return; }
             hitbox.transform.SetPositionAndRotation(transform.position, facing);
 
             float previous = elapsed;

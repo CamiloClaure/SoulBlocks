@@ -1,7 +1,7 @@
 namespace SoulBlocks
 {
-    // Tunables as public static fields, not const: a balance pass (og/simulacion) edits these
-    // without touching call sites. Every later feature adds its own Balance.<Feature>.cs partial.
+    // Tunables as public static fields, not const: a balance pass edits these without touching
+    // call sites. Every later feature adds its own Balance.<Feature>.cs partial.
     public static partial class Balance
     {
         public static float TileSize = 30f; // a map tile's length along its path (discovery, map, planner)

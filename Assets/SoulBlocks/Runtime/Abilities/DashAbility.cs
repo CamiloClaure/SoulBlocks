@@ -88,7 +88,8 @@ namespace SoulBlocks
                 float distance = Mathf.Min(maxDistance, i * Balance.HabilidadesSampleStep);
                 Vector3 point = origin + direction * distance;
                 if (Blocked(point + Vector3.up * .5f, ignore)) break;
-                if (SoulPlayer.IsSupportedAt(point)) { destination = point; found = true; }
+                if (SoulPlayer.IsSupportedAt(point))
+                { destination = point; found = true; }
                 if (distance >= maxDistance) break;
             }
             return found;

@@ -4,12 +4,16 @@ using UnityEngine;
 
 namespace SoulBlocks
 {
+    // What a branch is mostly for: souls, prisons, or exploring (shelters, altars, platforms).
     public enum BranchSpecialty { Souls, Prisons, Exploration }
+    // Prison tiers, T1 to T4 plus the final Nucleo; the pickaxe color stage gates each one.
     public enum PrisonTier { T1, T2, T3, T4, Nucleo }
 
+    // Resonant prisons share damage within their group; ExposedCore doubles every hit after the first.
     [Flags]
     public enum PrisonProp { None = 0, Resonant = 1, ExposedCore = 2 }
 
+    // How a prison group is laid out.
     public enum PrisonPattern { Single, Line, Arc, Compact, Connected }
 
     // The expedition map every system reads: branches cut into tiles, prisons, shelters,
@@ -37,7 +41,8 @@ namespace SoulBlocks
                 if (tile.branchId != branchId) continue;
                 float dx = tile.position.x - position.x, dz = tile.position.z - position.z;
                 float d = dx * dx + dz * dz;
-                if (d < best) { best = d; distance = tile.pathDistance; }
+                if (d < best)
+                { best = d; distance = tile.pathDistance; }
             }
             return distance;
         }

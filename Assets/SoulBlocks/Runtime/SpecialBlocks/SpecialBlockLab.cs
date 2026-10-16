@@ -21,10 +21,15 @@ namespace SoulBlocks
                 slot.crystal.Reveal();
             }
         }
+
         public void RestoreCrystals()
         {
-            foreach (var slot in slots) if (slot != null) slot.Restore();
-            foreach (var surface in surfaces) if (surface != null) surface.ResetLight();
+            foreach (var slot in slots)
+                if (slot != null)
+                    slot.Restore();
+            foreach (var surface in surfaces)
+                if (surface != null)
+                    surface.ResetLight();
             foreach (var arena in FindObjectsByType<PowerupTestArena>()) arena.Restore();
         }
     }

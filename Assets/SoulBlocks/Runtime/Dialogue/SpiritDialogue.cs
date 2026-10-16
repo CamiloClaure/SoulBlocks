@@ -5,29 +5,32 @@ using UnityEngine.InputSystem;
 
 namespace SoulBlocks
 {
+    // One line of a spirit's dialogue, edited per instance in the Inspector.
     [Serializable]
     public sealed class SpiritDialogueLine
     {
-        [TextArea(2, 6)] public string texto = "Hola.";
+        [TextArea(2, 6)] public string text = "Hola.";
     }
 
+    // A colored spirit you can talk to: R nearby opens its lines in a bottom box (R, Enter or
+    // Space advance, Esc closes) while the world pauses. Each instance keeps its own lines.
     public sealed class SpiritDialogue : MonoBehaviour
     {
-        [Header("Identidad del espiritu")]
-        public string nombre = "Espíritu";
+        [Header("Identidad del espíritu")]
+        public string speakerName = "Espíritu";
         public Color color = Color.yellow;
         public Transform visual;
-        [Header("Dialogo — edita cada frase en esta instancia")]
-        public SpiritDialogueLine[] dialogo = { new SpiritDialogueLine() };
-        [Min(.5f)] public float distanciaParaHablar = 2.8f;
+        [Header("Diálogo: edita cada frase en esta instancia")]
+        public SpiritDialogueLine[] lines = { new SpiritDialogueLine() };
+        [Min(.5f)] public float talkDistance = 2.8f;
         public static SpiritDialogue Active { get; private set; }
         public static bool HandledInputThisFrame => handledFrame == Time.frameCount;
         public int CurrentLine => line;
-        public string CurrentText => lines != null && line < lines.Length ? lines[line] : "";
+        public string CurrentText => activeLines != null && line < activeLines.Length ? activeLines[line] : "";
         static readonly List<SpiritDialogue> all = new List<SpiritDialogue>();
         static int handledFrame = -1;
         int line;
-        string[] lines;
+        string[] activeLines;
         float previousTimeScale;
         bool previousMovementLock;
         SoulPlayer talkingPlayer;
@@ -41,15 +44,18 @@ namespace SoulBlocks
         public static SpiritDialogue Nearest(SoulPlayer player)
         {
             if (player == null) return null;
-            SpiritDialogue result = null; float best = float.MaxValue;
+            SpiritDialogue result = null;
+            float best = float.MaxValue;
             foreach (var spirit in all)
             {
                 if (spirit == null) continue;
                 float distance = Vector3.Distance(player.transform.position, spirit.transform.position);
-                if (distance <= spirit.distanciaParaHablar && distance < best) { best = distance; result = spirit; }
+                if (distance <= spirit.talkDistance && distance < best)
+                { best = distance; result = spirit; }
             }
             return result;
         }
+
         void Update()
         {
             if (visual != null) visual.localPosition = visualOrigin + Vector3.up * (Mathf.Sin(Time.time * 1.8f + transform.position.x) * .08f);
@@ -63,38 +69,60 @@ namespace SoulBlocks
             }
             else if (Active == null && !Keys.Blocked && player != null && player.readInput && Nearest(player) == this && keyboard.rKey.wasPressedThisFrame) TryBegin(player);
         }
+
         public bool TryBegin(SoulPlayer player)
         {
-            if (Active != null || Keys.Blocked || player == null || !isActiveAndEnabled || Vector3.Distance(player.transform.position, transform.position) > distanciaParaHablar) return false;
+            if (Active != null || Keys.Blocked || player == null || !isActiveAndEnabled || Vector3.Distance(player.transform.position, transform.position) > talkDistance)
+                return false;
             var texts = new List<string>();
-            if (dialogo != null) foreach (var item in dialogo) if (item != null && !string.IsNullOrWhiteSpace(item.texto)) texts.Add(item.texto);
-            if (texts.Count == 0) { Hud.Toast("Este espíritu todavía no tiene diálogo."); return false; }
-            lines = texts.ToArray(); line = 0; textScroll = Vector2.zero; Active = this; handledFrame = Time.frameCount;
-            talkingPlayer = player; previousMovementLock = player.MovementLocked; previousTimeScale = Time.timeScale;
-            Keys.Blocked = true; player.MovementLocked = true; Time.timeScale = 0;
+            if (lines != null)
+                foreach (var item in lines)
+                    if (item != null && !string.IsNullOrWhiteSpace(item.text))
+                        texts.Add(item.text);
+            if (texts.Count == 0)
+            { Hud.Toast("Este espíritu todavía no tiene diálogo."); return false; }
+            activeLines = texts.ToArray();
+            line = 0;
+            textScroll = Vector2.zero;
+            Active = this;
+            handledFrame = Time.frameCount;
+            talkingPlayer = player;
+            previousMovementLock = player.MovementLocked;
+            previousTimeScale = Time.timeScale;
+            Keys.Blocked = true;
+            player.MovementLocked = true;
+            Time.timeScale = 0;
             return true;
         }
+
         public void Advance()
         {
             if (Active != this) return;
             handledFrame = Time.frameCount;
             textScroll = Vector2.zero;
-            if (line + 1 < lines.Length) line++; else Close();
+            if (line + 1 < activeLines.Length)
+                line++;
+            else
+                Close();
         }
+
         public void Close()
         {
             if (Active != this) return;
-            Active = null; handledFrame = Time.frameCount;
-            Time.timeScale = previousTimeScale; Keys.Blocked = false;
+            Active = null;
+            handledFrame = Time.frameCount;
+            Time.timeScale = previousTimeScale;
+            Keys.Blocked = false;
             if (talkingPlayer != null) talkingPlayer.MovementLocked = previousMovementLock;
             talkingPlayer = null;
         }
+
         void Draw()
         {
             if (Active != this)
             {
                 if (Active == null && !Keys.Blocked && GameRoot.Instance != null && Nearest(GameRoot.Instance.Player) == this)
-                    Hud.WorldLabel(transform.position + Vector3.up * 1.8f, "R: hablar con " + nombre);
+                    Hud.WorldLabel(transform.position + Vector3.up * 1.8f, "R: hablar con " + speakerName);
                 return;
             }
             if (titleStyle == null)
@@ -105,17 +133,21 @@ namespace SoulBlocks
             float width = Mathf.Min(760, Screen.width - 32), height = Mathf.Min(250, Screen.height - 32);
             var rect = new Rect((Screen.width - width) / 2, Screen.height - height - 16, width, height);
             GUI.Box(rect, "");
-            var previous = GUI.color; GUI.color = color;
-            GUI.Label(new Rect(rect.x + 20, rect.y + 14, width - 40, 32), nombre, titleStyle); GUI.color = previous;
-            GUI.Label(new Rect(rect.x + width - 90, rect.y + 20, 70, 24), (line + 1) + " / " + lines.Length);
+            var previous = GUI.color;
+            GUI.color = color;
+            GUI.Label(new Rect(rect.x + 20, rect.y + 14, width - 40, 32), speakerName, titleStyle);
+            GUI.color = previous;
+            GUI.Label(new Rect(rect.x + width - 90, rect.y + 20, 70, 24), (line + 1) + " / " + activeLines.Length);
             var area = new Rect(rect.x + 20, rect.y + 55, width - 40, height - 115);
             textScroll = GUI.BeginScrollView(area, textScroll, new Rect(0, 0, area.width - 20, Mathf.Max(area.height, bodyStyle.CalcHeight(new GUIContent(CurrentText), area.width - 20))));
             GUI.Label(new Rect(0, 0, area.width - 20, Mathf.Max(area.height, bodyStyle.CalcHeight(new GUIContent(CurrentText), area.width - 20))), CurrentText, bodyStyle);
             GUI.EndScrollView();
             GUI.Label(new Rect(rect.x + 20, rect.yMax - 40, width - 300, 24), "R / Enter: continuar · Esc: cerrar");
             if (GUI.Button(new Rect(rect.xMax - 250, rect.yMax - 45, 100, 30), "Cerrar")) Close();
-            if (GUI.Button(new Rect(rect.xMax - 140, rect.yMax - 45, 120, 30), line + 1 < lines.Length ? "Continuar" : "Terminar")) Advance();
+            if (GUI.Button(new Rect(rect.xMax - 140, rect.yMax - 45, 120, 30), line + 1 < activeLines.Length ? "Continuar" : "Terminar"))
+                Advance();
         }
+
         Vector2 textScroll;
     }
 }

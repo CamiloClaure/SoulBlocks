@@ -78,7 +78,8 @@ namespace SoulBlocks
             {
                 string source = "upgrade." + def.id;
                 int level = run.UpgradeLevel(def.id);
-                if (level <= 0) { stats.ClearSource(source); continue; }
+                if (level <= 0)
+                { stats.ClearSource(source); continue; }
 
                 var adds = new Dictionary<StatId, float>();
                 var muls = new Dictionary<StatId, float>();
@@ -117,11 +118,11 @@ namespace SoulBlocks
             switch (def.id)
             {
                 case "energia":
-                    {
-                        float extra = def.perLevelEffects[0].add;
-                        float range = extra * stats.Get(StatId.MoveSpeed) * .5f; // round trip: half the extra time each way
-                        return "+" + Fmt(extra) + " s: +" + Fmt(range) + " m de alcance ida y vuelta";
-                    }
+                {
+                    float extra = def.perLevelEffects[0].add;
+                    float range = extra * stats.Get(StatId.MoveSpeed) * .5f; // round trip: half the extra time each way
+                    return "+" + Fmt(extra) + " s: +" + Fmt(range) + " m de alcance ida y vuelta";
+                }
                 case "abundancia":
                     return "+" + Fmt(def.perLevelEffects[0].add * 100f) + "% de almas errantes en los caminos";
                 default:

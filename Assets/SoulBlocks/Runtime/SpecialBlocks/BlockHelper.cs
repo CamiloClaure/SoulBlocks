@@ -18,7 +18,8 @@ namespace SoulBlocks
 
         void Update()
         {
-            if (owner == null || !owner.Ready || Time.time >= expiresAt) { Destroy(gameObject); return; }
+            if (owner == null || !owner.Ready || Time.time >= expiresAt)
+            { Destroy(gameObject); return; }
             if (Keys.Blocked || Time.deltaTime <= 0) return;
             float speed = owner.SpeedAt(transform.position);
             hitCooldown -= Time.deltaTime * speed;
@@ -47,7 +48,8 @@ namespace SoulBlocks
 
             walked += Vector3.Distance(transform.position, lastPosition);
             lastPosition = transform.position;
-            if (walked >= BlockRules.StepDistance) { walked %= BlockRules.StepDistance; owner.NotifyStep(transform.position); }
+            if (walked >= BlockRules.StepDistance)
+            { walked %= BlockRules.StepDistance; owner.NotifyStep(transform.position); }
         }
 
         T Nearest<T>(System.Collections.Generic.IEnumerable<T> items, System.Func<T, bool> usable, float reach) where T : Component
@@ -58,7 +60,8 @@ namespace SoulBlocks
             {
                 if (!usable(item)) continue;
                 float distance = Vector3.Distance(item.transform.position, transform.position);
-                if (distance < nearest) { nearest = distance; best = item; }
+                if (distance < nearest)
+                { nearest = distance; best = item; }
             }
             return best;
         }

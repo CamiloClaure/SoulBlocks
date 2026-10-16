@@ -4,7 +4,7 @@ using UnityEngine;
 namespace SoulBlocks
 {
     // Every cross-system signal. Systems subscribe in their own OnEnable/OnDisable; nobody
-    // maintains a central list of listeners. Frozen: add an event only through the orchestrator.
+    // maintains a central list of listeners.
     public static partial class GameEvents
     {
         public static event Action<MapLayout> MapBuilt;

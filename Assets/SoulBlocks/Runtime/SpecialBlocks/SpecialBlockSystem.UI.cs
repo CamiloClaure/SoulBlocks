@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace SoulBlocks
 {
+    // The special blocks shop (opened from the tree altar) and the bottom block bar.
     public sealed partial class SpecialBlockSystem
     {
         bool shopOpen;
@@ -26,6 +27,7 @@ namespace SoulBlocks
             Keys.Blocked = true;
             if (GameRoot.Instance.Player != null) GameRoot.Instance.Player.MovementLocked = true;
         }
+
         public void CloseShop()
         {
             shopClosedFrame = Time.frameCount;
@@ -34,34 +36,44 @@ namespace SoulBlocks
             Keys.Blocked = false;
             if (GameRoot.Instance != null && GameRoot.Instance.Player != null) GameRoot.Instance.Player.MovementLocked = false;
         }
+
         public bool Upgrade(SpecialBlock block)
         {
             if (!Ready || Level(block) >= BlockRules.MaxLevel) return false;
             Run.specialBlockLevels[(int)block]++;
             return true;
         }
+
         public bool UpgradeClothing()
         {
             if (!Ready || Run.specialBlockClothingLevel >= BlockRules.MaxLevel) return false;
             Run.specialBlockClothingLevel++;
             return true;
         }
+
         string Passive(SpecialBlock block)
         {
             switch (block)
             {
-                case SpecialBlock.Yellow: return "Pasiva: al golpear puedes llevar luz durante 5 s. Acércate a los árboles grises (3 m).";
-                case SpecialBlock.Blue: return "Pasiva: al picar puede aparecer un aura azul. Al romper: 50% de obtener más fragmentos.";
-                case SpecialBlock.Green: return "Pasiva: cada " + BlockRules.HitInterval(Level(block)) + " golpes; mejora de velocidad por " + BlockRules.BuffSeconds(Level(block)).ToString("0.0") + " s.";
-                case SpecialBlock.Celeste: return "Pasiva: cada " + BlockRules.HitInterval(Level(block)) + " golpes; ayudante temporal.";
-                default: return "Pasiva: explosión por golpe; daño de ayudantes al 50%.";
+                case SpecialBlock.Yellow:
+                    return "Pasiva: al golpear puedes llevar luz durante 5 s. Acércate a los árboles grises (3 m).";
+                case SpecialBlock.Blue:
+                    return "Pasiva: al picar puede aparecer un aura azul. Al romper: 50% de obtener más fragmentos.";
+                case SpecialBlock.Green:
+                    return "Pasiva: cada " + BlockRules.HitInterval(Level(block)) + " golpes; mejora de velocidad por " + BlockRules.BuffSeconds(Level(block)).ToString("0.0") + " s.";
+                case SpecialBlock.Cyan:
+                    return "Pasiva: cada " + BlockRules.HitInterval(Level(block)) + " golpes; ayudante temporal.";
+                default:
+                    return "Pasiva: explosión por golpe; daño de ayudantes al 50%.";
             }
         }
+
         string Values(SpecialBlock block)
         {
             int level = Level(block);
             if (block == SpecialBlock.Red) return "Daño " + BlockRules.RedDamage(level) + " · radio " + BlockRules.Radius(block, level).ToString("0.0") + " m";
-            if (block == SpecialBlock.Celeste) return BlockRules.HelperCount(level) + " ayudantes · " + BlockRules.Duration(block, level) + " s (máximo 4 activos)";
+            if (block == SpecialBlock.Cyan)
+                return BlockRules.HelperCount(level) + " ayudantes · " + BlockRules.Duration(block, level) + " s (máximo 4 activos)";
             if (block == SpecialBlock.Blue) return "Radio " + BlockRules.Radius(block, level) + " m · " + BlockRules.Duration(block, level) + " s · pulso cada 1 s · recompensa extra +" + (50 + 25 * (level - 1)) + "%";
             return "Radio " + BlockRules.Radius(block, level) + " m · " + BlockRules.Duration(block, level) + " s"
                 + (block == SpecialBlock.Green ? " · velocidad ×" + BlockRules.Speed(level).ToString("0.00") : "");
@@ -101,9 +113,10 @@ namespace SoulBlocks
             }
             GUI.Label(new Rect(x, y + 44, w, 22), "1–5: activar poder · Rueda: ver descripción · E: altar · +/-: zoom");
             GUI.Label(new Rect(x, y + 65, w, 22), ActiveDescriptions[(int)Selected]);
-            GUI.Label(new Rect(x, y + 86, w, 22), "5 pasivas activas · Ropa " + Mathf.RoundToInt(BlockRules.Chance(Run.specialBlockClothingLevel) * 100) + "% · Verde " + GreenHits + "/" + BlockRules.HitInterval(Level(SpecialBlock.Green)) + " · Celeste " + CelesteHits + "/" + BlockRules.HitInterval(Level(SpecialBlock.Celeste)) + " · Ayudantes " + HelperCount);
+            GUI.Label(new Rect(x, y + 86, w, 22), "5 pasivas activas · Ropa " + Mathf.RoundToInt(BlockRules.Chance(Run.specialBlockClothingLevel) * 100) + "% · Verde " + GreenHits + "/" + BlockRules.HitInterval(Level(SpecialBlock.Green)) + " · Celeste " + CyanHits + "/" + BlockRules.HitInterval(Level(SpecialBlock.Cyan)) + " · Ayudantes " + HelperCount);
             GUI.Label(new Rect(Screen.width / 2f - 5, Screen.height / 2f - 10, 20, 20), "+");
         }
+
         Vector2 shopScroll;
         void DrawShop(int id)
         {
@@ -159,7 +172,8 @@ namespace SoulBlocks
             GUILayout.EndScrollView();
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Restaurar cristales de prueba")) ResetLab();
-            if (GUILayout.Button("Talentos del árbol")) { CloseShop(); GameRoot.Instance.GetComponent<ProgressionSystem>().OpenShop(); }
+            if (GUILayout.Button("Talentos del árbol"))
+            { CloseShop(); GameRoot.Instance.GetComponent<ProgressionSystem>().OpenShop(); }
             if (GUILayout.Button("Volver al juego (E / Esc)")) CloseShop();
             GUILayout.EndHorizontal();
         }

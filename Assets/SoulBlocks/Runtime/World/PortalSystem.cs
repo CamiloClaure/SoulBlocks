@@ -74,12 +74,12 @@ namespace SoulBlocks
                 var portal = layout.portals[i];
                 if (!branchById.TryGetValue(portal.branchId, out var branch)) continue;
 
-                var ring = Placeholder.Make(PrimitiveType.Cylinder, PortalColor, "Portal rama " + portal.branchId,
+                var ring = Placeholder.Make(PrimitiveType.Cylinder, PortalColor, "Branch Portal " + portal.branchId,
                     transform, portal.position + Vector3.up * .05f, scale, false, 1.2f);
                 ring.SetActive(false);
 
                 Vector3 padPos = FindPadPosition(treePos, i, count);
-                var pad = Placeholder.Make(PrimitiveType.Cylinder, PortalColor, "Portal pad " + portal.branchId,
+                var pad = Placeholder.Make(PrimitiveType.Cylinder, PortalColor, "Portal Pad " + portal.branchId,
                     transform, padPos + Vector3.up * .05f, scale, false, 1.2f);
                 pad.SetActive(false);
 

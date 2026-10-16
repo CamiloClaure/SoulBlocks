@@ -4,15 +4,14 @@ using UnityEngine;
 
 namespace SoulBlocks
 {
-    // Owns Run.prisons, brokenByTier, totalPrisonsBroken (CONTRATOS.md cooperation rules).
-    // Portals are NOT ours (og/mundo, Fase 3). Spawns a PrisonView per non-broken layout entry
-    // on MapBuilt; locked entries (requiresUnlock) stay inactive until UnlockGranted.
+    // Owns Run.prisons, brokenByTier and totalPrisonsBroken. Spawns a PrisonView per non-broken
+    // layout entry on MapBuilt; locked entries (requiresUnlock) stay inactive until UnlockGranted.
     public sealed class PrisonSystem : MonoBehaviour
     {
-        // Extension points for Fase 3 crews. DamageMultiplierFor(prisonId): null = no anomaly
-        // active, otherwise the "weakened prison" style multiplier applied on top of the normal
-        // hit damage. Broken fires alongside GameEvents.PrisonBroken, for the random-rewards
-        // crew to get the break position without re-deriving it from the layout.
+        // Extension points. DamageMultiplierFor(prisonId): null = no anomaly active, otherwise
+        // the "weakened prison" multiplier applied on top of the normal hit damage (expedition
+        // planning). Broken fires alongside GameEvents.PrisonBroken with the break position, for
+        // the rewards without re-deriving it from the layout.
         public static Func<int, float> DamageMultiplierFor;
         public static event Action<PrisonLayout, Vector3> Broken;
         public static void RaiseBroken(PrisonLayout layout, Vector3 position) => Broken?.Invoke(layout, position);

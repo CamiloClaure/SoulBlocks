@@ -35,7 +35,8 @@ namespace SoulBlocks
 
         public void Tick(float deltaTime)
         {
-            if (Current >= max) { timeProgress = 0f; return; }
+            if (Current >= max)
+            { timeProgress = 0f; return; }
             timeProgress += deltaTime;
             Gain(ref timeProgress, rechargeSeconds);
         }

@@ -2,6 +2,8 @@ using UnityEngine;
 
 namespace SoulBlocks
 {
+    // A crystal shard dropped by a broken crystal: scatters, settles and is picked up by walking
+    // over it (or by a celeste helper), adding one to Run.collectedCrystals.
     public sealed class CrystalFragment : MonoBehaviour
     {
         [Tooltip("Reemplaza el contenido de Model por tu FBX. Puedes añadir un Animator dentro de Model.")]
@@ -18,18 +20,26 @@ namespace SoulBlocks
 
         public void Initialize(Vector3 from, Vector3 to, CrystalColor color, Color tint)
         {
-            start = from; landing = to; Color = color; born = Time.time;
-            initialized = true; transform.position = from;
+            start = from;
+            landing = to;
+            Color = color;
+            born = Time.time;
+            initialized = true;
+            transform.position = from;
             var properties = new MaterialPropertyBlock();
-            properties.SetColor("_BaseColor", tint); properties.SetColor("_Color", tint);
+            properties.SetColor("_BaseColor", tint);
+            properties.SetColor("_Color", tint);
             foreach (var renderer in (model != null ? model : transform).GetComponentsInChildren<Renderer>())
                 renderer.SetPropertyBlock(properties);
         }
+
         void Start()
         {
             // A fragment dragged directly into a scene is also collectible.
-            if (!initialized) { start = landing = transform.position; born = Time.time; initialized = true; }
+            if (!initialized)
+            { start = landing = transform.position; born = Time.time; initialized = true; }
         }
+
         void Update()
         {
             if (!initialized || Collected || Keys.Blocked || Time.deltaTime <= 0) return;
@@ -38,13 +48,15 @@ namespace SoulBlocks
             var root = GameRoot.Instance;
             if (root != null) TryCollect(root.Player);
         }
+
         public bool TryCollect(SoulPlayer player)
             => player != null && TryCollectAt(player.transform.position);
         public bool TryCollectAt(Vector3 collectorPosition)
         {
             var root = GameRoot.Instance;
             if (Collected || !initialized || Time.time - born < Mathf.Max(pickupDelay, ScatterSeconds)
-                || Keys.Blocked || Time.timeScale <= 0 || root == null || root.Run == null) return false;
+                || Keys.Blocked || Time.timeScale <= 0 || root == null || root.Run == null)
+                return false;
             Vector3 delta = collectorPosition - transform.position;
             if (Mathf.Abs(delta.y) > 2 || new Vector2(delta.x, delta.z).sqrMagnitude > pickupRadius * pickupRadius) return false;
             Collected = true;
@@ -53,10 +65,12 @@ namespace SoulBlocks
             Destroy(gameObject);
             return true;
         }
+
         public static void Scatter(BreakableCrystal crystal)
         {
             var prefab = crystal.fragmentPrefab != null ? crystal.fragmentPrefab : Resources.Load<CrystalFragment>("Crystals/CrystalFragment");
-            if (prefab == null) { Debug.LogError("Falta el prefab Resources/Crystals/CrystalFragment.", crystal); return; }
+            if (prefab == null)
+            { Debug.LogError("Falta el prefab Resources/Crystals/CrystalFragment.", crystal); return; }
             int count = crystal.FragmentReward;
             Vector3 origin = crystal.transform.position;
             var root = GameRoot.Instance;

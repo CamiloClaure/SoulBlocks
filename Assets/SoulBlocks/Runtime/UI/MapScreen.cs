@@ -3,8 +3,8 @@ using UnityEngine;
 
 namespace SoulBlocks
 {
-    // Tab-held top-down overview. Discovered tiles come from Run.discoveredTiles (og/mapa owns
-    // that list, we only read it). With UnlockIds.Revelacion, also draws undiscovered prisons'
+    // Tab-held top-down overview. Discovered tiles come from Run.discoveredTiles (TileDiscovery
+    // writes it, we only read it). With UnlockIds.Revelacion, also draws undiscovered prisons'
     // secondary props and the plan anomaly straight off the layout data, without requiring the
     // player to have walked there.
     public sealed class MapScreen : MonoBehaviour
@@ -127,10 +127,7 @@ namespace SoulBlocks
             Hud.TextBox(new Rect(pos.x, pos.y - 14f, 0f, 0f), label, TextAnchor.MiddleCenter);
         }
 
-        // ponytail: og/mundo (Fase 3, not in this worktree yet) owns real portal activation.
-        // Approximated here as "this branch's end prison is already broken", matching 1.7's Raiz
-        // I effect ("romper 1 T1 -> portales en extremos de rama"). Contract request: a real
-        // Run.openPortals (or similar) if that drifts from "end prison broken".
+        // Same rule PortalSystem activates rings by: Raiz I owned and the branch-end prison broken.
         bool PortalActive(RunState run, PortalLayout portal)
         {
             if (!run.HasUnlock(UnlockIds.Raiz1)) return false;
@@ -191,9 +188,12 @@ namespace SoulBlocks
         {
             switch (specialty)
             {
-                case BranchSpecialty.Souls: return Color.yellow;
-                case BranchSpecialty.Prisons: return new Color(.2f, .8f, .2f);
-                default: return new Color(.3f, .6f, 1f);
+                case BranchSpecialty.Souls:
+                    return Color.yellow;
+                case BranchSpecialty.Prisons:
+                    return new Color(.2f, .8f, .2f);
+                default:
+                    return new Color(.3f, .6f, 1f);
             }
         }
 
@@ -201,11 +201,16 @@ namespace SoulBlocks
         {
             switch (tier)
             {
-                case PrisonTier.T1: return Color.yellow;
-                case PrisonTier.T2: return new Color(.2f, .8f, .2f);
-                case PrisonTier.T3: return new Color(.2f, .4f, 1f);
-                case PrisonTier.T4: return Color.red;
-                default: return Color.white; // Nucleo
+                case PrisonTier.T1:
+                    return Color.yellow;
+                case PrisonTier.T2:
+                    return new Color(.2f, .8f, .2f);
+                case PrisonTier.T3:
+                    return new Color(.2f, .4f, 1f);
+                case PrisonTier.T4:
+                    return Color.red;
+                default:
+                    return Color.white; // Nucleo
             }
         }
 
@@ -213,11 +218,16 @@ namespace SoulBlocks
         {
             switch (tier)
             {
-                case PrisonTier.T1: return "I";
-                case PrisonTier.T2: return "II";
-                case PrisonTier.T3: return "III";
-                case PrisonTier.T4: return "IV";
-                default: return "N"; // Nucleo
+                case PrisonTier.T1:
+                    return "I";
+                case PrisonTier.T2:
+                    return "II";
+                case PrisonTier.T3:
+                    return "III";
+                case PrisonTier.T4:
+                    return "IV";
+                default:
+                    return "N"; // Nucleo
             }
         }
 

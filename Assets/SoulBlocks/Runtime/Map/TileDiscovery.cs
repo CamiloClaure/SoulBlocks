@@ -36,7 +36,8 @@ namespace SoulBlocks
             {
                 float dx = tile.position.x - pos.x, dz = tile.position.z - pos.z;
                 float d2 = dx * dx + dz * dz;
-                if (d2 < best) { best = d2; bestIndex = tile.index; }
+                if (d2 < best)
+                { best = d2; bestIndex = tile.index; }
             }
             float halfTile = Balance.TileSize * .5f;
             if (bestIndex < 0 || best > halfTile * halfTile) return;
