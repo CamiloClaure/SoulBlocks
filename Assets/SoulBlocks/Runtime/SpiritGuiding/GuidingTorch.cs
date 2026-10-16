@@ -4,6 +4,10 @@ using UnityEngine.InputSystem;
 namespace SoulBlocks
 {
     public enum TorchState { Altar, Carried, Placed }
+
+    // The torch that guides souls: F takes it from its altar, places it (a call that grows its
+    // radius every pulse) or returns it; T lights it. While lit it calls wandering souls
+    // (WanderingSpirit); returned to the altar it receives them into the reserve.
     public sealed class GuidingTorch : MonoBehaviour
     {
         public Transform altarSocket;
@@ -16,7 +20,10 @@ namespace SoulBlocks
         [Min(1)] public float initialRadius = 4f;
         [Min(.1f)] public float radiusStep = 2f;
         [Min(.1f)] public float pulseInterval = 3f;
-        public float CurrentRadius => State == TorchState.Placed ? placedRadius : State == TorchState.Altar ? attractionRadius : initialRadius;
+        public float CurrentRadius => State == TorchState.Placed ? placedRadius : State == TorchState.Altar ? attractionRadius : CarriedRadius;
+        // In the hand the reach is StatId.TorchRadius (Alcance de la antorcha), initialRadius
+        // without a run.
+        float CarriedRadius => GameRoot.Instance != null && GameRoot.Instance.Stats != null ? GameRoot.Instance.Stats.Get(StatId.TorchRadius) : initialRadius;
         public bool ReadyToRetrieve { get; private set; }
         public float SecondsToPulse => Mathf.Max(0, pulseInterval - pulseTimer);
         float placedRadius, pulseTimer;

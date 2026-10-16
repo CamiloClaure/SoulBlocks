@@ -17,8 +17,7 @@ namespace SoulBlocks.Tests
         public IEnumerator SetUp()
         {
             SaveSystem.PathOverride = Path.Combine(Application.temporaryCachePath, "special-block-test.json");
-            GameRoot.PendingLoad = null;
-            GameRoot.PendingSeed = 123;
+            GameRoot.PendingLoad = new RunState { seed = 123 };
             SceneManager.LoadScene(GameRoot.SceneName);
             for (int i = 0; i < 10; i++) yield return null;
             StartMenu.Dismiss();
@@ -96,7 +95,7 @@ namespace SoulBlocks.Tests
             Assert.AreEqual(5, system.Lab.slots.Select(s => s.color).Distinct().Count());
             foreach (var group in system.Lab.slots.GroupBy(s => s.color))
                 Assert.AreEqual(3, group.Select(s => s.size).Distinct().Count());
-            Assert.AreEqual(3, Crystal(CrystalColor.Yellow, CrystalSize.Small).Health);
+            Assert.AreEqual(MiningBalance.Current.Health(CrystalColor.Yellow), Crystal(CrystalColor.Yellow, CrystalSize.Small).Health);
             Assert.IsTrue(Crystal(CrystalColor.Blue, CrystalSize.Small).Available);
         }
 
@@ -212,14 +211,17 @@ namespace SoulBlocks.Tests
         }
 
         [UnityTest]
-        public IEnumerator HelpersCollectAndDeliverSoulsAndExpire()
+        public IEnumerator HelpersPickUpFragmentsAndExpire()
         {
-            root.Player.Teleport(system.Lab.tree.position + Vector3.back * 12);
-            Vector3 point = system.Lab.tree.position + Vector3.right * 1.2f;
-            SoulPickup.Spawn(system.transform, point, 3);
-            system.SpawnHelper(point);
-            yield return new WaitForSeconds(2);
-            Assert.GreaterOrEqual(system.DeliveredSouls, 3);
+            var crystal = BreakableCrystal.All.First(c => c != null && c.Available && Vector3.Distance(c.transform.position, system.Lab.transform.position) < 15);
+            root.Player.Teleport(system.Lab.transform.position + Vector3.back * 11);
+            int before = root.Run.collectedCrystals;
+            Vector3 spot = crystal.transform.position;
+            crystal.TakeDamage(crystal.MaxHealth);
+            yield return new WaitForSeconds(.8f); // the fragments scatter and settle
+            system.SpawnHelper(spot + Vector3.right);
+            yield return new WaitForSeconds(4);
+            Assert.Greater(root.Run.collectedCrystals, before, "The helper did not pick up any fragment.");
             foreach (var helper in system.GetComponentsInChildren<BlockHelper>()) helper.expiresAt = Time.time;
             yield return null;
             yield return null;

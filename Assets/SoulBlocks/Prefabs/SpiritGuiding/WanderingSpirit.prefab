@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 7937176145523228233}
   - component: {fileID: 8607090458010926999}
   m_Layer: 0
-  m_Name: Alma luminosa amarilla
+  m_Name: Glowing Yellow Soul
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -183,7 +183,7 @@ GameObject:
   - component: {fileID: 3142004178589312030}
   - component: {fileID: 867687817897152701}
   m_Layer: 0
-  m_Name: "Halo et\xE9reo"
+  m_Name: Ethereal Halo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

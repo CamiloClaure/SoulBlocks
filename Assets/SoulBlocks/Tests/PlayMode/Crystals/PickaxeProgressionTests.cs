@@ -21,8 +21,8 @@ namespace SoulBlocks.Tests
   }
   [UnityTest] public IEnumerator PurchasesSwapModelsAndMaxLevelAppliesDamageOnce()
   {
-   Time.timeScale=1;Keys.Blocked=false;SceneManager.LoadScene("WorldBuilding");
-   for(int i=0;i<15;i++)yield return null;
+   Time.timeScale=1;Keys.Blocked=false;SceneManager.LoadScene(GameRoot.SceneName);
+   for(int i=0;i<15;i++)yield return null; StartMenu.Dismiss();
    var root=GameRoot.Instance;root.Player.readInput=false;SpecialBlockSystem.Instance.PassivesEnabled=false;
    var mining=root.Player.GetComponent<CrystalMiningAttack>();
    var view=mining.pickaxe.GetComponent<PickaxeVisual>();Assert.IsNotNull(view);Assert.AreEqual(5,view.stagePrefabs.Length);
@@ -47,7 +47,7 @@ namespace SoulBlocks.Tests
   [UnityTearDown] public IEnumerator Cleanup()
   {
    Time.timeScale=1;Keys.Blocked=false;
-   var old=SceneManager.GetSceneByName("WorldBuilding");
+   var old=SceneManager.GetSceneByName(GameRoot.SceneName);
    if(old.IsValid()){var empty=SceneManager.CreateScene("Mining cleanup");SceneManager.SetActiveScene(empty);yield return SceneManager.UnloadSceneAsync(old);}
   }
  }

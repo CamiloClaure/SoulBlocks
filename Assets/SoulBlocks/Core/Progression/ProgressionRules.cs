@@ -14,11 +14,9 @@ namespace SoulBlocks
         static readonly Dictionary<StatId, string> StatLabel = new Dictionary<StatId, string>
         {
             { StatId.MoveSpeed, "m/s de velocidad" },
-            { StatId.PickupRadius, "m de radio de recogida" },
+            { StatId.SpiritCapacity, "almas siguiendo la antorcha" },
+            { StatId.TorchRadius, "m de alcance de la antorcha" },
             { StatId.DashDistance, "m de distancia de dash" },
-            { StatId.MagnetRadius, "m de radio de imán" },
-            { StatId.MagnetDuration, "s de duración de imán" },
-            { StatId.PickInterval, "s entre golpes de pico" },
             { StatId.BlessingOptions, "opción(es) de bendición" }
         };
 
@@ -124,16 +122,8 @@ namespace SoulBlocks
                         float range = extra * stats.Get(StatId.MoveSpeed) * .5f; // round trip: half the extra time each way
                         return "+" + Fmt(extra) + " s: +" + Fmt(range) + " m de alcance ida y vuelta";
                     }
-                case "carga":
-                    return "+" + Fmt(def.perLevelEffects[0].add) + " almas por salida";
                 case "abundancia":
-                    return "+" + Fmt(def.perLevelEffects[0].add * 100f) + "% de almas en las cuevas";
-                case "pico_nivel":
-                    {
-                        // nv X damages up to tier index X (0 = T1 .. 3 = T4), nv 4 reaches the Nucleo.
-                        string tier = nextLevel <= TierRoman.Length - 1 ? TierRoman[nextLevel] : "Núcleo";
-                        return "nv " + nextLevel + ": pica cristales " + tier + ", más daño por golpe";
-                    }
+                    return "+" + Fmt(def.perLevelEffects[0].add * 100f) + "% de almas errantes en los caminos";
                 default:
                     if (def.perLevelEffects.Count > 0)
                     {

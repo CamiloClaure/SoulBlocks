@@ -1,13 +1,12 @@
 namespace SoulBlocks
 {
-    // Tunables owned by og/expedicion: soul value, energy warning thresholds, where to drop the
-    // player back near the tree on depletion, and how far loose souls scatter on the ground.
+    // Expedition tunables: energy warning thresholds, where to drop the player back near the
+    // tree on depletion, and how far souls released by a prison scatter.
     public static partial class Balance
     {
-        public static float SoulValue = 1f;
         public static float EnergyWarningHigh = .25f;
         public static float EnergyWarningLow = .1f;
-        public static float HubReturnOffset = 2f;
-        public static float GroundSoulScatterRadius = 2.5f;
+        public static float HubReturnOffset = 4.5f; // from the tree center, clear of its 4 m trunk
+        public static float ReleasedSoulScatterRadius = 2.5f;
     }
 }

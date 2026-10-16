@@ -134,7 +134,7 @@ namespace SoulBlocks
             wizardAnimation = wizardModel.GetComponent<Animation>();
             if (wizardAnimation != null)
             {
-                wizardAnimation.cullingType = AnimationCullingType.AlwaysAnimate; // like the classic Animator (SoulBlocksSetup)
+                wizardAnimation.cullingType = AnimationCullingType.AlwaysAnimate; // like the classic Animator
                 foreach (AnimationState state in wizardAnimation)
                 {
                     state.wrapMode = WrapMode.Loop;

@@ -4,7 +4,7 @@ using UnityEngine;
 namespace SoulBlocks
 {
     // Placeholder crystal prison + IMineable wrapper around PrisonRules. No collider: the player
-    // walks through (ponytail: the pick targets purely by MineableRegistry + Radius, never
+    // walks through (the pickaxe swing finds prisons by MineableRegistry + Radius, never
     // Physics, so a collider here would only ever get in the way of movement). Every blow that
     // lands chips shards off (Burst) and makes the crystal flinch.
     public sealed class PrisonView : MonoBehaviour, IMineable
@@ -18,8 +18,17 @@ namespace SoulBlocks
         Vector3 bodyScale;
         Color color;
 
-        // Drawn by PrisonSystem as a Hud.WorldLabel (opaque box) while the player is close.
-        public string Label { get; private set; }
+        // Drawn by PrisonSystem as a Hud.WorldLabel (opaque box) while the player is close, with
+        // the pickaxe color it still needs when the current one cannot chip it.
+        public string Label
+        {
+            get
+            {
+                int required = PrisonRules.RequiredLevel(layout.tier);
+                return PrisonRules.PickaxeTier(run.pickaxeLevel) < required ? label + "\nrequiere pico " + PrisonRules.PickaxeTierName(required) : label;
+            }
+        }
+        string label;
 
         public int PrisonId => layout.id;
         public Vector3 Position => transform.position;
@@ -67,7 +76,7 @@ namespace SoulBlocks
             int required = PrisonRules.RequiredLevel(layout.tier);
             if (pickLevel < required)
             {
-                Hud.Toast("requiere pico nv " + required);
+                Hud.Toast("requiere pico " + PrisonRules.PickaxeTierName(required));
                 return 0;
             }
 
@@ -143,7 +152,7 @@ namespace SoulBlocks
         void UpdateLabel(PrisonRecord record)
         {
             int remaining = PrisonRules.TotalHp(layout.tier) - record.damage;
-            Label = TierSymbol(layout.tier) + "\nHP " + remaining + " fase " + record.phasesDone + "/" + PrisonRules.Phases(layout.tier);
+            label = TierSymbol(layout.tier) + "\nHP " + remaining + " fase " + record.phasesDone + "/" + PrisonRules.Phases(layout.tier);
         }
 
         static string TierSymbol(PrisonTier tier)

@@ -12,10 +12,10 @@ namespace SoulBlocks.Tests
         GuidingTorch torch; SoulPlayer player; AuthoredPath path;
         [UnitySetUp] public IEnumerator Setup()
         {
-            SceneManager.LoadScene("WorldBuilding");
-            for(int i=0;i<15;i++) yield return null;
+            SceneManager.LoadScene(GameRoot.SceneName);
+            for(int i=0;i<15;i++) yield return null; StartMenu.Dismiss();
             torch=Object.FindAnyObjectByType<GuidingTorch>(); player=GameRoot.Instance.Player;
-            player.readInput=false; path=GameObject.Find("Camino primario").GetComponent<AuthoredPath>();
+            player.readInput=false; path=GameObject.Find("Primary Path").GetComponent<AuthoredPath>();
             Assert.IsNotNull(torch); Assert.GreaterOrEqual(Object.FindObjectsByType<WanderingSpirit>(FindObjectsSortMode.None).Length,18);
             if(SpecialBlockSystem.Instance != null) SpecialBlockSystem.Instance.PassivesEnabled=false;
         }
@@ -23,11 +23,11 @@ namespace SoulBlocks.Tests
         {
             Time.timeScale=1;Keys.Blocked=false;
             var empty=SceneManager.CreateScene("Spirit cleanup");SceneManager.SetActiveScene(empty);
-            yield return SceneManager.UnloadSceneAsync("WorldBuilding");
+            yield return SceneManager.UnloadSceneAsync(GameRoot.SceneName);
         }
         [UnityTest] public IEnumerator CrystalsDoNotReleaseOldSoulPickups()
         {
-            Assert.IsNull(GameObject.Find("Generated Souls"));
+            Assert.AreEqual(0, Object.FindObjectsByType<WanderingSpirit>(FindObjectsSortMode.None).Count(s => s.name.StartsWith("Released Soul")));
             int before=GameRoot.Instance.Run.collectedCrystals;
             var crystal=Object.FindObjectsByType<BreakableCrystal>(FindObjectsSortMode.None).First(c=>c.Available);
             int reward=3*(int)crystal.size;
@@ -58,7 +58,6 @@ namespace SoulBlocks.Tests
             Assert.AreEqual(before+reward,GameRoot.Instance.Run.collectedCrystals);
             yield return null;
             Assert.AreEqual(0,Object.FindObjectsByType<CrystalFragment>(FindObjectsSortMode.None).Length);
-            Assert.AreEqual(0,Object.FindObjectsByType<SoulPickup>(FindObjectsSortMode.None).Length);
             foreach(var spirit in Object.FindObjectsByType<WanderingSpirit>(FindObjectsSortMode.None))
             {
                 Assert.AreEqual(1,spirit.visual.childCount);

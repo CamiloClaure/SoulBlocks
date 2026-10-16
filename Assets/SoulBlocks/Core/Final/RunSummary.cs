@@ -37,7 +37,6 @@ namespace SoulBlocks
         {
             return new List<string>
             {
-                "Semilla: " + run.effectiveSeed,
                 "Tiempo de juego: " + FormatTime(run.playTimeSeconds),
                 "Expediciones: " + run.expeditionIndex,
                 "Prisiones rotas: " + run.totalPrisonsBroken + " (" + BrokenByTierSummary(run) + ")",

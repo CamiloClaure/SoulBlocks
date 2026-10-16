@@ -63,7 +63,7 @@ namespace SoulBlocks
 
             foreach (var altar in layout.altars)
             {
-                altars[altar.id] = new AltarEntry { layout = altar, roll = AltarRules.Roll(run.effectiveSeed, altar.id) };
+                altars[altar.id] = new AltarEntry { layout = altar, roll = AltarRules.Roll(run.seed, altar.id) };
                 Build(altar);
             }
         }

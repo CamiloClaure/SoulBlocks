@@ -155,7 +155,7 @@ namespace SoulBlocks
             if (GUILayout.Button("Mejorar ropa", GUILayout.Width(110))) UpgradeClothing();
             GUI.enabled = true;
             GUILayout.EndHorizontal();
-            GUILayout.Label("Almas entregadas por ayudantes: " + DeliveredSouls + " · Las mejoras no cambian el porcentaje; sólo la ropa.");
+            GUILayout.Label("Las mejoras no cambian el porcentaje; sólo la ropa.");
             GUILayout.EndScrollView();
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Restaurar cristales de prueba")) ResetLab();

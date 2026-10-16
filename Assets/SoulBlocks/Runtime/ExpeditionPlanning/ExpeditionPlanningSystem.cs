@@ -3,8 +3,8 @@ using UnityEngine;
 namespace SoulBlocks
 {
     // Owns Run.plan (section 1.8): rolls it on ExpeditionPlanned, tracks the chosen objective's
-    // progress, applies the one active anomaly (soul burst / weakened prison / dash current) and
-    // the per-branch soul density hook, and draws the hub panel + expedition HUD line.
+    // progress, applies the one active anomaly (soul burst / weakened prison / dash current),
+    // and draws the hub panel + expedition HUD line.
     public sealed class ExpeditionPlanningSystem : MonoBehaviour
     {
         GameObject anomalyMarker;
@@ -12,8 +12,6 @@ namespace SoulBlocks
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Register() => GameRoot.Register<ExpeditionPlanningSystem>();
-
-        static int DefaultSpawnCount(SoulSpawnLayout spawn) => spawn.baseCount;
 
         void OnEnable()
         {
@@ -24,7 +22,6 @@ namespace SoulBlocks
             GameEvents.PrisonDamaged += OnPrisonDamaged;
             GameEvents.ShelterEntered += OnShelterEntered;
             GameEvents.TileDiscovered += OnTileDiscovered;
-            ExpeditionController.SpawnCountFor = CountForSpawn;
             PrisonSystem.DamageMultiplierFor = MultiplierFor;
             Hud.Register(600, DrawHud);
         }
@@ -38,7 +35,6 @@ namespace SoulBlocks
             GameEvents.PrisonDamaged -= OnPrisonDamaged;
             GameEvents.ShelterEntered -= OnShelterEntered;
             GameEvents.TileDiscovered -= OnTileDiscovered;
-            ExpeditionController.SpawnCountFor = DefaultSpawnCount;
             PrisonSystem.DamageMultiplierFor = null;
             ClearCorriente();
             Hud.Unregister(DrawHud);
@@ -108,14 +104,6 @@ namespace SoulBlocks
         }
 
         void OnExpeditionEnded(ExpeditionEndReason reason) => ClearCorriente();
-
-        int CountForSpawn(SoulSpawnLayout spawn)
-        {
-            var root = GameRoot.Instance;
-            if (root == null || root.Run == null || root.Layout == null) return spawn.baseCount;
-            int comingIndex = root.Run.expeditionIndex + 1;
-            return ExpeditionPlanner.SpawnCount(root.Layout, root.Run, root.Run.effectiveSeed, comingIndex, spawn);
-        }
 
         float MultiplierFor(int prisonId)
         {

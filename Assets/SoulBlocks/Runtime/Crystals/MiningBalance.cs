@@ -15,7 +15,7 @@ namespace SoulBlocks
         [Min(0)] public int additionalCostPerLevel = 5;
         static MiningBalance cached;
         public static MiningBalance Current => cached != null ? cached : cached = Resources.Load<MiningBalance>("Mining/Balance") ?? CreateInstance<MiningBalance>();
-        public static int Stage(int level) => (Mathf.Clamp(level, 1, 50) - 1) / 10;
+        public static int Stage(int level) => PrisonRules.PickaxeTier(level);
         public int Damage(int level)
         {
             int result = 0;

@@ -30,13 +30,14 @@ namespace SoulBlocks.Tests
         public void SceneHasAuthoredPrefabBesideTreeAndWiredMiningPlayer()
         {
             EditorSceneManager.OpenScene("Assets/Scenes/SoulBlocks.unity");
-            var crystal = GameObject.Find("Crystal Yellow - Tree").GetComponent<BreakableCrystal>();
+            var crystal = GameObject.Find("Crystal Yellow Tree").GetComponent<BreakableCrystal>();
             var player = Object.FindAnyObjectByType<SoulPlayer>();
-            var tree = GameObject.Find("Wisdom Tree");
+            var tree = Object.FindAnyObjectByType<CentralSpiritTree>();
             Assert.IsNotNull(crystal);
             Assert.IsTrue(PrefabUtility.IsPartOfPrefabInstance(crystal));
             Assert.Less(Vector3.Distance(tree.transform.position, crystal.transform.position), 4f);
-            Assert.AreEqual(player.GetComponent<CharacterController>().height * .5f,
+            // Half the player's height per size step.
+            Assert.AreEqual(player.GetComponent<CharacterController>().height * .5f * (int)crystal.size,
                 crystal.GetComponent<BoxCollider>().size.y, .001f);
             var attack = player.GetComponent<CrystalMiningAttack>();
             Assert.IsNotNull(attack);

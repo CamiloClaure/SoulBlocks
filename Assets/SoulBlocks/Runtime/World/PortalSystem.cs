@@ -7,8 +7,8 @@ namespace SoulBlocks
     // teleports the player back near the tree and ends the expedition as Portal; a matching pad
     // near the tree sends them back out to that branch end, where HubZone's own "left the
     // island" check starts the next expedition for free, nothing to do here for that half.
-    // Also owns the one-line toasts for Raiz II/III (bridges, deep segments): MapBuilder already
-    // activates their tiles on UnlockGranted, this just announces it.
+    // Also owns the one-line toasts for Raiz II/III (bridges, deep segments): their UnlockGate
+    // opens them on UnlockGranted, this just announces it.
     public sealed class PortalSystem : MonoBehaviour
     {
         sealed class Entry

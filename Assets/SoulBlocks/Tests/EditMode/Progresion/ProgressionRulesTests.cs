@@ -8,7 +8,6 @@ namespace SoulBlocks.Tests
     {
         static UpgradeDef Carga => UpgradeCatalog.Get("carga");
         static UpgradeDef Dash => UpgradeCatalog.Get("dash");
-        static UpgradeDef PicoNivel => UpgradeCatalog.Get("pico_nivel");
         static UpgradeDef Raiz1 => UpgradeCatalog.Get("raiz1");
         static UpgradeDef Raiz2 => UpgradeCatalog.Get("raiz2");
         static UpgradeDef Raiz3 => UpgradeCatalog.Get("raiz3");
@@ -26,10 +25,10 @@ namespace SoulBlocks.Tests
         [Test]
         public void CostUsesPerUpgradeGrowth()
         {
-            // pico_nivel: growth 2.0, base 180.
-            Assert.AreEqual(180, ProgressionRules.Cost(PicoNivel, 1));
-            Assert.AreEqual(360, ProgressionRules.Cost(PicoNivel, 2));
-            Assert.AreEqual(720, ProgressionRules.Cost(PicoNivel, 3));
+            // dash: growth 1.5, base 60.
+            Assert.AreEqual(60, ProgressionRules.Cost(Dash, 1));
+            Assert.AreEqual(90, ProgressionRules.Cost(Dash, 2));
+            Assert.AreEqual(135, ProgressionRules.Cost(Dash, 3));
         }
 
         [Test]
@@ -84,13 +83,13 @@ namespace SoulBlocks.Tests
         }
 
         [Test]
-        public void ApplyStatsGivesCargoCapacity150AfterOneCargaLevel()
+        public void ApplyStatsRaisesSpiritCapacityByOneCargaLevel()
         {
             var run = new RunState();
             run.SetUpgradeLevel("carga", 1);
             var stats = new StatSheet();
             ProgressionRules.ApplyStats(run, stats);
-            Assert.AreEqual(150f, stats.Get(StatId.CargoCapacity), .0001f);
+            Assert.AreEqual(Balance.SpiritCapacity + Balance.CargaEffect, stats.Get(StatId.SpiritCapacity), .0001f);
         }
 
         [Test]
@@ -113,7 +112,7 @@ namespace SoulBlocks.Tests
             ProgressionRules.ApplyStats(run, stats);
             run.SetUpgradeLevel("carga", 0);
             ProgressionRules.ApplyStats(run, stats);
-            Assert.AreEqual(Balance.CargoCapacity, stats.Get(StatId.CargoCapacity), .0001f);
+            Assert.AreEqual(Balance.SpiritCapacity, stats.Get(StatId.SpiritCapacity), .0001f);
         }
 
         [Test]
@@ -165,13 +164,12 @@ namespace SoulBlocks.Tests
         public void BoardNodeOpensOnlyOnceItsParentReachesTheLevel()
         {
             var run = new RunState { reserveSouls = 10000 };
-            var imanDuracion = UpgradeCatalog.Get("iman_duracion");
-            Assert.AreEqual("requiere Radio de imán nv 2", ProgressionRules.WhyCannotBuy(run, imanDuracion));
-            run.SetUpgradeLevel("iman_radio", 1);
-            Assert.IsFalse(ProgressionRules.Buy(run, imanDuracion));
-            run.SetUpgradeLevel("iman_radio", 2);
-            Assert.IsNull(ProgressionRules.WhyCannotBuy(run, imanDuracion));
-            Assert.IsTrue(ProgressionRules.Buy(run, imanDuracion));
+            var velocidad = UpgradeCatalog.Get("velocidad");
+            Assert.AreEqual("requiere Energía nv 1", ProgressionRules.WhyCannotBuy(run, velocidad));
+            Assert.IsFalse(ProgressionRules.Buy(run, velocidad));
+            run.SetUpgradeLevel("energia", 1);
+            Assert.IsNull(ProgressionRules.WhyCannotBuy(run, velocidad));
+            Assert.IsTrue(ProgressionRules.Buy(run, velocidad));
         }
 
         [Test]
@@ -204,7 +202,7 @@ namespace SoulBlocks.Tests
 
             var stats = new StatSheet();
             ProgressionRules.ApplyStats(loaded, stats);
-            Assert.AreEqual(Balance.CargoCapacity + Balance.CargaEffect * 2, stats.Get(StatId.CargoCapacity), .0001f);
+            Assert.AreEqual(Balance.SpiritCapacity + Balance.CargaEffect * 2, stats.Get(StatId.SpiritCapacity), .0001f);
         }
 
         static void BuyAllCoreInOrder(RunState run)

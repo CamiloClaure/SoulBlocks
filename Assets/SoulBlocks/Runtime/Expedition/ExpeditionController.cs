@@ -4,16 +4,13 @@ using UnityEngine;
 
 namespace SoulBlocks
 {
-    // Owns the expedition loop: energy drain, start/end, cargo deposit and the HUD panel that
-    // shows them. Other crews end an expedition (portals) or deposit cargo (shelters) through
-    // the public API below instead of touching RunState directly.
+    // Owns the expedition loop: energy drain while off the island (paused in shelters), start
+    // and end, and the HUD panel that shows them. Portals end an expedition through the public
+    // API below instead of touching RunState directly. Souls are not carried: they follow the
+    // torch (WanderingSpirit), and the ones left behind when it ends simply keep wandering.
     public sealed class ExpeditionController : MonoBehaviour
     {
         public static ExpeditionController Instance { get; private set; }
-
-        // Souls per spawn point for the coming expedition; the random-density crew overrides
-        // this with its own curve. Defaults to the layout's own baseCount.
-        public static Func<SoulSpawnLayout, int> SpawnCountFor = DefaultSpawnCount;
 
         readonly EnergyMeter meter = new EnergyMeter();
         readonly HashSet<int> activeShelterIds = new HashSet<int>();
@@ -24,13 +21,7 @@ namespace SoulBlocks
         static void Register() => GameRoot.Register<ExpeditionController>();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics()
-        {
-            Instance = null;
-            SpawnCountFor = DefaultSpawnCount;
-        }
-
-        static int DefaultSpawnCount(SoulSpawnLayout spawn) => spawn.baseCount;
+        static void ResetStatics() => Instance = null;
 
         void OnEnable()
         {
@@ -56,7 +47,6 @@ namespace SoulBlocks
 
         void OnMapBuilt(MapLayout layout)
         {
-            if (GameRoot.Instance.ManualWorld) return;
             if (firstPlanDone) return;
             firstPlanDone = true;
             GameEvents.RaiseExpeditionPlanned();
@@ -68,7 +58,7 @@ namespace SoulBlocks
         void OnLeftHub()
         {
             var root = GameRoot.Instance;
-            if (root == null || root.Run == null || root.Run.inExpedition || root.ManualWorld) return;
+            if (root == null || root.Run == null || root.Run.inExpedition) return;
             StartExpedition(root);
         }
 
@@ -93,35 +83,19 @@ namespace SoulBlocks
             GameEvents.RaiseEnergyChanged(run.energy, max);
         }
 
-        // Portals call this to end an expedition on arrival; shelters call DepositCargo below
-        // without ending one.
+        // Portals call this to end an expedition on arrival.
         public void EndExpedition(ExpeditionEndReason reason)
         {
             var root = GameRoot.Instance;
             if (root == null || root.Run == null || !root.Run.inExpedition) return;
             var run = root.Run;
             run.inExpedition = false;
-            DepositCargo();
             float max = root.Stats.Get(StatId.EnergyMax);
             run.energy = max;
             meter.ResetForExpedition(max);
             GameEvents.RaiseEnergyChanged(run.energy, max);
             GameEvents.RaiseExpeditionEnded(reason);
             GameEvents.RaiseExpeditionPlanned();
-        }
-
-        // Moves whatever is in cargo into the reserve. Safe to call with empty cargo (shelters
-        // may call it speculatively); a no-op raises nothing.
-        public void DepositCargo()
-        {
-            var root = GameRoot.Instance;
-            if (root == null || root.Run == null) return;
-            var run = root.Run;
-            if (run.cargoSouls <= 0) return;
-            int capacity = root.Stats != null ? root.Stats.GetInt(StatId.CargoCapacity) : (int)Balance.CargoCapacity;
-            int amount = Cargo.Deposit(ref run.cargoSouls, ref run.reserveSouls);
-            GameEvents.RaiseSoulsDeposited(amount);
-            GameEvents.RaiseCargoChanged(run.cargoSouls, capacity);
         }
 
         void Update()
@@ -160,8 +134,8 @@ namespace SoulBlocks
         static void TeleportNearTree(GameRoot root)
         {
             if (root.Player == null || root.Tree == null) return;
+            // Beside the tree, never on it: its trunk has a collider.
             Vector3 center = root.Tree.position;
-            if (SoulPlayer.IsSupportedAt(center)) { root.Player.Teleport(center); return; }
             for (int i = 0; i < 8; i++)
             {
                 float angle = i * Mathf.PI * 2f / 8f;
@@ -178,13 +152,13 @@ namespace SoulBlocks
             var run = root.Run;
             float max = root.Stats != null ? root.Stats.Get(StatId.EnergyMax) : Balance.EnergyMax;
             float fraction = max > 0f ? run.energy / max : 0f;
-            int capacity = root.Stats != null ? root.Stats.GetInt(StatId.CargoCapacity) : (int)Balance.CargoCapacity;
+            int capacity = root.Stats != null ? root.Stats.GetInt(StatId.SpiritCapacity) : (int)Balance.SpiritCapacity;
 
             var previous = GUI.color;
             GUI.color = fraction <= Balance.EnergyWarningLow ? Color.red : fraction <= Balance.EnergyWarningHigh ? Color.yellow : Color.white;
             Hud.Line(string.Format("Energía {0:0}/{1:0}", run.energy, max));
             GUI.color = previous;
-            Hud.Line("Carga " + run.cargoSouls + "/" + capacity + "  ·  Reserva " + run.reserveSouls);
+            Hud.Line("Almas siguiéndote " + WanderingSpirit.FollowingCount + "/" + capacity + "  ·  Reserva " + run.reserveSouls);
             Hud.Line("Wisdom " + run.wisdom + "  ·  Expedición #" + run.expeditionIndex);
         }
     }

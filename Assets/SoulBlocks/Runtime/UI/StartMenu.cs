@@ -2,14 +2,13 @@ using UnityEngine;
 
 namespace SoulBlocks
 {
-    // First-boot modal: continue a save, start a new seed, or keep the world GameRoot already
-    // booted. Shown once per process (static flag reset only at SubsystemRegistration), never
-    // again after a GameRoot.Restart within the same run.
+    // First-boot modal: continue a save or start a new game (the run GameRoot already booted is
+    // a fresh one). Shown once per process (static flag reset only at SubsystemRegistration),
+    // never again after a GameRoot.Restart within the same run.
     public sealed class StartMenu : MonoBehaviour
     {
         static bool shownThisProcess;
         bool open;
-        string seedText = "";
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Register() => GameRoot.Register<StartMenu>();
@@ -31,7 +30,6 @@ namespace SoulBlocks
 
         void OnMapBuilt(MapLayout layout)
         {
-            if (GameRoot.Instance.ManualWorld) return;
             if (shownThisProcess) return;
             shownThisProcess = true;
             Open();
@@ -40,13 +38,12 @@ namespace SoulBlocks
         void Open()
         {
             open = true;
-            seedText = GameRoot.Instance.Run.seed.ToString();
             Keys.Blocked = true;
             if (GameRoot.Instance.Player != null) GameRoot.Instance.Player.MovementLocked = true;
         }
 
-        // Public for bots/tests and the "Jugar con este mundo" button: close without restarting,
-        // keeping whatever GameRoot already built.
+        // Public for bots/tests and the "Nueva partida" button: close without restarting,
+        // keeping the fresh run GameRoot already built.
         public static void Dismiss()
         {
             var menu = GameRoot.Instance != null ? GameRoot.Instance.GetComponent<StartMenu>() : null;
@@ -63,30 +60,16 @@ namespace SoulBlocks
         void Draw()
         {
             if (!open) return;
-            var rect = new Rect(Screen.width * .5f - 220, Screen.height * .5f - 150, 440, 300);
+            var rect = new Rect(Screen.width * .5f - 180, Screen.height * .5f - 70, 360, 140);
             GUI.Window(947101, rect, DrawWindow, "SoulBlocks");
         }
 
         void DrawWindow(int windowId)
         {
-            var run = GameRoot.Instance.Run;
-            GUILayout.Label("Seed actual: " + run.effectiveSeed);
-
             GUI.enabled = SaveSystem.HasValidSave();
-            if (GUILayout.Button("Continuar")) GameRoot.Restart(null, SaveSystem.TryLoad());
+            if (GUILayout.Button("Continuar")) GameRoot.Restart(SaveSystem.TryLoad());
             GUI.enabled = true;
-
-            GUILayout.Space(12);
-            GUILayout.Label("Nueva partida (seed):");
-            seedText = SeedField.Filter(GUILayout.TextField(seedText));
-            if (GUILayout.Button("Nueva partida"))
-            {
-                int seed = SeedField.TryParse(seedText, out int parsed) ? parsed : run.seed;
-                GameRoot.Restart(seed, null);
-            }
-
-            GUILayout.Space(12);
-            if (GUILayout.Button("Jugar con este mundo")) CloseInternal();
+            if (GUILayout.Button("Nueva partida")) CloseInternal();
         }
     }
 }

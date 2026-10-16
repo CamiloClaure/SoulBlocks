@@ -58,7 +58,7 @@ namespace SoulBlocks
             float angle = spawned.Count * 2.4f + Time.time;
             Vector3 position = transform.position + new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle)) * 1.5f;
             var spirit = Instantiate(spiritPrefab, position, Quaternion.identity);
-            spirit.name = "Alma del árbol nutrido";
+            spirit.name = "Tree Soul";
             spirit.torch = torch; spirit.allowFloatingOutsideGround = true; spirit.phase = angle;
             spawned.Add(spirit);
         }

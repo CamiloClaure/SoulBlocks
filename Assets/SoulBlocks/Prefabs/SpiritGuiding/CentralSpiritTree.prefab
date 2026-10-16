@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 902912496270013543}
   - component: {fileID: 4898510078758598767}
   m_Layer: 0
-  m_Name: "Bloque blanco \xB7 reemplazar por FBX"
+  m_Name: White Block - replace with FBX
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

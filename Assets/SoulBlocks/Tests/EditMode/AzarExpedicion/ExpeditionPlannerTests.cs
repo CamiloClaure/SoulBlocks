@@ -5,7 +5,7 @@ namespace SoulBlocks.Tests
 {
     public class ExpeditionPlannerTests
     {
-        static RunState FreshRun(int effectiveSeed) => new RunState { effectiveSeed = effectiveSeed };
+        static RunState FreshRun(int seed) => new RunState { seed = seed };
 
         [Test]
         public void SameSeedAndIndexGivesIdenticalPlan()
@@ -68,8 +68,8 @@ namespace SoulBlocks.Tests
                         Assert.IsNotNull(target, "fracturar targeted a prison id not in the layout.");
                         Assert.IsTrue(string.IsNullOrEmpty(target.requiresUnlock) || run.HasUnlock(target.requiresUnlock),
                             "fracturar targeted a locked prison.");
-                        Assert.LessOrEqual(PrisonRules.RequiredLevel(target.tier), stats.GetInt(StatId.PickLevel),
-                            "fracturar targeted a prison above the current pick level.");
+                        Assert.LessOrEqual(PrisonRules.RequiredLevel(target.tier), PrisonRules.PickaxeTier(run.pickaxeLevel),
+                            "fracturar targeted a prison above the current pickaxe stage.");
                         Assert.IsFalse(run.Prison(target.id).broken, "fracturar targeted an already-broken prison.");
                     }
                 }
@@ -77,22 +77,19 @@ namespace SoulBlocks.Tests
         }
 
         [Test]
-        public void DensityNeverFallsBelowTheGuaranteedMinimum()
+        public void RecolectarGoalFitsWhatTheTorchCanLead()
         {
             var layout = MapLayoutFixtures.Simple();
-            var run = FreshRun(123);
+            var stats = new StatSheet();
+            int capacity = stats.GetInt(StatId.SpiritCapacity);
 
             for (int index = 1; index <= 5; index++)
-            {
-                float total = 0f;
-                foreach (var spawn in layout.soulSpawns)
-                {
-                    if (!string.IsNullOrEmpty(spawn.requiresUnlock) && !run.HasUnlock(spawn.requiresUnlock)) continue;
-                    total += ExpeditionPlanner.SpawnCount(layout, run, run.effectiveSeed, index, spawn);
-                }
-                Assert.GreaterOrEqual(total, Balance.DensityMinimumTotal - 2f,
-                    "expedition " + index + " total souls (" + total + ") fell below the guaranteed minimum.");
-            }
+                foreach (var objective in ExpeditionPlanner.Plan(layout, FreshRun(123), stats, index).offered)
+                    if (objective.kind == "recolectar")
+                    {
+                        Assert.LessOrEqual(objective.goal, capacity, "one trip with a full torch must be enough");
+                        Assert.GreaterOrEqual(objective.goal, (int)Balance.ObjectiveRecolectarMin);
+                    }
         }
 
         // Cheap structural fingerprint: good enough to tell "identical" from "different" plans

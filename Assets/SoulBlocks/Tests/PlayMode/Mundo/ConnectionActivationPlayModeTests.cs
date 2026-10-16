@@ -1,5 +1,7 @@
+using System.Linq;
 using System.Collections;
 using NUnit.Framework;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
@@ -18,25 +20,15 @@ namespace SoulBlocks.Tests
 
             var root = GameRoot.Instance;
             Assert.IsNotNull(root, "GameRoot did not boot.");
-            if (root.Layout.connections.Count == 0)
-            {
-                Assert.Ignore("No connections were generated for this seed.");
-                yield break;
-            }
-
-            var mapBuilder = root.GetComponent<MapBuilder>();
-            Assert.IsNotNull(mapBuilder, "MapBuilder was not attached.");
-
-            var connection = root.Layout.connections[0];
-            Assert.Greater(connection.tiles.Count, 0, "Connection has no tiles.");
-            var tileObj = mapBuilder.TileObject(connection.tiles[0]);
-            Assert.IsNotNull(tileObj, "Connection tile object missing.");
-            Assert.IsFalse(tileObj.activeSelf, "Connection tile should start locked.");
+            Assert.Greater(root.Layout.connections.Count, 0, "The scene has no connection path.");
+            Assert.AreEqual(UnlockIds.Raiz2, root.Layout.connections[0].requiresUnlock);
+            var bridge = Object.FindObjectsByType<AuthoredPath>(FindObjectsInactive.Include, FindObjectsSortMode.None).First(p => p.role == PathRole.Connection);
+            Assert.IsFalse(bridge.gameObject.activeInHierarchy, "The connection path should start locked.");
 
             GameEvents.RaiseUnlockGranted(UnlockIds.Raiz2);
             for (int i = 0; i < 3; i++) yield return null;
 
-            Assert.IsTrue(tileObj.activeSelf, "Connection tile did not activate after Raiz2 was granted.");
+            Assert.IsTrue(bridge.gameObject.activeInHierarchy, "The connection path did not open after Raiz2 was granted.");
         }
     }
 }

@@ -31,7 +31,7 @@ namespace SoulBlocks.Tests
             Assert.IsTrue(progression.TryBuy("carga"));
             yield return null;
 
-            Assert.AreEqual(150f, root.Stats.Get(StatId.CargoCapacity), .0001f);
+            Assert.AreEqual(Balance.SpiritCapacity + Balance.CargaEffect, root.Stats.Get(StatId.SpiritCapacity), .0001f);
             Assert.IsTrue(statsChanged, "StatsChanged was not raised.");
         }
     }

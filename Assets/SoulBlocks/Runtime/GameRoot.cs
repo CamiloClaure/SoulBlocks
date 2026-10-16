@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -13,8 +12,8 @@ namespace SoulBlocks
     public sealed class GameRoot : MonoBehaviour
     {
         public const string SceneName = "SoulBlocks";
+        public const string IslandName = "Main Island";
         public static GameRoot Instance { get; private set; }
-        public static int? PendingSeed;
         public static RunState PendingLoad;
         static readonly List<Type> systems = new List<Type>();
 
@@ -25,7 +24,6 @@ namespace SoulBlocks
         public Transform Tree;
         public Transform Island;
         public Camera ViewCamera;
-        public bool ManualWorld { get; private set; }
         bool built;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -42,8 +40,7 @@ namespace SoulBlocks
 
         static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            bool manual = scene.GetRootGameObjects().Any(r => r.GetComponent<ManualWorld>() != null);
-            if ((scene.name != SceneName && !manual) || (Instance != null && Instance.gameObject.scene == scene)) return;
+            if (scene.name != SceneName || (Instance != null && Instance.gameObject.scene == scene)) return;
             var go = new GameObject("Game Root");
             SceneManager.MoveGameObjectToScene(go, scene);
             go.AddComponent<GameRoot>(); // Awake sets Instance; Start builds the world
@@ -75,109 +72,41 @@ namespace SoulBlocks
             return component != null ? component : go.AddComponent<T>();
         }
 
-        // Sets the pending seed/save and reloads the scene; OnSceneLoaded builds a fresh root.
-        public static void Restart(int? seed, RunState load)
+        // Sets the pending save (null = new game) and reloads the scene; OnSceneLoaded builds a
+        // fresh root.
+        public static void Restart(RunState load)
         {
-            PendingSeed = seed;
             PendingLoad = load;
-            SceneManager.LoadScene(Instance != null && Instance.ManualWorld ? Instance.gameObject.scene.name : SceneName);
+            SceneManager.LoadScene(SceneName);
         }
 
         void Awake() { Instance = this; }
         void OnDestroy() { if (Instance == this) Instance = null; }
         void Start() { if (!built) BuildWorld(); }
 
+        // The world is hand-built in the scene: the layout comes from its paths and sites
+        // (SceneLayout), and gated content is hidden before anyone reacts to MapBuilt.
         void BuildWorld()
         {
             built = true;
             Player = FindAnyObjectByType<SoulPlayer>();
-            var treeRoot = GameObject.Find("Wisdom Tree");
-            var centralTree = FindAnyObjectByType<CentralSpiritTree>();
-            Tree = centralTree != null ? centralTree.transform : treeRoot != null ? treeRoot.transform : null;
-            var islandRoot = GameObject.Find("Main Island");
-            Island = islandRoot != null ? islandRoot.transform : null;
+            var tree = FindAnyObjectByType<CentralSpiritTree>();
+            Tree = tree != null ? tree.transform : null;
+            var island = GameObject.Find(IslandName);
+            Island = island != null ? island.transform : null;
             ViewCamera = Player != null && Player.viewCamera != null ? Player.viewCamera : Camera.main;
 
-            Run = PendingLoad != null ? PendingLoad : new RunState { seed = PendingSeed ?? Environment.TickCount };
+            // The seed is hidden now: it only keeps a save's random rolls (blessings, plans,
+            // altars) reproducible.
+            Run = PendingLoad != null ? PendingLoad : new RunState { seed = Environment.TickCount };
             PendingLoad = null;
-            PendingSeed = null;
             Stats = new StatSheet();
-
-            ManualWorld = gameObject.scene.GetRootGameObjects().Any(r => r.GetComponent<ManualWorld>() != null);
-            if (ManualWorld)
-            {
-                Run = new RunState();
-                Layout = new MapLayout { hubCenter = Tree != null ? Tree.position : Vector3.zero };
-                Run.energy = Balance.EnergyMax;
-                GameEvents.RaiseStatsChanged();
-                GameEvents.RaiseMapBuilt(Layout);
-                return;
-            }
-
-            var input = new MapGenInput { seed = Run.seed, hubCenter = Island != null ? Island.position : Vector3.zero };
-            if (Island != null)
-            {
-                Physics.SyncTransforms(); // bounds below must reflect the island's authored transforms
-                input.anchors = DetectAnchors(Island);
-            }
-            Layout = MapGen.Generate(input);
-            Run.effectiveSeed = Layout.effectiveSeed;
             Run.energy = Balance.EnergyMax;
 
-            Attach<MapBuilder>().Build(Layout, Run);
+            Layout = SceneLayout.FromScene(gameObject.scene, Tree != null ? Tree.position : Vector3.zero);
+            UnlockGate.ApplyAll(gameObject.scene, Run);
             GameEvents.RaiseStatsChanged();
             GameEvents.RaiseMapBuilt(Layout);
-        }
-
-        // For other crews' PlayMode tests: a self-contained GameRoot with a given layout/run,
-        // skipping island-edge detection entirely.
-        public static GameRoot BootWith(MapLayout layout, RunState run)
-        {
-            var instance = Attach<GameRoot>();
-            instance.built = true;
-            AttachSystems();
-            instance.Layout = layout;
-            instance.Run = run;
-            instance.Stats = new StatSheet();
-            instance.Player = FindAnyObjectByType<SoulPlayer>();
-            var treeRoot = GameObject.Find("Wisdom Tree");
-            instance.Tree = treeRoot != null ? treeRoot.transform : null;
-            var islandRoot = GameObject.Find("Main Island");
-            instance.Island = islandRoot != null ? islandRoot.transform : null;
-            instance.ViewCamera = instance.Player != null && instance.Player.viewCamera != null ? instance.Player.viewCamera : Camera.main;
-            Attach<MapBuilder>().Build(layout, run);
-            GameEvents.RaiseStatsChanged();
-            GameEvents.RaiseMapBuilt(layout);
-            return instance;
-        }
-
-        // Anchors from the island's own edge: same geometry the retired block mechanic used
-        // (git show archive/block-mechanic:Assets/SoulBlocks/Editor/BlockMechanicSetup.cs, BuildRoad).
-        // North +Z at x=-5, East +X at z=-12, West -X at z=-30.
-        static List<MapAnchor> DetectAnchors(Transform island)
-        {
-            var colliders = island.GetComponentsInChildren<Collider>().Where(c => c.enabled && !c.isTrigger).ToArray();
-            return new List<MapAnchor>
-            {
-                DetectAnchor(colliders, Vector3.forward, -5f),
-                DetectAnchor(colliders, Vector3.right, -12f),
-                DetectAnchor(colliders, Vector3.left, -30f)
-            };
-        }
-
-        static MapAnchor DetectAnchor(Collider[] ground, Vector3 direction, float crossCoordinate)
-        {
-            bool alongX = Mathf.Abs(direction.x) > .5f;
-            bool positive = direction.x + direction.z > 0;
-            var matching = ground.Where(c => crossCoordinate >= (alongX ? c.bounds.min.z : c.bounds.min.x) + .01f &&
-                crossCoordinate <= (alongX ? c.bounds.max.z : c.bounds.max.x) - .01f).ToArray();
-            if (matching.Length == 0) return new MapAnchor { position = Vector3.zero, direction = direction };
-            float boundary = positive ? matching.Max(c => alongX ? c.bounds.max.x : c.bounds.max.z)
-                : matching.Min(c => alongX ? c.bounds.min.x : c.bounds.min.z);
-            float top = matching.Max(c => c.bounds.max.y);
-            // Raw edge point, not offset: MapGen already starts its first tile one tile-size out from the anchor.
-            Vector3 edge = alongX ? new Vector3(boundary, top, crossCoordinate) : new Vector3(crossCoordinate, top, boundary);
-            return new MapAnchor { position = edge, direction = direction };
         }
     }
 }

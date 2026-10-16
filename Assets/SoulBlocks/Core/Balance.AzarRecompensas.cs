@@ -13,9 +13,8 @@ namespace SoulBlocks
 
         // Bendiciones: effects applied as "blessing.<id>" stat sources.
         public static float BlessingDashChargesAdd = 1f;
-        public static float BlessingMagnetRadiusMul = 1.5f;
         public static float BlessingEnergyMaxAdd = 40f;
-        public static float BlessingCargoCapacityAdd = 50f;
+        public static float BlessingSpiritCapacityAdd = 6f;
 
         // Altares de riesgo: cost/reward known before use, deterministic per altar.
         public static float AltarCostMin = 20f, AltarCostMax = 48f;

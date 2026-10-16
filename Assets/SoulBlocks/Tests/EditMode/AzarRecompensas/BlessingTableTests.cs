@@ -36,7 +36,7 @@ namespace SoulBlocks.Tests
         [Test]
         public void ExcludedIdsNeverAppearInTheOffer()
         {
-            var excluded = new List<string> { "pico_cadena", "dash_extra" };
+            var excluded = new List<string> { "pico_cadena" };
             var offer = BlessingTable.Offer(444, 2, 3, excluded);
             Assert.AreEqual(3, offer.Count);
             foreach (var id in excluded) CollectionAssert.DoesNotContain(offer, id);

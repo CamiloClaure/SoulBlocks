@@ -7,16 +7,12 @@ namespace SoulBlocks
         public static float UpgradeMilestoneEvery = 3f; // "cada 3 niveles hay un hito perceptible" (1.7)
 
         // Arbol de Almas
-        public static float CargaCost = 40f, CargaGrowth = 1.5f, CargaMaxLevel = 8f, CargaEffect = 50f;
+        public static float CargaCost = 40f, CargaGrowth = 1.5f, CargaMaxLevel = 8f, CargaEffect = 4f;
         public static float EnergiaCost = 40f, EnergiaGrowth = 1.5f, EnergiaMaxLevel = 8f, EnergiaEffect = 32f;
         public static float VelocidadCost = 50f, VelocidadGrowth = 1.5f, VelocidadMaxLevel = 6f, VelocidadEffect = .48f;
-        public static float RadioCost = 35f, RadioGrowth = 1.5f, RadioMaxLevel = 4f, RadioEffect = .5f;
+        public static float RadioCost = 35f, RadioGrowth = 1.5f, RadioMaxLevel = 4f, RadioEffect = 1f;
         public static float AbundanciaCost = 50f, AbundanciaGrowth = 1.5f, AbundanciaMaxLevel = 4f, AbundanciaEffect = .125f;
         public static float DashCost = 60f, DashGrowth = 1.5f, DashMaxLevel = 4f, DashEffect = 1.5f, DashMilestoneCharges = 1f;
-        public static float ImanRadioCost = 45f, ImanRadioGrowth = 1.5f, ImanRadioMaxLevel = 4f, ImanRadioEffect = 2f;
-        public static float ImanDuracionCost = 45f, ImanDuracionGrowth = 1.5f, ImanDuracionMaxLevel = 3f, ImanDuracionEffect = 1f;
-        public static float PicoNivelCost = 180f, PicoNivelGrowth = 2f, PicoNivelMaxLevel = 4f, PicoNivelEffect = 1f;
-        public static float PicoVelocidadCost = 60f, PicoVelocidadGrowth = 1.5f, PicoVelocidadMaxLevel = 4f, PicoVelocidadEffect = -.08f;
 
         // Arbol de Wisdom: nucleo (en orden)
         public static float Raiz1Cost = 3f, Raiz2Cost = 8f, Raiz3Cost = 20f, DespertarCost = 40f;

@@ -8,7 +8,4 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/SoulBlocks.unity
     guid: 3339f9fd9342fd44c8bd8028028e05b4
-  - enabled: 1
-    path: Assets/Scenes/WorldBuilding.unity
-    guid: 5df506faa346aaf4c984f4b60f387396
   m_configObjects: {}

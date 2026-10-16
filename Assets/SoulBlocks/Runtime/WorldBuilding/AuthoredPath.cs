@@ -4,6 +4,14 @@ using UnityEngine.Rendering;
 
 namespace SoulBlocks
 {
+    // Decor: plain walkable ground. Branch: an expedition branch (nested under another Branch
+    // path it extends that branch). Connection: a bridge between the two branches nearest its
+    // ends. SceneLayout reads these to build the run's MapLayout.
+    public enum PathRole { Decor, Branch, Connection }
+
+    // A walkable ribbon drawn by hand: a Catmull-Rom curve through `points` (local space) with
+    // a slab mesh and MeshCollider on the Ground layer, rebuilt whenever it changes, in edit
+    // mode too. AuthoredPathEditor adds the point handles.
     [ExecuteAlways, RequireComponent(typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider))]
     public sealed class AuthoredPath : MonoBehaviour
     {
@@ -11,6 +19,9 @@ namespace SoulBlocks
         [Min(.5f)] public float width = 4;
         [Min(.05f)] public float thickness = .5f;
         [Range(4, 64)] public int samplesPerSegment = 16;
+        [Tooltip("Decor: solo suelo. Branch: rama de expedición (anidada bajo otra Branch la extiende). Connection: puente entre las dos ramas más cercanas a sus extremos.")]
+        public PathRole role;
+        public BranchSpecialty specialty;
         Mesh mesh;
         bool dirty = true;
         void OnEnable() => dirty = true;

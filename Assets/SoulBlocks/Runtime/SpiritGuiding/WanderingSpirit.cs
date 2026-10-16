@@ -1,9 +1,17 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace SoulBlocks
 {
+    // A soul loose in the world. It wanders off the paths (or circles a nourishable tree) until
+    // a lit torch calls it, then follows the light: behind the player while carried, around it
+    // when placed. At the altar (torch returned) or a shelter with Entrega it ascends and pays
+    // one soul into the reserve. At most StatId.SpiritCapacity souls follow at once (Carga).
     public sealed class WanderingSpirit : MonoBehaviour
     {
+        public static readonly List<WanderingSpirit> All = new List<WanderingSpirit>();
+        public static int FollowingCount { get; private set; }
+
         public GuidingTorch torch;
         public Transform visual;
         public float wanderRadius = 2f;
@@ -12,37 +20,52 @@ namespace SoulBlocks
         public float phase;
         public bool allowFloatingOutsideGround;
         PathPopulation population;
-        public bool Following { get; private set; }
+        bool following;
+        public bool Following
+        {
+            get => following;
+            private set
+            {
+                if (following == value) return;
+                following = value;
+                FollowingCount += value ? 1 : -1;
+            }
+        }
         public bool Ascending { get; private set; }
         public bool FollowingBehind => Following && torch != null && torch.State == TorchState.Carried;
         Vector3 home;
         float ascension;
         bool delivered;
-        Vector3[] road;
-        float roadHalfWidth;
-        void Start()
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics()
         {
-            home = transform.position;
-            population = FindAnyObjectByType<PathPopulation>();
-            if (population != null) return;
-            var go = GameObject.Find("Camino primario");
-            var path = go != null ? go.GetComponent<AuthoredPath>() : null;
-            if (path == null) return;
-            roadHalfWidth = path.width * Mathf.Max(Mathf.Abs(path.transform.lossyScale.x), Mathf.Abs(path.transform.lossyScale.z)) * .5f + .5f;
-            road = new Vector3[501];
-            for (int i = 0; i < road.Length; i++) road[i] = path.transform.TransformPoint(path.Evaluate(i / 500f));
+            All.Clear();
+            FollowingCount = 0;
         }
-        bool InsideRoad(Vector3 position)
+
+        static int Capacity => GameRoot.Instance != null && GameRoot.Instance.Stats != null ? GameRoot.Instance.Stats.GetInt(StatId.SpiritCapacity) : int.MaxValue;
+
+        void OnEnable() => All.Add(this);
+
+        void OnDisable()
         {
-            if (population != null) return population.InsideRoad(position);
-            if (road == null) return false;
-            for (int i = 0; i < road.Length; i++)
-            {
-                var delta = road[i] - position; delta.y = 0;
-                if (delta.sqrMagnitude < roadHalfWidth * roadHalfWidth) return true;
-            }
-            return false;
+            All.Remove(this);
+            Following = false;
         }
+
+        // Where it was spawned (or last let go): it wanders around this point.
+        public Vector3 Home => home;
+
+        void Awake() => home = transform.position;
+
+        void Start() => population = FindAnyObjectByType<PathPopulation>();
+
+        // Shelters with Entrega deliver the souls following the torch on the spot.
+        public void Deliver() => Ascending = true;
+
+        bool InsideRoad(Vector3 position) => population != null && population.InsideRoad(position);
+
         void Update()
         {
             if (Keys.Blocked || Time.deltaTime <= 0 || torch == null) return;
@@ -55,6 +78,7 @@ namespace SoulBlocks
                 return;
             }
             bool attracted = torch.Calls(transform.position, Following);
+            if (attracted && !Following && FollowingCount >= Capacity) attracted = false;
             if (Following && !attracted) home = transform.position;
             Following = attracted;
             var tree = Following ? null : NourishableTree.Nearest(transform.position);

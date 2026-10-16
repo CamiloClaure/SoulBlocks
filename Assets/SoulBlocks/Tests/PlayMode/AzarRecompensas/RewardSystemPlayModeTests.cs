@@ -17,7 +17,7 @@ namespace SoulBlocks.Tests
             string chosenBlessing = null;
             GameEvents.BlessingChosen += id => chosenBlessing = id;
 
-            GameRoot.PendingSeed = 9001; // fixed seed: reproducible branch layout and blessing offer
+            GameRoot.PendingLoad = new RunState { seed = 9001 }; // fixed seed: reproducible blessing offer
             SceneManager.LoadScene("SoulBlocks");
             for (int i = 0; i < 10; i++) yield return null;
             Assert.IsTrue(mapBuilt, "MapBuilt was not raised.");
@@ -55,11 +55,11 @@ namespace SoulBlocks.Tests
             Assert.AreEqual(expectedCount, rewards.BlessingOptions.Count,
                 "offered blessing count did not match StatId.BlessingOptions.");
 
-            // The offer is a random N-of-5 subset (deterministic per seed, but not guaranteed to
+            // The offer is a random N-of-4 subset (deterministic per seed, but not guaranteed to
             // include any specific id): prefer "carga" when it is there, otherwise take whatever
             // was actually offered so the test stays valid for every seed.
             string pick = rewards.BlessingOptions.Contains("carga") ? "carga" : rewards.BlessingOptions[0];
-            float cargoBefore = root.Stats.Get(StatId.CargoCapacity);
+            float cargoBefore = root.Stats.Get(StatId.SpiritCapacity);
 
             Assert.IsTrue(rewards.ChooseBlessing(pick), "ChooseBlessing rejected an id from its own offer.");
             yield return null;
@@ -68,13 +68,13 @@ namespace SoulBlocks.Tests
             Assert.IsFalse(Keys.Blocked, "Keys.Blocked stayed true after choosing a blessing.");
             CollectionAssert.Contains(root.Run.activeBlessings, pick);
             if (pick == "carga")
-                Assert.AreEqual(cargoBefore + Balance.BlessingCargoCapacityAdd, root.Stats.Get(StatId.CargoCapacity), .001f);
+                Assert.AreEqual(cargoBefore + Balance.BlessingSpiritCapacityAdd, root.Stats.Get(StatId.SpiritCapacity), .001f);
 
             ExpeditionController.Instance.EndExpedition(ExpeditionEndReason.OnFoot);
             yield return null;
 
-            Assert.AreEqual(cargoBefore, root.Stats.Get(StatId.CargoCapacity), .001f,
-                "CargoCapacity did not return to base after the expedition ended.");
+            Assert.AreEqual(cargoBefore, root.Stats.Get(StatId.SpiritCapacity), .001f,
+                "SpiritCapacity did not return to base after the expedition ended.");
             Assert.AreEqual(0, root.Run.activeBlessings.Count, "Run.activeBlessings was not cleared after the expedition ended.");
         }
     }

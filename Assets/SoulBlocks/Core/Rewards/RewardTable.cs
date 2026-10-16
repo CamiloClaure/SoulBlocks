@@ -16,9 +16,9 @@ namespace SoulBlocks
     // same prison the same extra, independent of every other system's draws.
     public static class RewardTable
     {
-        public static RewardRoll Roll(int effectiveSeed, int prisonId)
+        public static RewardRoll Roll(int seed, int prisonId)
         {
-            var rng = SeededRng.Stream(effectiveSeed, "reward.extra." + prisonId);
+            var rng = SeededRng.Stream(seed, "reward.extra." + prisonId);
             float total = Balance.RewardWeightSouls + Balance.RewardWeightEnergy + Balance.RewardWeightSpeed;
             float roll = rng.NextFloat() * total;
 

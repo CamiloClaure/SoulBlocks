@@ -4,18 +4,13 @@ namespace SoulBlocks
     public enum StatId
     {
         MoveSpeed,
-        CargoCapacity,
+        SpiritCapacity, // souls that can follow the torch at once
         EnergyMax,
-        PickupRadius,
+        TorchRadius, // reach of the carried torch
         DashCharges,
         DashDistance,
         DashRechargeSeconds,
-        MagnetRadius,
-        MagnetDuration,
-        MagnetCooldown,
-        PickLevel,
-        PickInterval,
         BlessingOptions,
-        SoulDensity
+        SoulDensity // path spirits per spacing (PathPopulation)
     }
 }

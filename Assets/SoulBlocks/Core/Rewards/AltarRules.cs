@@ -11,9 +11,9 @@ namespace SoulBlocks
     // no hidden randomness on the way in or out.
     public static class AltarRules
     {
-        public static AltarRoll Roll(int effectiveSeed, int altarId)
+        public static AltarRoll Roll(int seed, int altarId)
         {
-            var rng = SeededRng.Stream(effectiveSeed, "altar.risk." + altarId);
+            var rng = SeededRng.Stream(seed, "altar.risk." + altarId);
             int cost = rng.Next((int)Balance.AltarCostMin, (int)Balance.AltarCostMax + 1);
             int reward = rng.Next((int)Balance.AltarRewardMin, (int)Balance.AltarRewardMax + 1);
             return new AltarRoll { cost = cost, reward = reward };

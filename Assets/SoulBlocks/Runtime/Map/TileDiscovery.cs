@@ -2,8 +2,8 @@ using UnityEngine;
 
 namespace SoulBlocks
 {
-    // Marks the player's current tile discovered the first time they stand on it. og/mapa owns
-    // Run.discoveredTiles (see CONTRATOS.md cooperation rules).
+    // Marks the player's current tile discovered the first time they stand on it (the only
+    // writer of Run.discoveredTiles).
     public sealed class TileDiscovery : MonoBehaviour
     {
         MapLayout layout;
@@ -22,7 +22,7 @@ namespace SoulBlocks
         }
 
         // ponytail: linear scan over every tile each frame; fine for a few hundred tiles, swap
-        // for a cell lookup keyed like MapGen's occupancy grid if branch counts grow a lot.
+        // for a grid lookup if the map grows a lot.
         void Update()
         {
             if (layout == null || run == null) return;

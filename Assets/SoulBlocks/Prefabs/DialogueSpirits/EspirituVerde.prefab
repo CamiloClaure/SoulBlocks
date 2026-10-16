@@ -96,7 +96,7 @@ GameObject:
   - component: {fileID: 5578170044717932615}
   - component: {fileID: 4686946282581029607}
   m_Layer: 0
-  m_Name: Esfera eterea
+  m_Name: Ethereal Sphere
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

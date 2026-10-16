@@ -43,7 +43,7 @@ namespace SoulBlocks
         public static void SaveNow()
         {
             var root = GameRoot.Instance;
-            if (root == null || root.Run == null || root.ManualWorld) return;
+            if (root == null || root.Run == null) return;
             WriteAtomic(SavePath, SaveStore.Serialize(root.Run));
         }
 

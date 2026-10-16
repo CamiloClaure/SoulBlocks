@@ -55,7 +55,7 @@ namespace SoulBlocks.Tests
             Assert.IsNotNull(target, "No PrisonView registered for the objective's prison.");
 
             int wisdomBefore = run.wisdom;
-            int pickLevel = root.Stats.GetInt(StatId.PickLevel);
+            int pickLevel = PrisonRules.PickaxeTier(run.pickaxeLevel);
             for (int guard = 0; guard < 64 && !objective.done; guard++)
             {
                 target.ApplyPickHit(pickLevel);

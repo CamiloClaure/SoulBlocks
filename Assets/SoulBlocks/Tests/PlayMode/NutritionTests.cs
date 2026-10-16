@@ -14,8 +14,8 @@ namespace SoulBlocks.Tests
         [UnitySetUp] public IEnumerator Setup()
         {
             Time.timeScale = 1; Keys.Blocked = false;
-            SceneManager.LoadScene("WorldBuilding");
-            for (int i = 0; i < 15; i++) yield return null;
+            SceneManager.LoadScene(GameRoot.SceneName);
+            for (int i = 0; i < 15; i++) yield return null; StartMenu.Dismiss();
             system = SpecialBlockSystem.Instance; player = GameRoot.Instance.Player;
             player.readInput = false; system.PassivesEnabled = false;
             Object.FindAnyObjectByType<GuidingTorch>().SetLit(false);
@@ -25,7 +25,7 @@ namespace SoulBlocks.Tests
             Time.timeScale = 1; Keys.Blocked = false;
             var empty = SceneManager.CreateScene("Nutrition cleanup");
             SceneManager.SetActiveScene(empty);
-            yield return SceneManager.UnloadSceneAsync("WorldBuilding");
+            yield return SceneManager.UnloadSceneAsync(GameRoot.SceneName);
         }
         [UnityTest] public IEnumerator YellowPassiveTravelsWithPlayerAndRevivesNearbyTree()
         {
@@ -60,14 +60,14 @@ namespace SoulBlocks.Tests
             Assert.IsTrue(system.TryUseSelected());
             Assert.IsTrue(tree.Alive); Assert.IsTrue(second.Alive); Assert.IsFalse(distant.Alive);
             yield return new WaitForSeconds(3.3f);
-            var generated = Object.FindObjectsByType<WanderingSpirit>().Where(s => s.name == "Alma del árbol nutrido").ToArray();
+            var generated = Object.FindObjectsByType<WanderingSpirit>().Where(s => s.name == "Tree Soul").ToArray();
             Assert.AreEqual(4, generated.Length, "Each tree is capped at two live spirits in this test.");
             Assert.IsTrue(generated.All(s => s.torch != null && s.visual != null));
             Assert.Less(Vector3.Distance(generated[0].transform.position, tree.transform.position), 8);
             system.ResetLab();
             yield return null;
             Assert.IsFalse(tree.Alive);
-            Assert.AreEqual(0, Object.FindObjectsByType<WanderingSpirit>().Count(s => s.name == "Alma del árbol nutrido"));
+            Assert.AreEqual(0, Object.FindObjectsByType<WanderingSpirit>().Count(s => s.name == "Tree Soul"));
         }
         [UnityTest] public IEnumerator BlueAuraRollsBonusOnceOnBreakAndResetClearsIt()
         {

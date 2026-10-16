@@ -13,7 +13,6 @@ namespace SoulBlocks
         public SpecialBlockLab Lab { get; private set; }
         public bool Ready => Lab != null && GameRoot.Instance != null && GameRoot.Instance.Run != null;
         public bool PassivesEnabled = true;
-        public int DeliveredSouls { get; set; }
         public int GreenHits { get; private set; }
         public int CelesteHits { get; private set; }
         public int GreenRolls { get; private set; }

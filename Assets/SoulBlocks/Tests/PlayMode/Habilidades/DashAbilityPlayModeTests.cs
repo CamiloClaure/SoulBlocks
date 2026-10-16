@@ -44,12 +44,12 @@ namespace SoulBlocks.Tests
             player.readInput = false;
             var dash = root.GetComponent<DashAbility>();
 
-            // Last two tiles of branch 0's required path (always present, never a shortcut):
+            // Last two tiles of branch 0 that are always present:
             // dashing further along their direction runs off the end into the void.
             TileLayout last = null, previous = null;
             foreach (var tile in root.Layout.tiles)
             {
-                if (tile.branchId != 0 || tile.shortcut || !string.IsNullOrEmpty(tile.requiresUnlock)) continue;
+                if (tile.branchId != 0 || !string.IsNullOrEmpty(tile.requiresUnlock)) continue;
                 if (last == null || tile.pathDistance > last.pathDistance) { previous = last; last = tile; }
                 else if (previous == null || tile.pathDistance > previous.pathDistance) previous = tile;
             }

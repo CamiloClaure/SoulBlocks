@@ -14,8 +14,8 @@ namespace SoulBlocks.Tests
         [UnitySetUp] public IEnumerator Setup()
         {
             Time.timeScale = 1; Keys.Blocked = false;
-            SceneManager.LoadScene("WorldBuilding");
-            for (int i = 0; i < 15; i++) yield return null;
+            SceneManager.LoadScene(GameRoot.SceneName);
+            for (int i = 0; i < 15; i++) yield return null; StartMenu.Dismiss();
             root = GameRoot.Instance; root.Player.readInput = false;
             altar = TreeUpgradeAltar.Instance;
             SpecialBlockSystem.Instance.PassivesEnabled = false;
@@ -25,7 +25,7 @@ namespace SoulBlocks.Tests
             SpecialBlockSystem.Instance.CloseShop(); root.GetComponent<ProgressionSystem>().Close();
             Time.timeScale = 1; Keys.Blocked = false;
             var empty = SceneManager.CreateScene("Sculptable cleanup"); SceneManager.SetActiveScene(empty);
-            yield return SceneManager.UnloadSceneAsync("WorldBuilding");
+            yield return SceneManager.UnloadSceneAsync(GameRoot.SceneName);
         }
         [UnityTest] public IEnumerator TerrainIsEditablePaintedAndSupportsWalkingOutsidePaths()
         {
@@ -35,7 +35,6 @@ namespace SoulBlocks.Tests
             Assert.AreEqual(513, terrain.terrainData.heightmapResolution);
             Assert.AreEqual(3, terrain.terrainData.terrainLayers.Length);
             Assert.IsNotNull(root.Tree.GetComponent<CentralSpiritTree>());
-            Assert.IsNull(Object.FindAnyObjectByType<WisdomTreeVisual>());
             Assert.AreEqual(new Vector3(48, 16, 48), terrain.terrainData.size);
             Assert.IsFalse(SoulPlayer.IsSupportedAt(new Vector3(35, 0, -35)), "Outside the island must remain void.");
             Assert.IsTrue(terrain.terrainData.IsHole(0, 0));

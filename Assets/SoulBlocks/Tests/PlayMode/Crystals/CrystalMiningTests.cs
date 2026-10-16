@@ -1,6 +1,7 @@
 using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
 namespace SoulBlocks.Tests
@@ -14,6 +15,14 @@ namespace SoulBlocks.Tests
         [UnitySetUp]
         public IEnumerator SetUp()
         {
+            // A scene left loaded by an earlier test would put its terrain and paths under this
+            // rig at the origin.
+            var leftover = SceneManager.GetSceneByName(GameRoot.SceneName);
+            if (leftover.IsValid() && leftover.isLoaded)
+            {
+                SceneManager.SetActiveScene(SceneManager.CreateScene("Crystal mining test " + Time.frameCount));
+                yield return SceneManager.UnloadSceneAsync(leftover);
+            }
             Keys.Blocked = false;
             Time.timeScale = 1;
             // A scene left loaded by an earlier test keeps its special blocks live: a random red

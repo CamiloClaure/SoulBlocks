@@ -7,8 +7,8 @@ using UnityEngine.TestTools;
 namespace SoulBlocks.Tests {
 public class SpiritDialogueTests {
  SpiritDialogue[] spirits; SoulPlayer player;
- [UnitySetUp] public IEnumerator Setup(){SceneManager.LoadScene("WorldBuilding");for(int i=0;i<15;i++)yield return null;player=GameRoot.Instance.Player;player.readInput=false;spirits=Object.FindObjectsByType<SpiritDialogue>(FindObjectsSortMode.None);}
- [UnityTearDown] public IEnumerator Cleanup(){if(SpiritDialogue.Active!=null)SpiritDialogue.Active.Close();Time.timeScale=1;Keys.Blocked=false;var empty=SceneManager.CreateScene("Dialogue cleanup");SceneManager.SetActiveScene(empty);yield return SceneManager.UnloadSceneAsync("WorldBuilding");}
+ [UnitySetUp] public IEnumerator Setup(){SceneManager.LoadScene(GameRoot.SceneName);for(int i=0;i<15;i++)yield return null; StartMenu.Dismiss();player=GameRoot.Instance.Player;player.readInput=false;spirits=Object.FindObjectsByType<SpiritDialogue>(FindObjectsSortMode.None);}
+ [UnityTearDown] public IEnumerator Cleanup(){if(SpiritDialogue.Active!=null)SpiritDialogue.Active.Close();Time.timeScale=1;Keys.Blocked=false;var empty=SceneManager.CreateScene("Dialogue cleanup");SceneManager.SetActiveScene(empty);yield return SceneManager.UnloadSceneAsync(GameRoot.SceneName);}
  [UnityTest] public IEnumerator FiveSpiritsSpeakAndReleaseControls(){
   Assert.AreEqual(5,spirits.Length);Assert.AreEqual(5,spirits.Select(s=>s.color).Distinct().Count());
   foreach(var spirit in spirits){

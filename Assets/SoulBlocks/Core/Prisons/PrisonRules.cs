@@ -24,6 +24,13 @@ namespace SoulBlocks
         public static int Fragments(PrisonTier tier) => (int)Balance.PrisonFragments[(int)tier];
         public static int SoulsPerPhase(PrisonTier tier) => (int)Balance.PrisonSoulsPerPhase[(int)tier];
 
+        // The pickaxe's color stage (levels 1-10 yellow = 0 ... 41-50 red = 4) is its level
+        // against prisons: tier T(n+1) needs stage n, the Nucleo the red stage.
+        public static int PickaxeTier(int pickaxeLevel) => (Mathf.Clamp(pickaxeLevel, 1, 50) - 1) / 10;
+
+        static readonly string[] PickaxeTierNames = { "amarillo", "azul", "verde", "celeste", "rojo" };
+        public static string PickaxeTierName(int tier) => PickaxeTierNames[Mathf.Clamp(tier, 0, PickaxeTierNames.Length - 1)];
+
         // Phase sizes split the total HP as evenly as possible; any remainder lands one-each on
         // the first phases so sizes never differ by more than 1 HP and always sum to TotalHp.
         static int PhaseSize(PrisonTier tier, int phaseIndex0)

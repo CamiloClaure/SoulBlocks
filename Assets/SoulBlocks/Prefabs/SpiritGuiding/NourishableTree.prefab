@@ -116,7 +116,7 @@ GameObject:
   - component: {fileID: 4490684491916415870}
   - component: {fileID: 8798845635113628630}
   m_Layer: 0
-  m_Name: "Rect\xE1ngulo gris - reemplazar por Blender"
+  m_Name: Gray Rectangle - replace with Blender model
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

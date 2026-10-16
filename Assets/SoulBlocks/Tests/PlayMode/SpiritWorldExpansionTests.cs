@@ -14,8 +14,8 @@ namespace SoulBlocks.Tests
         [UnitySetUp] public IEnumerator Setup()
         {
             Keys.Blocked = false; Time.timeScale = 1;
-            SceneManager.LoadScene("WorldBuilding");
-            for (int i = 0; i < 15; i++) yield return null;
+            SceneManager.LoadScene(GameRoot.SceneName);
+            for (int i = 0; i < 15; i++) yield return null; StartMenu.Dismiss();
             player = GameRoot.Instance.Player; player.readInput = false;
             torch = Object.FindAnyObjectByType<GuidingTorch>();
             SpecialBlockSystem.Instance.PassivesEnabled = false;
@@ -24,13 +24,13 @@ namespace SoulBlocks.Tests
         {
             Time.timeScale = 1; Keys.Blocked = false;
             var empty = SceneManager.CreateScene("Expansion cleanup"); SceneManager.SetActiveScene(empty);
-            yield return SceneManager.UnloadSceneAsync("WorldBuilding");
+            yield return SceneManager.UnloadSceneAsync(GameRoot.SceneName);
         }
         [UnityTest] public IEnumerator DenseSpiritsStayOutsideEveryAuthoredRoad()
         {
             var population = Object.FindAnyObjectByType<PathPopulation>();
             Assert.Greater(population.SpiritCount, 100);
-            Assert.IsTrue(Object.FindObjectsByType<WanderingSpirit>().Any(s => s.name.StartsWith("Alma del vacío") && !population.InsideRoad(s.transform.position, 10) && !SoulPlayer.IsSupportedAt(s.transform.position)));
+            Assert.IsTrue(Object.FindObjectsByType<WanderingSpirit>().Any(s => s.name.StartsWith("Void Soul") && !population.InsideRoad(s.transform.position, 10) && !SoulPlayer.IsSupportedAt(s.transform.position)));
             yield return new WaitForSeconds(.5f);
             foreach (var spirit in Object.FindObjectsByType<WanderingSpirit>())
             {
@@ -46,6 +46,7 @@ namespace SoulBlocks.Tests
             player.Teleport(torch.AltarPosition + Vector3.right * 1.7f);
             Assert.IsTrue(torch.Interact(player));
             yield return null;
+            GameRoot.Instance.Stats.SetModifier("test", StatId.SpiritCapacity, 1000f); // following, not the Carga cap, is under test
             var spirits = Object.FindObjectsByType<WanderingSpirit>().Take(16).ToArray();
             for (int i = 0; i < spirits.Length; i++)
             {
@@ -70,7 +71,7 @@ namespace SoulBlocks.Tests
         }
         [UnityTest] public IEnumerator NewRoadReachesArenaAndHubHasFiveUpgrades()
         {
-            var road = GameObject.Find("Camino de prueba de poderes").GetComponent<AuthoredPath>();
+            var road = GameObject.Find("Power Test Path").GetComponent<AuthoredPath>();
             Assert.Greater(Vector3.Distance(road.transform.TransformPoint(road.Evaluate(0)), road.transform.TransformPoint(road.Evaluate(1))), 60);
             for (int i = 0; i <= 100; i++)
             {

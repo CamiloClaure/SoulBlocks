@@ -9,13 +9,13 @@ namespace SoulBlocks.Tests
         {
             var run = new RunState();
             run.seed = 123;
-            run.effectiveSeed = 124;
             run.expeditionIndex = 3;
             run.playTimeSeconds = 90.5f;
             run.inExpedition = true;
             run.victory = false;
             run.reserveSouls = 40;
-            run.cargoSouls = 12;
+            run.collectedCrystals = 12;
+            run.pickaxeLevel = 14;
             run.wisdom = 7;
             run.energy = 18.5f;
             run.treeStage = 2;
@@ -28,7 +28,6 @@ namespace SoulBlocks.Tests
             run.brokenByTier[(int)PrisonTier.T1] = 2;
             run.discoveredTiles.Add(3);
             run.discoveredTiles.Add(9);
-            run.groundSouls.Add(new GroundSoul { position = new Vector3(1, 0, 2), value = 5 });
             run.plan.offered.Add(new ObjectiveRecord { kind = "collect", targetId = 1, branchId = 0, goal = 10, progress = 4, rewardWisdom = 2 });
             run.plan.chosenObjective = 0;
             run.plan.anomaly = new AnomalyRecord { kind = "swarm", branchId = 1, position = new Vector3(4, 0, 4) };
@@ -47,12 +46,12 @@ namespace SoulBlocks.Tests
 
             Assert.IsNotNull(loaded);
             Assert.AreEqual(run.seed, loaded.seed);
-            Assert.AreEqual(run.effectiveSeed, loaded.effectiveSeed);
             Assert.AreEqual(run.expeditionIndex, loaded.expeditionIndex);
             Assert.AreEqual(run.playTimeSeconds, loaded.playTimeSeconds, .0001f);
             Assert.AreEqual(run.inExpedition, loaded.inExpedition);
             Assert.AreEqual(run.reserveSouls, loaded.reserveSouls);
-            Assert.AreEqual(run.cargoSouls, loaded.cargoSouls);
+            Assert.AreEqual(run.collectedCrystals, loaded.collectedCrystals);
+            Assert.AreEqual(run.pickaxeLevel, loaded.pickaxeLevel);
             Assert.AreEqual(run.wisdom, loaded.wisdom);
             Assert.AreEqual(run.treeStage, loaded.treeStage);
             Assert.IsTrue(loaded.HasUnlock(UnlockIds.Raiz1));
@@ -63,9 +62,6 @@ namespace SoulBlocks.Tests
             Assert.IsTrue(loaded.Prison(9).broken);
             Assert.AreEqual(2, loaded.brokenByTier[(int)PrisonTier.T1]);
             CollectionAssert.AreEquivalent(run.discoveredTiles, loaded.discoveredTiles);
-            Assert.AreEqual(1, loaded.groundSouls.Count);
-            Assert.AreEqual(5, loaded.groundSouls[0].value);
-            Assert.AreEqual(new Vector3(1, 0, 2), loaded.groundSouls[0].position);
             Assert.AreEqual(1, loaded.plan.offered.Count);
             Assert.AreEqual("collect", loaded.plan.offered[0].kind);
             Assert.AreEqual(0, loaded.plan.chosenObjective);

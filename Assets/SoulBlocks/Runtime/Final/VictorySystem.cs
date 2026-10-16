@@ -86,7 +86,7 @@ namespace SoulBlocks
             GUILayout.Space(10);
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Seguir jugando")) Continue();
-            if (GUILayout.Button("Nueva partida")) GameRoot.Restart(null, null);
+            if (GUILayout.Button("Nueva partida")) GameRoot.Restart(null);
             GUILayout.EndHorizontal();
         }
     }

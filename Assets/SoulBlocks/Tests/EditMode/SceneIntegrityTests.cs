@@ -21,8 +21,9 @@ namespace SoulBlocks.Tests
                     Assert.AreEqual(0, GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(t.gameObject), "Missing script on " + t.name);
 
             Assert.IsTrue(roots.Any(r => r.name == "Main Island"), "Missing Main Island root.");
-            Assert.IsTrue(roots.Any(r => r.name == "Wisdom Tree"), "Missing Wisdom Tree root.");
-            Assert.IsTrue(roots.Any(r => r.GetComponent<SoulBlocks.SoulPlayer>() != null), "Missing Player root.");
+            Assert.IsTrue(roots.Any(r => r.GetComponent<CentralSpiritTree>() != null), "Missing the central tree root.");
+            Assert.IsTrue(roots.Any(r => r.GetComponentInChildren<Terrain>() != null && r.name == GameRoot.IslandName), "The island terrain must sit under Main Island (HubZone).");
+            Assert.IsTrue(roots.Any(r => r.GetComponent<SoulPlayer>() != null), "Missing Player root.");
         }
     }
 }

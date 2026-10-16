@@ -19,7 +19,7 @@ namespace SoulBlocks.Tests
             var root = GameRoot.Instance;
             Assert.IsNotNull(root);
             if (SpecialBlockSystem.Instance != null) SpecialBlockSystem.Instance.PassivesEnabled = false;
-            var crystal = GameObject.Find("Crystal Yellow - Tree").GetComponent<BreakableCrystal>();
+            var crystal = GameObject.Find("Crystal Yellow Small").GetComponent<BreakableCrystal>();
             Assert.IsNotNull(crystal);
             root.Player.readInput = false;
             root.Player.Teleport(crystal.transform.position + Vector3.back * 1.2f + Vector3.up * .03f);

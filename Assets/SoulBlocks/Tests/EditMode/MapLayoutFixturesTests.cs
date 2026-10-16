@@ -4,12 +4,6 @@ using SoulBlocks;
 
 namespace SoulBlocks.Tests
 {
-    // ponytail: HasThreeBranchesInSpecialtyOrder and HasOneShelterOnTheExplorationBranch were
-    // written against the og/mapa stand-in (fixed branch order, exactly one shelter). The real
-    // generator shuffles specialties per seed and places a shelter every ~35m of the Exploration
-    // branch plus one near the Prisons branch end, so both are rewritten here to check the real
-    // contract instead of the stand-in's exact shape. See final report: deviation, not a frozen
-    // contract file.
     public class MapLayoutFixturesTests
     {
         [Test]
@@ -39,7 +33,6 @@ namespace SoulBlocks.Tests
             var layout = MapLayoutFixtures.Simple();
             Assert.AreEqual(layout.tiles.Count, layout.tiles.Select(t => t.index).Distinct().Count());
             Assert.AreEqual(layout.prisons.Count, layout.prisons.Select(p => p.id).Distinct().Count());
-            Assert.AreEqual(layout.soulSpawns.Count, layout.soulSpawns.Select(s => s.id).Distinct().Count());
             Assert.AreEqual(layout.branches.Count, layout.branches.Select(b => b.id).Distinct().Count());
         }
 
